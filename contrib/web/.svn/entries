@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="34"
+   name=""
+   committed-date="2005-08-07T17:33:01.000388Z"
+   url="svn://trespassersw/w1retap/trunk/contrib/web"
+   last-author="jrh"
+   kind="dir"
+   uuid="6ee217d1-e6ed-0310-8d52-e44375f16242"
+   revision="35"/>
+<entry
+   committed-rev="34"
+   name="wplot.pl"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="e912a200dd2a868d236e34c2d48a17ba"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="wxcrop.plt"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="39f9649ba93a68dbd1d8bd3e23b7138a"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="wxrss.pl"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="ed89ba8caca24e73ce43225015d682a4"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="COPYING"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="e04e542dd97a1ee17bb92d530c84a2e4"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="xmlrss.png"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="8ddac8a9f81ef7511a3f502e51b44c75"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="wug.pl"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="72668f38d4df5d852875ff27a6b4be4c"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="wx.tmpl.html"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="aa79e30cb6c847d50675b2b635e90fd3"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+<entry
+   committed-rev="34"
+   name="README"
+   text-time="2005-08-09T17:56:40.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="5c98ae47ac99540506bd882c739c8954"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:40.000000Z"/>
+</wc-entries>

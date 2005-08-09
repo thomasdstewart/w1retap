@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="34"
+   name=""
+   committed-date="2005-08-07T17:33:01.000388Z"
+   url="svn://trespassersw/w1retap/trunk/docs"
+   last-author="jrh"
+   kind="dir"
+   uuid="6ee217d1-e6ed-0310-8d52-e44375f16242"
+   revision="35"/>
+<entry
+   committed-rev="34"
+   name="sample.txt"
+   text-time="2005-08-09T17:56:39.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="afbdbb1a02b40912efef21dfa5ce76c8"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:39.000000Z"/>
+<entry
+   committed-rev="34"
+   name="applet.png"
+   text-time="2005-08-09T17:56:39.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="c113746b0dd027cb096c9fb0157046b6"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:39.000000Z"/>
+<entry
+   committed-rev="36"
+   name="w1retap.odt"
+   text-time="2005-08-09T19:51:02.000000Z"
+   committed-date="2005-08-09T19:58:30.832267Z"
+   checksum="707e182ff24f9b6ba1235a96cc92588b"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:39.000000Z"
+   revision="36"/>
+<entry
+   committed-rev="36"
+   name="mkpg.pl"
+   text-time="2005-08-09T19:56:31.000000Z"
+   committed-date="2005-08-09T19:58:30.832267Z"
+   checksum="ec8587151888c2a9fa436b265c651ff2"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T19:57:33.000000Z"
+   revision="36"/>
+<entry
+   committed-rev="36"
+   name="w1retap.pdf"
+   text-time="2005-08-09T19:51:09.000000Z"
+   committed-date="2005-08-09T19:58:30.832267Z"
+   checksum="98a494028e3099e7cac241e31656d943"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:39.000000Z"
+   revision="36"/>
+<entry
+   committed-rev="34"
+   name="README"
+   text-time="2005-08-09T17:56:39.000000Z"
+   committed-date="2005-08-07T17:33:01.000388Z"
+   checksum="19df24f80f0d6e6c5eb92df2ea2ca207"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:39.000000Z"/>
+<entry
+   committed-rev="36"
+   name="w1retap.xhtml"
+   text-time="2005-08-09T19:51:20.000000Z"
+   committed-date="2005-08-09T19:58:30.832267Z"
+   checksum="e576453ec31592f1ba1ea97f91291274"
+   last-author="jrh"
+   kind="file"
+   prop-time="2005-08-09T17:56:39.000000Z"
+   revision="36"/>
+</wc-entries>

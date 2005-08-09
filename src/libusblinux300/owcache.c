@@ -57,82 +57,27 @@ void InitDHash(void)
 }
   
 //--------------------------------------------------------------------------
-// Add a page to the hash table.  If the page is already in the hash table
-// it is updated and a new time stamp is given.  If the page is new then
-// it is added to the table. The data in buf is put in the page and the 
-// Space location number is returned.
+// The hashing function takes the data provided and returns a hash 
+// number in the range 0 to DEPTH-1.    
 //
-// portnum  the port number of the port being used for the
-//          1-Wire Network.
-// SNum     the serial number for the part that the read is
+// SNum  the serial number for the part that the read is
 //          to be done on.
-// pg       the page to add
-// buf      the buffer of the page data
-// len      len of data for the page
+// page  the page that is being added or looked for
 //
-// return the space number for the new page
+// returns the hash number of the given data                   
 //
-uchar AddPage(int portnum, uchar *SNum, PAGE_TYPE pg, uchar *buf, int len)        
+uchar HashFunction(uchar *SNum, int page)                    
 {
-   uchar hs,p=0xFF; 
-   short i=0,m;
-   PAGE_TYPE page;
-   int tlen;
-   uchar cache_page[32];
-
-   page = pg;
-                              
-   // attempt to see if page already there                           
-   if(!FindPage(portnum,SNum,&page,(uchar)(len & 0x80),FALSE,
-                &cache_page[0],&tlen,&p))
-      return FALSE;
+   ulong h;
+   uchar tmp_page;
    
-   if (p == 0xFF)
-   {
-      // page not found so add one
-      hs = HashFunction(SNum,page);
-      p = FindNew(hs);
-      
-      // attach the device to the chain (if there is one)
-      // no other page in hash location
-      if (Hash[hs] == 0xFF)   
-      {
-         Hash[hs] = p;             // hash p to new page
-         Space[p].Fptr = 0xFF;     // np front p to nothing
-         Space[p].Bptr = 0xFF;     // np back p to nothing
-         Space[p].Hptr = hs;       // np hash p to hash location
-      }    
-      // some other page already there                
-      else                            
-      {                                                       
-         // insert as first page
-         Space[p].Fptr = Hash[hs]; // np front p to old first page
-         Space[Hash[hs]].Bptr = p; // old first page back p to np
-         Hash[hs] = p;             // hash p to np 
-         Space[p].Hptr = hs;       // np hash p to hash location
-      }
-
-      // set the page number
-      Space[p].Page = page;
-      // set the rom
-      for (i = 0; i < 8; i++)
-         Space[p].ROM[i] = SNum[i];            
-   }
+   tmp_page = (uchar) page;
    
-   // set the data
-   Space[p].Data[0] = len;
-   m = ((len & 0x1F) <= 0x1D) ? (len & 0x1F) : 0;
-   for (i = 0; i < m; i++)
-      Space[p].Data[i+1] = buf[i];   
-
-   // set the time stamp limit of X seconds
-   Space[p].Tstamp = msGettick() + CACHE_TIMEOUT; // (3.10)
+   h = (SNum[1] << 12) | (SNum[2] << 8) | (SNum[7] << 4) | tmp_page;
    
-   // return the Space number of the new page         
-   return p;
+   return (uchar)(h % DEPTH);
 }
 
-                  
 //--------------------------------------------------------------------------
 // Find a empty page in Space and return its pointer. First look at the 
 // expected spot.  If an empty or expired page is not found then search
@@ -211,6 +156,84 @@ uchar FindNew(uchar hashnum)
    return t;
 }
              
+
+//--------------------------------------------------------------------------
+// Add a page to the hash table.  If the page is already in the hash table
+// it is updated and a new time stamp is given.  If the page is new then
+// it is added to the table. The data in buf is put in the page and the 
+// Space location number is returned.
+//
+// portnum  the port number of the port being used for the
+//          1-Wire Network.
+// SNum     the serial number for the part that the read is
+//          to be done on.
+// pg       the page to add
+// buf      the buffer of the page data
+// len      len of data for the page
+//
+// return the space number for the new page
+//
+uchar AddPage(int portnum, uchar *SNum, PAGE_TYPE pg, uchar *buf, int len)        
+{
+   uchar hs,p=0xFF; 
+   short i=0,m;
+   PAGE_TYPE page;
+   int tlen;
+   uchar cache_page[32];
+
+   page = pg;
+                              
+   // attempt to see if page already there                           
+   if(!FindPage(portnum,SNum,&page,(uchar)(len & 0x80),FALSE,
+                &cache_page[0],&tlen,&p))
+      return FALSE;
+   
+   if (p == 0xFF)
+   {
+      // page not found so add one
+      hs = HashFunction(SNum,page);
+      p = FindNew(hs);
+      
+      // attach the device to the chain (if there is one)
+      // no other page in hash location
+      if (Hash[hs] == 0xFF)   
+      {
+         Hash[hs] = p;             // hash p to new page
+         Space[p].Fptr = 0xFF;     // np front p to nothing
+         Space[p].Bptr = 0xFF;     // np back p to nothing
+         Space[p].Hptr = hs;       // np hash p to hash location
+      }    
+      // some other page already there                
+      else                            
+      {                                                       
+         // insert as first page
+         Space[p].Fptr = Hash[hs]; // np front p to old first page
+         Space[Hash[hs]].Bptr = p; // old first page back p to np
+         Hash[hs] = p;             // hash p to np 
+         Space[p].Hptr = hs;       // np hash p to hash location
+      }
+
+      // set the page number
+      Space[p].Page = page;
+      // set the rom
+      for (i = 0; i < 8; i++)
+         Space[p].ROM[i] = SNum[i];            
+   }
+   
+   // set the data
+   Space[p].Data[0] = len;
+   m = ((len & 0x1F) <= 0x1D) ? (len & 0x1F) : 0;
+   for (i = 0; i < m; i++)
+      Space[p].Data[i+1] = buf[i];   
+
+   // set the time stamp limit of X seconds
+   Space[p].Tstamp = msGettick() + CACHE_TIMEOUT; // (3.10)
+   
+   // return the Space number of the new page         
+   return p;
+}
+
+                  
              
 //--------------------------------------------------------------------------
 // Search the hash cache to find the page discribed by the rom and page.
@@ -363,24 +386,3 @@ uchar FreePage(uchar ptr)
 }         
 
                     
-//--------------------------------------------------------------------------
-// The hashing function takes the data provided and returns a hash 
-// number in the range 0 to DEPTH-1.    
-//
-// SNum  the serial number for the part that the read is
-//          to be done on.
-// page  the page that is being added or looked for
-//
-// returns the hash number of the given data                   
-//
-uchar HashFunction(uchar *SNum, int page)                    
-{
-   ulong h;
-   uchar tmp_page;
-   
-   tmp_page = (uchar) page;
-   
-   h = (SNum[1] << 12) | (SNum[2] << 8) | (SNum[7] << 4) | tmp_page;
-   
-   return (uchar)(h % DEPTH);
-}
