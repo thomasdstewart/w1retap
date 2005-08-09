@@ -1,0 +1,16 @@
+In order to install, configure and run w1retap
+
+0. Quick Instructions
+
+   ./configure
+   make
+   sudo make install (or run as root).
+
+   "make install" installs the w1retap application into ${prefix}/bin
+   and its plugins to ${prefix}/lib/w1retap/.
+
+1. Longer version
+
+   Read the details in doc/w1retap.pdf, doc/w1retap.odt or
+   doc/w1retap.xhtml.
+

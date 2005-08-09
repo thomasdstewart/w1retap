@@ -1,0 +1,17 @@
+This is the Dallas libusblinux distribution available from
+ftp://ftp.dalsemi.com/pub/auto_id/public/libusblinux300.tar.gz,
+modified by Jonathan Hudson <jh+w1retap@daria.co.uk> for w1retap:
+
+* Temperature module supports DS18B20
+* Compiles with gcc 4.0 (ugly still)
+* Added pressure.c for AAG TAI8570 pressure module
+* Added autoconf/automake for the bits w1retap uses
+
+use:
+
+make -f makefile.orig linux
+
+As part of w1retap, this is covered by the GPL, as the generous Dallas licence
+allows; my changes are dual licenced under the GPL for w1retap, and the Dallas
+PD licence, if you want to use the Dallas SDK for any other purpose outside
+of w1retap.

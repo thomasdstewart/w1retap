@@ -63,10 +63,10 @@ int main(int argc, char **argv)
    //----------------------------------------
    // Introduction header
    printf("\n/---------------------------------------------\n");
-   printf("  Temperature application DS1920/DS1820 - Version 1.00 \n"
-          "  The following is a test to excersize a DS1920/DS1820.\n"
+   printf("  Temperature application DS1920/DS1820/DS18B20 - Version 1.00 \n"
+          "  The following is a test to exersize a DS1920/DS18[B]20.\n"
           "  Temperature Find and Read from a: \n"
-          "  DS1920/DS1820 (at least 1)\n\n");
+          "  DS1920/DS18[B]20 (at least 1)\n\n");
 
    printf("  Press any CTRL-C to stop this program.\n\n");
    printf("  Output [Serial Number(s) ........ Temp1(F)] \n\n");
@@ -76,7 +76,8 @@ int main(int argc, char **argv)
    {
       printf("1-Wire Net name required on command line!\n"
              " (example: \"COM1\" (Win32 DS2480),\"/dev/cua0\" "
-             "(Linux DS2480),\"1\" (Win32 TMEX)\n");
+             "(Linux DS2480),\"1\" (Win32 TMEX),"
+             "\"DS2490-1\" (Linux USB:1).\n");
       exit(1);
    }
 
@@ -91,8 +92,14 @@ int main(int argc, char **argv)
    // success
    printf("Port opened: %s\n",argv[1]);
 
-   // Find the device(s)
+   // Find the device(s) -- try DS1920/DS1820
    NumDevices = FindDevices(portnum, &FamilySN[0], 0x10, MAXDEVICES);
+
+   if(NumDevices == 0) // try DS18B20
+   {
+       NumDevices = FindDevices(portnum, &FamilySN[0], 0x28, MAXDEVICES);
+   }
+   
    if (NumDevices>0)
    {
       printf("\n");
@@ -114,7 +121,8 @@ int main(int argc, char **argv)
             if (ReadTemperature(portnum, FamilySN[i],&current_temp))
             {
                PrintSerialNum(FamilySN[i]);
-               printf("     %5.1f \n", current_temp * 9 / 5 + 32);
+               printf(" %5.1fC  %5.1fF \n", current_temp,
+                      current_temp * 9 / 5 + 32);
               // converting temperature from Celsius to Fahrenheit
             }
             else

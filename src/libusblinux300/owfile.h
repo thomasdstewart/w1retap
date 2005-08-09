@@ -137,8 +137,7 @@ uchar    AddPage(int portnum, uchar *SNum, PAGE_TYPE pg, uchar *buf, int len);
 SMALLINT FindPage(int portnum, uchar *SNum, PAGE_TYPE *page, uchar mflag, uchar time, 
                   uchar *buf, int *len, uchar *space_num);
 uchar FreePage(uchar ptr);
-static uchar FindNew(uchar hashnum); 
-static uchar HashFunction(uchar *SNum, int page);                    
+
 
 // function prototypes for owfile.c
 SMALLINT      owFirstFile(int, uchar *, FileEntry *); 
