@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+  <meta http-equiv="refresh" content="300" />
+ <meta name="description" content="Personal Weather Station" />
+  <meta name="keywords" content=
+  "Jonathan Hudson,Daria Hudson,Linux,Weather,1-wire,Dallas,
+  Netley Marsh,Southampton" />
+  <title>Weather</title>
+</head>
+
+<body>
+  <h1>Weather in Netley Marsh and Southampton Water</h1>
+
+  <table style="text-align: left;" border="0" cellspacing="0"
+	cellpadding="2" summary="Weather data">
+    <colgroup>
+      <col width="400" style="background-color: rgb(255, 255, 235);" /> 
+      <col width="400" style="background-color: rgb(235, 255, 255);" /> 
+    </colgroup>
+
+    <tbody>
+      <tr>
+        <th>
+          Netley Marsh
+          <hr />
+        </th>
+
+        <th>
+          Southampton Water
+          <hr />
+        </th>
+      </tr>
+
+      <tr>
+        <td valign="top">
+          <p>
+	    <object 
+	      data="thermo.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="40" height="150" align="right"
+		  title="Temperature in Daria's Greenhouse (<TMPL_VAR NAME=GTEMP>)" >
+		    </object>
+           Timestamp:
+          <TMPL_VAR NAME=DATE><br />
+          <b>Greenhouse</b><br />
+          <TMPL_VAR NAME=GTEMP> (24 hour min
+          <tmpl_var name=GMIN>, max
+          <tmpl_var name=GMAX>)<br />
+          <b>Garden Weather</b><br />
+          Temperature:
+          <tmpl_var name=TEMP><br />
+          Pressure:
+          <tmpl_var name=PRESS><br />
+          Relative Humidity:
+          <tmpl_var name=HUMID>%<br />
+          Dew Point:
+          <tmpl_var name=DEWP><br />
+          Rainfall (last hour):
+          <tmpl_var name=RAIN>, <tmpl_var name=RAIN24> (24 hours)
+	    </p>
+         </td>
+
+        <td valign="top">
+          <p>Timestamp:
+          <tmpl_var name=PDATE><br />
+          Direction:
+          <tmpl_var name=WDIRN>&deg;<br />
+          Average Speed:
+          <tmpl_var name=WSPEED>kts (adjusted to 10m)<br />
+          Gust:
+          <tmpl_var name=WGUST>kts (adjusted to 10m)<br />
+          Tide:
+          <tmpl_var name=TIDE>m<br /></p>
+          <hr />
+
+          <p>Data is from the <a href=
+          "http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
+          <a href="http://www.sotonmet.co.uk/wap">WAP</a> feed and adjusted
+          for the wind sensor height.</p>
+          <hr />
+        </td>
+
+        <td>
+          <div align="center">
+            <img src="stnmap.png" alt="Map" align="middle" title=
+            "Netley Marsh weather station location (50.9N,1.5W)" />
+          </div>
+        </td>
+      </tr><!-- Images start here -->
+
+      <tr>
+        <td>
+	    <object 
+	      data="gtemp.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="24 hour temperature in Daria's greenhouse (now: <TMPL_VAR NAME=GTEMP>)" >
+	      </object>
+        </td>
+
+        <td>
+	    <object 
+	      data="wdirn.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title= "24 hour Southampton Water wind direction (now: <TMPL_VAR NAME=WDIRN>&deg;)">
+		  </object>
+        </td>
+
+        <td>
+          <div align="center">
+	    <object 
+	      data="winddirn.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      align="middle" width="120" height="120" 
+            title="Wind Direction on Southampton Water (<TMPL_VAR NAME=WDIRN>&deg;)" >
+		    </object>
+            </div>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+	    <object 
+	      data="temp.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="24 hour outside temperature (now: <TMPL_VAR NAME=TEMP>)" >
+		</object>
+        </td>
+
+        <td>
+	    <object 
+	      data="wspeed.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="24 hour wind speed on Southampton Water (now: <TMPL_VAR NAME=WSPEED>kts)">
+		  </object>
+        </td>
+
+        <td rowspan="0" valign="top">
+          <p>The Netley Marsh data is obtained from a number of
+          1-wire weather sensors in our garden. You can find out more
+          information about the <b>hardware and software</b> used <a
+          href= "tech.html">(Linux, 1-wire, Sqlite)</a>, on the
+	      <a href="tech.html">technical description page</a>.
+	    </p>
+	    <p>
+	      There are also some pictures of the sensors and 
+	      Daria's greenhouse in
+	      the <a href="images/">image gallery</a>.
+	    </p>
+          <p>Our garden is surrounded by trees, therefore we do not
+          have an anemometer; as we sail at Weston Sailing Club on
+          Southampton Water, it is convenient to use the <a href=
+          "http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
+          <a href="http://www.sotonmet.co.uk/wap">WAP</a> feed for wind
+          information. The wind speed is normalised from the value
+          measured at 53m to a more normal 10m for display.
+	    </p>
+	    <p align="right">
+	      <a href="wx.xml">
+		<img src="xmlrss.png" border="0"
+                  title="XML RSS feed" alt="RSS Feed" /> RSS Feed
+              </a>
+	    </p>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+	    <object 
+	      data="press.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="24 hour pressure (now: <TMPL_VAR NAME=PRESS>)" >
+	      </object>
+	  </td>
+
+        <td>
+	    <object 
+	      data="tide.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="24 hour Southampton tide level (now: <TMPL_VAR NAME=TIDE>m)" >
+		  </object>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+	    <object 
+	      data="humid.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="24 hour relative humidity (now: <TMPL_VAR NAME=HUMID>%)">
+	    </object>
+        </td>
+
+        <td style="background-color: rgb(255, 255, 235);" > 
+	    <object 
+	      data="temps.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="Comparison of greenhouse and exterior temperatures" >
+	    </object>
+	  </td>
+
+
+
+      </tr>
+	<tr>
+        <td style="background-color: rgb(255, 255, 235);" > 
+	    <object 
+	      data="rain.<TMPL_VAR NAME=TYPE>" type=<TMPL_VAR NAME=IMIME>
+	      width="400" height="200" align="right"
+	      title="Rainfall" >
+	    </object>
+	  </td>
+	</tr>
+
+    </tbody>
+  </table><br />
+      <p align="right">
+	<a href="http://getfirefox.com/" 
+	  title="Get Firefox - The Browser, Reloaded.">
+	  <img src="getfirefox_small.png" 
+	    align="right" border="0" alt="Get Firefox" /></a>
+      </p>
+</body>
+</html>

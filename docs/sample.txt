@@ -1,0 +1,38 @@
+./w1retap -v
+w1retap v0.01 (c) 2005 Jonathan Hudson
+Sensors:
+286DA467000000AD Temperature
+        1: GHT Greenhouse Temperature °C
+2692354D00000095 Humidity
+        1: OHUM Humidity %
+        1: OTMP0 Temperature °C
+12FC6B34000000A9 Pressure
+        1: OPRS Pressure hPa
+        1: OTMP1 Temperature °C
+1D9BB10500000089 RainGauge
+        1: RGC0 Counter0 tips
+        1: RGC1 Counter1 tips
+Plugins:
+ 0: c [0x80793b8] /usr/local/lib/w1retap/libw1sqlite.so => /var/tmp/sensors.db
+ 1: l [0x80793b8] /usr/local/lib/w1retap/libw1sqlite.so => /var/tmp/sensors.db
+ 2: l [0x8079e60] /usr/local/lib/w1retap/libw1xml.so =>
+ 3: l [0x807a1b8] /usr/local/lib/w1retap/libw1file.so =>
+ 4: l [0x807a528] /usr/local/lib/w1retap/libw1csv.so =>
+<?xml version="1.0" encoding="utf-8"?>
+<report timestamp="2005-08-01T19:51:45+0100" unixepoch="1122922305">
+  <sensor name="GHT" value="17.0625" units="°C"></sensor>
+  <sensor name="OHUM" value="96.4636" units="%"></sensor>
+  <sensor name="OTMP0" value="16.2500" units="°C"></sensor>
+  <sensor name="OPRS" value="1017.8268" units="hPa"></sensor>
+  <sensor name="OTMP1" value="16.9916" units="°C"></sensor>
+  <sensor name="RGC0" value="3544.0000" units="tips"></sensor>
+  <sensor name="RGC1" value="3508.0000" units="tips"></sensor>
+</report>
+2005-08-01T19:51:45+0100 GHT 17.062500 °C
+2005-08-01T19:51:45+0100 OHUM 96.463608 %
+2005-08-01T19:51:45+0100 OTMP0 16.250000 °C
+2005-08-01T19:51:45+0100 OPRS 1017.826843 hPa
+2005-08-01T19:51:45+0100 OTMP1 16.991602 °C
+2005-08-01T19:51:45+0100 RGC0 3544.000000 tips
+2005-08-01T19:51:45+0100 RGC1 3508.000000 tips
+"2005-08-01T19:51:45+0100","GHT",17.062500,"°C","OHUM",96.463608,"%","OTMP0",16.250000,"°C","OPRS",1017.826843,"hPa","OTMP1",16.991602,"°C","RGC0",3544.000000,"tips","RGC1",3508.000000,"tips"

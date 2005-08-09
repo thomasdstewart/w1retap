@@ -1,0 +1,2 @@
+SUBDIRS = $(USE_APPLET)
+EXTRA_DIST = web

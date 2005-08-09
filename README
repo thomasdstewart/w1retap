@@ -1,0 +1,55 @@
+w1retap - One wire sensor logging.
+
+w1retap is a system for logging data from a 1-wire weather sensors to
+either a relational database or files (or combination thereof). 
+
+The initial release supports any number of the following sensors from
+AAG Electrónica (AAG) <http://www.aagelectronica.com/>, based on
+Dallas Semiconductors <http://www.dalsemi.com/> devices.
+
+TAI8520 (DS1820 / DS18S20) Temperature sensors;
+TAI8540B (DS2438) Humidity Sensor
+TAI8570 Pressure Sensor
+TAI8575 Rain Gauge
+
+I do not own a TAI8515 Weather Station / Anemometer, so this is not
+supported, but as it is supported by the libusblinux300 SDK, adding
+support is "trivial".
+
+The logging is performed by one or more "plugin" modules, these
+currently include:
+
+	Sqlite (version 3)
+	PostgreSQL
+	MySQL
+	ODBC
+
+	Text file
+	CSV file
+	XML file
+
+w1retap is designed to run on the Linux operating system and assumes
+that the interface between the computer and the 1-wire system is a
+DS2490 USB adaptor. As the software is based on the Dallas Semi/Maxim
+public domain 1-wire USB SDK, adapting for other interfaces
+(e.g.serial) should be trivial.
+
+Unless otherwise indicated, the system is released under the GNU Public
+Licence.
+
+Files:
+
+src: Contains the w1retap software. 
+
+src/libusblinux300: The Dallas PD 1-wire SDK
+
+doc: Documentation on configuring and using w1retap
+
+contrib: Various scripts and applications, including a web page
+builder, a wunderground.com reporting script, RSS feeder, and GNOME
+panel applet.
+
+Please see the docs sub-directory for information on building,
+installing and running w1retap.
+
+Jonathan Hudson, Netley Marsh, August 2005
