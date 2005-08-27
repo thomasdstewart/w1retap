@@ -241,7 +241,8 @@ static int w1_read_pressure(int portnum, w1_device_t *w)
             }
         }
         
-        if(ReadPressureValues (portnum, &temp, &pres))
+        if(ReadPressureValues (portnum, &temp, &pres) &&
+           (pres > 900 && pres < 1100) )
         {
             if(w->s[0].name)
             {

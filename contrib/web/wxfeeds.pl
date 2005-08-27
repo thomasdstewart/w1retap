@@ -23,6 +23,7 @@
 
 use strict;
 use XML::RSS;
+use XML::Atom::SimpleFeed;
 use IO::File;
 use Net::FTP;
 use DBI;
@@ -31,8 +32,9 @@ use POSIX qw(strftime);
 #use constant DSN => 'dbi:Pg:dbname=w1retap user=postgres';
 use constant DSN => 'dbi:SQLite:dbname=/var/tmp/sensors.db';
 use constant RDF => 'wx.xml';
+use constant ATOM => 'wxatom.xml';
 
-use vars qw/$rss $date/;
+use vars qw/$rss $atom $date/;
 
 sub doftp($$)
 {
@@ -44,7 +46,7 @@ sub doftp($$)
 
   my @files = qw /gtemp.png press.png temp.png tide.png wdirn.png wspeed.png
 		  humid.png thermo.png wdirn.png winddirn.png index.html
-		  temps.png rain.png wx.xml wx_static.xml/;
+		  temps.png rain.png wx.xml wx_static.xml wxatom.xml/;
 
   $ftp->login(undef,undef) or die "Cannot login ", $ftp->message;
   $ftp->binary;
@@ -62,7 +64,8 @@ sub doftp($$)
   $ftp->quit ();
 }
 
-sub add_rss
+
+sub add_feeds
 {
   my $l = shift;
   my $c='<table>';
@@ -90,9 +93,21 @@ sub add_rss
     $fh->close;
   }
 
+  my $wdate = POSIX::strftime("%FT%TZ", gmtime($l->{udate}));
+
+  $atom->add_entry(title => 'Weather in Netley Marsh '. $l->{gstamp},
+                   link => 'http://www.daria.co.uk/wx/rss_'.
+                   $l->{udate}.'.html',
+                   modified => $wdate,
+                   issued => $wdate,
+                   author   => {
+                                name => "J. Hudson",
+                                email => 'jh+w1retap@daria.co.uk'
+                               },
+                   content => $c
+		  );
   $c =~ s/</&lt;/g;
   $c =~ s/>/&gt;/g;
-
   $rss->add_item(title => 'Weather in Netley Marsh '. $l->{gstamp},
 		 link => 'http://www.daria.co.uk/wx/rss_'.$l->{udate}.'.html',
 		 description => $c,
@@ -109,8 +124,21 @@ chdir $dir if $dir;
 
 $date = POSIX::strftime("%FT%TZ", gmtime());
 $rss = new XML::RSS;
-
 $rss->add_module(prefix=>'my', uri=>'http://www.daria.co.uk/my/');
+
+$atom = XML::Atom::SimpleFeed->new(title => "Jonathan and Daria's Weather",
+                                   link => 'http://www.daria.co.uk/wx/',
+                                   modified => $date,
+                                   tagline =>
+                                   'A personal weather station in Netley Marsh,
+Hampshire',
+                                   copyright => 'Copyright (c) 2005 Jonathan Hudson',
+                                   author => {
+                                              name  => 'Jonathan Hudson',
+                                              email => 'jh+weather@daria.co.uk'
+                                             }
+                                  );
+
 my $dbh = DBI->connect(DSN, '', '', {'RaiseError' => 1});
 my $smt = $dbh->prepare(q/select * from station/);
 $smt->execute();
@@ -143,7 +171,7 @@ $smt->execute();
 
 while (( $l = $smt->fetchrow_hashref))
 {
-  $last = add_rss($l);
+  $last = add_feeds($l);
 }
 
 $smt->finish;
@@ -151,6 +179,10 @@ $dbh->disconnect;
 
 $rss->{output} = '1.0';
 $rss->save(RDF);
+
+my $fh = new IO::File ATOM,'w';
+$fh->print($atom->as_string());
+$fh->close;
 
 doftp($host, $last) if $host;
 my $lrss = $last - 3600*24;
