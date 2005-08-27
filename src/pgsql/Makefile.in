@@ -262,6 +262,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+w1pgsql.lo w1pgsql.o : w1pgsql.c ../w1retap.h ../../config.h
 
 info-am:
 info: info-am

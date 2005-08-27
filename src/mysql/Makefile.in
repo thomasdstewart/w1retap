@@ -262,6 +262,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+w1mysql.lo w1mysql.o : w1mysql.c ../w1retap.h ../../config.h
 
 info-am:
 info: info-am

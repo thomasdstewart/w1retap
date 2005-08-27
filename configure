@@ -1522,7 +1522,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 PACKAGE=w1retap
-VERSION=0.0.1
+VERSION=0.0.2
 am__api_version="1.4"
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
@@ -1718,7 +1718,7 @@ fi
 
 PACKAGE=w1retap
 
-VERSION=0.0.1
+VERSION=0.0.2
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { { echo "$as_me:$LINENO: error: source directory already configured; run \"make distclean\" there first" >&5

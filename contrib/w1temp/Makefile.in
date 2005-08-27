@@ -340,6 +340,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+w1temp.o: w1temp.c
 
 info-am:
 info: info-am

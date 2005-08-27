@@ -262,6 +262,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+w1odbc.lo w1odbc.o : w1odbc.c ../w1retap.h ../../config.h
 
 info-am:
 info: info-am

@@ -1,4 +1,16 @@
 0.0.1	Fix the delay time to be in the second we want. First public
 	release.
+
+0.0.2	Add a (code) constraint on the pressure reading (about once a
+	month my sensor reports a single value way out of range).
+
+	Add new tables of daily and monthly, maintained by wplot.pl to
+	record daily and monthly rainfalls. 
+
+	Make the web page render in MSIE, by downgrading <OBJECT> tags to
+	<IMG>. Don't you just hate broken browsers.
+
+	Remove duplicate files and .svn files from the distributed tar
+	ball.
 	
 	

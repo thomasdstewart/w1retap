@@ -392,6 +392,14 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+w1conf.o: w1conf.c w1retap.h ../config.h
+w1csv.lo w1csv.o : w1csv.c w1retap.h ../config.h
+w1file.lo w1file.o : w1file.c w1retap.h ../config.h
+w1retap.o: w1retap.c libusblinux300/ownet.h libusblinux300/temp10.h \
+	libusblinux300/atod26.h libusblinux300/cnt1d.h \
+	libusblinux300/pressure.h w1retap.h ../config.h
+w1util.o: w1util.c w1retap.h ../config.h
+w1xml.lo w1xml.o : w1xml.c w1retap.h ../config.h
 
 info-am:
 info: info-recursive

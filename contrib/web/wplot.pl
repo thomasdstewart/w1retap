@@ -179,83 +179,6 @@ sub drawthermo($)
   $fh->close;
 }
 
-=pod
-sub drawplots()
-{
-  my $pipe = new IO::Pipe;
-  $pipe->writer("gnuplot");
-  print $pipe <<EOF;
-set bmargin 4
-set key top right
-set key box
-set grid
-
-set xlabel
-set format x "%H:%M"
-set timefmt "%Y-%m-%d.%H:%M"
-set xdata time
-set xtics rotate 900
-
-set terminal png transparent size 400,200 enhanced  xffffff x000000 x202020
-set output "wdirn.png"
-set title "Wind Direction"
-set yrange [ 0 : 359 ]
-set ylabel "degrees"
-plot 'w0.dat' using 1:2  title "Dirn" with lines lw 3
-
-set autoscale
-set terminal png transparent size 400,200 enhanced  xffffff x000000 x202020
-set output "wspeed.png"
-set title "Wind Speed"
-set ylabel "knots"
-plot  'w0.dat' using 1:4 t "Gust" with lines lw 3, 'w0.dat' using 1:3 t "Average" with lines lw 3
-
-set terminal png transparent size 400,200 enhanced  xffffff x000000 x202020
-set output "tide.png"
-set title "Tide"
-set yrange [ 0 : 5 ]
-set ylabel "height (m)"
-set datafile missing "-1"
-plot 'w0.dat' using 1:5 t "Tide" with lines lw 3
-
-set autoscale
-set terminal png transparent  size 400,200 enhanced  xffffff x000000 x202020
-set output "gtemp.png"
-set title "Greenhouse"
-set ylabel "\260C"
-plot 'w1.dat' using 1:2 t "Temp" with lines lw 3
-
-set terminal png transparent  size 400,200 enhanced  xffffff x000000 x202020
-set output "temp.png"
-set title "Outside Temperature"
-#set yrange [ -10 : 30 ]
-set ylabel "\260C"
-plot 'w2.dat' using 1:2 t "Temp" with lines lw 3
-
-set terminal png transparent size 400,200 enhanced  xffffff x000000 x202020
-set output "press.png"
-set title "Pressure"
-#set yrange [ 980 : 1040 ]
-set ylabel "millibar"
-plot 'w3.dat' using 1:2 t "Pressure" with lines lw 3
-
-set terminal png transparent size 400,200 enhanced  xffffff x000000 x202020
-set output "humid.png"
-set title "Relative Humidity"
-#set yrange [ 0: 100 ]
-set ylabel "Rel Humid %"
-plot 'w4.dat' using 1:2 t "RH" with lines lw 3
-
-set autoscale
-set terminal png transparent size 400,200 enhanced  xffffff x000000 x202020
-set output "temps.png"
-set title "Comparative Temperatures"
-set ylabel "\260C"
-plot  'w5.dat' using 1:3 t "Outside" with lines lw 3, 'w5.dat' using 1:2 t "Greenhouse" with lines lw 3
-EOF
-  $pipe->close;
-}
-=cut
 
 sub pr_msl($$$)
 {
@@ -287,6 +210,110 @@ sub dewpt($$)
   my $e = $humid / 100 * $es;
   my $f = log ( $e / 610.78 ) / 17.2694;
   $B *  $f / ( 1 - $f);
+}
+
+sub raincalc($$$$)
+{
+  my ($dbh,$now,$rainf,$factr) = (shift,shift,shift,shift);
+  my $rstd = $dbh->prepare(q/select udate,rain0  from daily order by udate desc limit 7/);
+  my $rstm = $dbh->prepare(q/select udate,rain0  from monthly order by udate desc limit 2/);
+  my (@falls,@ds,$n,$v,$d,$m0);
+  $ds[0] = $now;
+  $falls[0] = $rainf;
+#  printf "CALLED %d %s\n", $now, scalar (localtime( $now));
+  $rstd->execute;
+  for ($n  = 0 ; $n < 7 ; $n++)
+  {
+    $v = $rstd->fetchrow_arrayref;
+    push @ds, $$v[0];
+    push @falls,  $$v[1];
+  }
+  $rstd->finish;
+
+  $n = @falls;
+  my @cells;
+
+  $cells[0] = 'Rainfall';
+
+  my ($minch,$mmm,$i);
+  for ($i =0; $i < $n; $i++)
+  {
+###    printf "CALLED %d %s %d\n", $ds[$i], scalar (localtime( $ds[$i])),$falls[$i];
+
+  }
+  for ($i =1; $i < $n; $i++)
+  {
+    my @xtm = localtime $ds[$i];
+    $minch = ($falls[$i-1]-$falls[$i])*$factr;
+    $mmm = $minch *25.4;
+    push @cells, sprintf "%s:%.2f:%.1f", POSIX::strftime("%a %d %b", @xtm),
+      $minch, $mmm;
+  }
+  $rstm->execute;
+
+  my $base = $falls[0];
+  for ($i = 0; $i < 2; $i++)
+  {
+    $v = $rstm->fetchrow_arrayref;
+    $d = $$v[0];
+    $m0 = $$v[1];
+    $minch = ($base-$$v[1])*$factr;
+    $mmm = $minch *25.4;
+    my @xtm = localtime $d;
+    push @cells, sprintf "%s:%.2f:%.1f", POSIX::strftime("%B %Y", @xtm),
+    $minch, $mmm;
+    $base = $m0;
+  }
+  $rstm->finish;
+
+  $n = 0;
+  my $fh = new IO::File 'w7.dat','w+';
+  my $w = new XML::Writer(OUTPUT => $fh);
+  $w->startTag('table', border=>"0", cellspacing => "0", cellpadding => "0",
+	       summary => "Weather data"  );
+  $w->startTag('colgroup');
+  $w->emptyTag('col',width => '120');
+  $w->emptyTag('col',width => '120');
+  $w->emptyTag('col',width => '120');
+  $w->endTag('colgroup');
+  $w->startTag('tbody');
+
+  foreach my $c (@cells)
+  {
+    $w->startTag('tr');
+    if ($n == 0)
+    {
+      $w->startTag('td');
+      $w->endTag('td');
+      $w->startTag('td');
+      $w->startTag('b');
+      $w->characters($c);
+      $w->endTag('b');
+      $w->endTag('td');
+    }
+    else
+    {
+      my ($ds,$in,$mm) = split(/:/,$c);
+      $w->startTag('td');
+      $w->characters($ds);
+      $w->endTag('td');
+      $w->startTag('td');
+      $w->characters($in.' in');
+      $w->endTag('td');
+      $w->startTag('td');
+      $w->characters($mm.' mm');
+      $w->endTag('td');
+    }
+    $w->endTag('tr');
+    $n++;
+  }
+  $w->endTag('tbody');
+  $w->endTag('table');
+  $w->end();
+  $fh->seek(0,0);
+  my $xml = $fh->getline;
+  $fh->close;
+  $xml;
 }
 
 ############################# main ###############################
@@ -359,10 +386,14 @@ my $fh5 = new IO::File "w5.dat", "w";
 
 $dbh = DBI->connect($opt{S}, '', '', {'RaiseError' => 1}) or die;
 
-$smt = $dbh->prepare(q/select * from station/);
-$smt->execute();
-my $stn = $smt->fetchrow_hashref;
-$smt->finish;
+my $stn = $dbh->selectrow_hashref(q/select * from station/);
+#my $sens = $dbh->selectall_arrayref(q/select abbrv1,units1,abbrv2,units2 from w1sensors/);
+#my ($a, %units);
+#foreach $a (@$sens)
+#{
+#  $units{$$a[0]} = $$a[1] if (defined $$a[0]);
+#  $units{$$a[2]} = $$a[3] if (defined $$a[2]);
+#}
 
 $smt = $dbh->prepare(qq/select date, name, value from readings where
   date > $then order by date /);
@@ -456,6 +487,8 @@ $fh3->close;
 $fh4->close;
 $fh5->close;
 
+$d2 = $lt1 if ($lt1 > $d2);
+
 my $logdate = strftime("%Y-%m-%d %H:%M", localtime($d2));
 $dewpt= dewpt($temp, $humid);
 
@@ -520,6 +553,15 @@ if ((($tm[1] % 10) == 0))
   $dbh->do(qq/insert into latest values
     ($d2, '$logdate', $gtemp, $maxt, $mint, $temp, $press, $humid, $rain,
      $dewpt, '$dock[0]', $dock[2], $dock[1], $dock[4])/);
+
+  if (($tm[1] == 0) && ($tm[2] == 0))
+  {
+    $dbh->do(qq/insert into daily values ($d2,$r1,0)/);
+    if (($tm[3] == 1))
+    {
+      $dbh->do(qq/insert into monthly values ($d2,$r1,0)/);
+    }
+  }
   $dbh->commit;
 }
 
@@ -543,6 +585,8 @@ $rmax += 0.01;
 
 $hmax *= 1.05;
 $hmax = 100 if $hmax > 100;
+
+my $rf = raincalc($dbh,$d2,$r1,$stn->{rfact});
 
 $dbh->disconnect();
 $fh->close;
@@ -573,17 +617,18 @@ system 'rsvg -h 150 -w 40 thermo.svg thermo.png';
 system 'rsvg -h 120 -w 120 winddirn.svg winddirn.png';
 print 'Done Graphs '.(time - $t_0)."s\n" if $opt{'t'};
 
-unlink ('w0.dat','w1.dat','w2.dat','w3.dat','w4.dat','w5.dat', 'w6.dat')
+unlink ('w0.dat','w1.dat','w2.dat','w3.dat','w4.dat','w5.dat', 'w6.dat','w7.dat')
   unless $opt{t};
 
-my $template = HTML::Template->new('filename' => 'wx.tmpl.html');
+
+my $template = HTML::Template->new('filename' => 'wx.tmpl.html',
+				 die_on_bad_params =>0 );
 
 my $g_temp = sprintf("%.1f&deg;C / %.1f&deg;F", $gtemp, CtoF($gtemp));
 my $min_t = sprintf("%.1f&deg;C / %.1f&deg;F", $mint, CtoF($mint));
 my $max_t = sprintf("%.1f&deg;C / %.1f&deg;F", $maxt, CtoF($maxt));
 my $prs = sprintf("%.1f hPa / %.1f inHg", $press, mbtoin($press));
 my $tmp = sprintf("%.1f&deg;C / %.1f&deg;F", $temp, CtoF($temp));
-
 
 $template->param(TYPE => $itype);
 $template->param(IMIME => $imime);
@@ -609,6 +654,7 @@ $template->param(WDIRN => $dock[1]);
 $template->param(WSPEED => $dock[2]);
 $template->param(WGUST => $dock[3]);
 $template->param(TIDE => $dock[4]);
+$template->param(WRAINDAT => $rf);
 
 $fh = new IO::File "w.html", "w";
 $fh->print ($template->output);
@@ -676,8 +722,6 @@ if((($now - $d2) < 300) and defined($stn->{wu_user}) and ($tm[1] % 10) == 0)
   $url .= sprintf('&baromin=%.3f&dewptf=%.1f&humidity=%.1f&rainin=%.4f'.
 		  '&tempf=%.1f',
 		  mbtoin($press), CtoF($dewpt), $humid, $rain, CtoF($temp));
-
-
 
   if ($opt{'t'})
   {

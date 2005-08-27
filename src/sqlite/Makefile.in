@@ -262,6 +262,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+w1sqlite.lo w1sqlite.o : w1sqlite.c ../w1retap.h ../../config.h
 
 info-am:
 info: info-am
