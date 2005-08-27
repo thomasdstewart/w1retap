@@ -3,8 +3,8 @@
 
 AC_INIT(configure.ac)
 PACKAGE=w1retap
-VERSION=0.0.1
-AM_INIT_AUTOMAKE(w1retap, 0.0.1)
+VERSION=0.0.2
+AM_INIT_AUTOMAKE(w1retap, 0.0.2)
 
 AM_CONFIG_HEADER(config.h)
 
