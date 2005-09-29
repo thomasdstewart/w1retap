@@ -466,7 +466,7 @@ static int w1_read_all_sensors(w1_devlist_t *w1)
             }
         }
 
-        if(nv)
+        if(nv && w1->logtime == 0)
         {
             w1->logtime = now;
         }
@@ -499,6 +499,7 @@ int main(int argc, char **argv)
     w1_devlist_t *w1;
     struct sigaction act ={{0}};
     int doversion = 0;
+    int immed = 1;
     int n;
     int c;
 
@@ -527,10 +528,13 @@ int main(int argc, char **argv)
     
     read_config(w1);
     
-    while((c = getopt (argc, argv,"dt:i:TvNh?V")) != EOF)
+    while((c = getopt (argc, argv,"dt:i:TvNh?Vw")) != EOF)
     {
         switch(c)
         {
+            case 'w':
+                immed = 0;
+                break;
             case 'T':
                 w1->logtmp = 0;
                 break;
@@ -590,27 +594,34 @@ int main(int argc, char **argv)
     
     while(1)
     {
-        int nv = w1_read_all_sensors(w1);
+        int nv = 0;
         
-        if(nv)
+        if(immed)
         {
-            for(n = 0; n < w1->ndll; n++)
+            nv = w1_read_all_sensors(w1);
+        
+            if(nv)
             {
-                if (w1->dlls[n].func)
+                for(n = 0; n < w1->ndll; n++)
                 {
-                    (w1->dlls[n].func)(w1, w1->dlls[n].param);
+                    if (w1->dlls[n].func)
+                    {
+                        (w1->dlls[n].func)(w1, w1->dlls[n].param);
+                    }
+                }
+
+                if(w1->logtmp)
+                {
+                    w1_tmpfilelog (w1);
                 }
             }
-
-            if(w1->logtmp)
-            {
-                w1_tmpfilelog (w1);
-            }
         }
-    
+        
         if(w1->delay)
         {
             int ns;
+            immed = 1;
+            
             do
             {
                 struct timeval now;
@@ -641,17 +652,19 @@ int main(int argc, char **argv)
                 }
                 gettimeofday(&now, NULL);
 
-                if(w1->verbose)
-                {
-                    fputs(ctime(&now.tv_sec),stderr);
-                }
-                
                 then.tv_sec = w1->delay * (1 + now.tv_sec / w1->delay);
-                then.tv_nsec = 20*1000*1000; /* ensure tick crossed */
+                then.tv_nsec = 100*1000*1000; /* ensure tick crossed */
                 nnow.tv_sec = now.tv_sec;
                 nnow.tv_nsec = now.tv_usec * 1000;
                 nanosub(&then, &nnow, &req);
                 ns  = nanosleep(&req, NULL);
+                if(ns == 0)
+                {
+                    gettimeofday(&now, NULL);
+                    w1->logtime = now.tv_sec;
+                    if(w1->verbose)
+                        fputs(ctime(&now.tv_sec),stderr);
+                }
             } while (ns != 0);
         }
         else
@@ -661,4 +674,3 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
