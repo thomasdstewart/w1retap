@@ -12,5 +12,7 @@
 
 	Remove duplicate files and .svn files from the distributed tar
 	ball.
-	
+
+0.0.3	Fixed the pgsql driver to actually work.
+
 	
