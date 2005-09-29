@@ -3,8 +3,8 @@
 
 AC_INIT(configure.ac)
 PACKAGE=w1retap
-VERSION=0.0.2
-AM_INIT_AUTOMAKE(w1retap, 0.0.2)
+VERSION=0.0.3
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -15,7 +15,6 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-
 
 AC_CHECK_LIB([curl], [curl_easy_init])
 AC_CHECK_LIB([expat], [XML_ParserCreate])
@@ -71,7 +70,7 @@ fi
 
 AC_PATH_PROG(MYSQL_CONFIG, mysql_config, no)
 if test "$MYSQL_CONFIG" = "no" ; then
- : # AC_MSG_RESULT([Not found])
+ : #AC_MSG_RESULT([Not found])
 else
  MYSQL_CFLAGS="$(mysql_config --cflags)"
  MYSQL_LIBS="$(mysql_config --libs)"
@@ -82,11 +81,16 @@ AC_PATH_PROG(PG_CONFIG, pg_config, no)
 if test "$PG_CONFIG" = "no" ; then
  AC_MSG_RESULT([Not found])
 else
- PGSQL_CFLAGS="$(pg_config --includedir)"
- PGSQL_LIBS="$(pg_config --libdir)"
- PGV="$(pg_config --version | cut -f 2 -d ' ' | cut -f 1 -d '.')" 
- PGSQL_CFLAGS="$PGSQL_CFLAGS -DPGV=$PGV"
- USE_PGSQL=pgsql
+ save_libs="$LIBS"
+ AC_CHECK_LIB([pq], [PQconnectdb])
+ LIBS="$save_libs"
+ if test $ac_cv_lib_pq_PQconnectdb = yes ; then
+  PGSQL_CFLAGS="$(pg_config --includedir)"
+  PGSQL_LIBS="$(pg_config --libdir)"
+  PGV="$(pg_config --version | cut -f 2 -d ' ' | cut -f 1 -d '.')" 
+  PGSQL_CFLAGS="$PGSQL_CFLAGS -DPGV=$PGV"
+  USE_PGSQL=pgsql
+ fi
 fi
 
 AC_SUBST(MYSQL_LIBS)
@@ -105,7 +109,7 @@ if test "$PKG_CONFIG" = "no" ; then
 fi
 
 PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
-AC_MSG_RESULT(OK)
+#AC_MSG_RESULT(OK)
 
 dnl need curl and expat for starters for the applet
 if test $ac_cv_lib_curl_curl_easy_init = yes -a  $ac_cv_lib_expat_XML_ParserCreate = yes 
@@ -119,7 +123,7 @@ then
   CURL_LIBS="$(curl-config --libs)"
   AC_SUBST(CURL_CFLAGS)
   AC_SUBST(CURL_LIBS)
-  AC_MSG_RESULT(OK)	
+  #AC_MSG_RESULT(OK)	
  else
   : #echo "************ FAILS **************"
  fi

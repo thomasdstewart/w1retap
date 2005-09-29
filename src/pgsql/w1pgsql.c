@@ -61,7 +61,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         {
             int j;
             
-            for(j = 0; j < 6; j++)
+            for(j = 0; j < 8; j++)
             {
                 char *s = PQgetvalue(res, n, j);
                 char *sv = (s && *s) ? strdup(s) : NULL;
@@ -177,16 +177,23 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 }
 
 #if defined(TESTBIN)
-int main()
+int main(int argc, char **argv)
 {
+    char *auth = "dbname=w1retap user=postgres";
     w1_devlist_t w = {0},*w1;
+    
+    if(argc == 2)
+    {
+        auth = argv[1];
+    }
+
     w1=&w;
-    w1_init(w1, "dbname=w1retap user=postgres");
-    w1->logtime = time(0);
+    w1_init(w1, auth);
+    w1->logtime = 0;
     w1->devs[0].s[0].valid = 1;
     w1->devs[0].init = 1;
     w1->devs[0].s[0].value = 22.22;
-    w1_logger(w1, "dbname=w1retap user=postgres");    
+    w1_logger(w1, auth);    
     return 0;
 }
 #endif
