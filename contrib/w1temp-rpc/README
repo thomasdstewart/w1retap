@@ -1,0 +1,51 @@
+This directory contains a simple GNOME panel applet to display the
+w1retap data using XML_RPC.
+
+Requires a recent (>1.0) version of XMLRPC-C. You must use the cURL
+transort.
+
+Requires the wx.cgi server on your host.
+
+In order to specify the location of the server providing the data, you
+need a configuration file:
+
+     ~/.config/w1retap/applet
+
+This may contain a number of key/value pairs,
+
+xurl = 
+key = 
+delay = 
+xuser = 
+xpass =
+
+ e.g.:
+
+[Config]
+# Internal (LAN) site
+xurl = http://roo/wx/rpc/wx.cgi
+
+# Updates in seconds (defaults to 120)
+#delay = 600
+
+# Data to display in applet, default is
+# temperature
+key = temperature
+
+# If your site requires **basic** authorisation
+xuser = user
+xpass = password
+
+One day there will be proper stuff, like autoconf, gconf, preferences
+etc, for now to build:
+
+# Edit Makefile as required
+$ make && sudo make install
+# Add to panel
+
+To uninstall
+
+# Remove from panel 
+$ sudo make uninstall
+
+w1temp is licenced under the GPL.

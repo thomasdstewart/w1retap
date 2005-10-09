@@ -1,0 +1,39 @@
+PROJ=w1temp
+
+APPL = `pkg-config --cflags libpanelapplet-2.0`
+LDFLAGS = -Wl,-O1 `pkg-config --libs libpanelapplet-2.0` -lcurl -lexpat
+OPT = -Os -Wall
+CFLAGS = $(OPT) -D_GNU_SOURCE=1
+CC=gcc
+INSDIR=$(shell [ -d /usr/lib/gnome-applets ] && echo /usr/lib/gnome-applets || echo /usr/libexec )
+
+all: $(PROJ) w1temp.server
+
+$(PROJ): $(PROJ).o
+	$(CC) $(OPT) -o $(PROJ) $< $(LDFLAGS)
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+w1temp.o : w1temp.c
+	$(CC) $(CFLAGS) $(APPL) -c -o $@ $<
+
+clean:
+	rm -f  $(PROJ) $(PROJ).o w1temp.server
+
+
+w1temp.server: w1temp.server.in
+	sed -e "s|\@INSDIR\@|$(INSDIR)|" $< > $@
+
+install:
+	cp w1temp $(INSDIR)
+	cp w1temp.server /usr/lib/bonobo/servers/
+	mkdir /usr/share/pixmaps/w1temp
+	cp w1temp.png /usr/share/pixmaps/w1temp/w1temp.png	
+	cp thermo_*.png /usr/share/pixmaps/w1temp
+
+uninstall:
+	rm -f $(INSDIR)/w1temp
+	rm -f /usr/lib/bonobo/servers/w1temp.server
+	rm -rf /usr/share/pixmaps/w1temp
+

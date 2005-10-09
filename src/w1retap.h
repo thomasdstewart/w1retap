@@ -52,6 +52,9 @@ typedef struct
     char *units;
     float value;
     short valid;
+    float roc;
+    float lval;
+    time_t ltime;
 } w1_sensor_t;
 
 typedef struct
@@ -70,7 +73,8 @@ struct w1_devlist
     int delay;
     int portnum;    
     char *iface;
-    char *rcfile;    
+    char *rcfile;
+    char *repfile;
     time_t logtime;
     dlldef_t dlls[MAXDLL];
     short verbose;
@@ -88,5 +92,7 @@ extern char *w1_get_from_home(const char *);
 extern void dll_parse(w1_devlist_t *, int, char *);
 extern void read_config(w1_devlist_t *);
 extern FILE * w1_file_open(char *);
+extern w1_sensor_t * w1_find_sensor(w1_devlist_t *, const char *);
+
 #endif
 

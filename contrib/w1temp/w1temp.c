@@ -122,86 +122,11 @@ static void xml_start(void *data, const char *el, const char **attr)
 
 static void xml_end(void *data, const char *el) {}
 
-static gint timerfunc (gpointer data)
+static void clean_curl(MY_STUFF_t *m)
 {
-    MY_STUFF_t *m =  (MY_STUFF_t *)data;
-    int td;
-    int n = -1;
-
-    m->len = 0;    
-    m->nvals = 0;
-    
-    curl_easy_perform(m->c);
-    
-    if(m->len && m->ptr)
-    {
-        XML_Parser p = XML_ParserCreate(NULL);
-        XML_SetElementHandler(p, xml_start, xml_end);
-        XML_SetUserData(p, m);
-        XML_Parse(p, m->ptr, m->len, 1);
-    
-        char tt[1024];
-        double gtemp = -999;
-        int nc = 0;
-        wdata_t *w = m->w;;
-        int j;
-        
-        for(j = 0; j < m->nvals; j++, w++)
-        {
-            if(w->units)
-            {
-                if ((0 == strcasecmp(w->key, m->key)))
-                {
-                    gtemp = w->value;
-                    n = 0;
-                }
-                nc+=sprintf(tt+nc,"%s: %.2f %s\n", w->key, w->value, w->units);
-                g_free(w->units);
-                w->units = NULL;
-                g_free(w->key);
-                w->key = NULL;
-            }
-        }
-
-        if(m->time)
-        {
-            strcpy(tt+nc, m->time);
-        }
-        
-        gtk_tooltips_set_tip (m->tips, GTK_WIDGET (m->applet), tt, NULL);
-        
-        td = (int)(gtemp+0.5);
-        if(td > 39) td = 39;
-        if(td < -5) td = -5;
-        snprintf(m->lbl, LSIZE, "%.1f°C", gtemp);
-
-        if( m->last != td)
-        {
-            char *pixnam;
-            char *fnam;
-            
-            asprintf (&pixnam, "thermo_%d.png", td);
-            fnam = g_build_filename (G_DIR_SEPARATOR_S,
-                                            m->pixdir, pixnam, NULL);
-            GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (fnam, NULL);
-            g_free(fnam);
-            g_free(pixnam);
-            gtk_image_set_from_pixbuf (GTK_IMAGE (m->image), pixbuf);
-            m->last = td;
-        }
-    }
-    
-    if(n == -1) 
-    {
-        strcpy(m->lbl, "?");
-    }
-
-    gtk_label_set_text (GTK_LABEL(m->label), m->lbl);
-    g_free(m->ptr);
-    g_free(m->time);
-    m->ptr = NULL;
-    g_timeout_add (m->timeout, timerfunc, m);
-    return FALSE;
+    curl_easy_cleanup(m->c);
+    curl_global_cleanup();
+    m->c = NULL;
 }
 
 static void init_curl(MY_STUFF_t *m)
@@ -221,6 +146,103 @@ static void init_curl(MY_STUFF_t *m)
         }
     }
 }
+
+static gint timerfunc (gpointer data)
+{
+    MY_STUFF_t *m =  (MY_STUFF_t *)data;
+    int td;
+    int n = -1;
+
+    m->len = 0;    
+    m->nvals = 0;
+
+    if(m->c == NULL)
+    {
+        init_curl(m);
+    }
+    
+    if(m->c)
+    {
+        if(curl_easy_perform(m->c) == 0)
+        {
+            if(m->len && m->ptr)
+            {
+                XML_Parser p = XML_ParserCreate(NULL);
+                XML_SetElementHandler(p, xml_start, xml_end);
+                XML_SetUserData(p, m);
+                XML_Parse(p, m->ptr, m->len, 1);
+                XML_ParserFree(p);
+                
+                char tt[1024];
+                double gtemp = -999;
+                int nc = 0;
+                wdata_t *w = m->w;;
+                int j;
+            
+                for(j = 0; j < m->nvals; j++, w++)
+                {
+                    if(w->units)
+                    {
+                        if ((0 == strcasecmp(w->key, m->key)))
+                        {
+                            gtemp = w->value;
+                            n = 0;
+                        }
+                        nc+=sprintf(tt+nc,"%s: %.2f %s\n", w->key, w->value, w->units);
+                        g_free(w->units);
+                        w->units = NULL;
+                        g_free(w->key);
+                        w->key = NULL;
+                    }
+                }
+                
+                if(m->time)
+                {
+                    strcpy(tt+nc, m->time);
+                }
+                gtk_tooltips_set_tip (m->tips, GTK_WIDGET (m->applet), tt, NULL);
+            
+                td = (int)(gtemp+0.5);
+                if(td > 39) td = 39;
+                if(td < -5) td = -5;
+                snprintf(m->lbl, LSIZE, "%.1f°C", gtemp);
+                
+                if( m->last != td)
+                {
+                    char *pixnam;
+                    char *fnam;
+                    
+                    asprintf (&pixnam, "thermo_%d.png", td);
+                    fnam = g_build_filename (G_DIR_SEPARATOR_S,
+                                             m->pixdir, pixnam, NULL);
+                    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (fnam, NULL);
+                    g_free(fnam);
+                    g_free(pixnam);
+                    gtk_image_set_from_pixbuf (GTK_IMAGE (m->image), pixbuf);
+                    g_object_unref(pixbuf);
+                    m->last = td;
+                }
+            }
+        }
+        else
+        {
+            clean_curl(m);
+        }
+    }
+    
+    if(n == -1) 
+    {
+        strcpy(m->lbl, "?");
+    }
+
+    gtk_label_set_text (GTK_LABEL(m->label), m->lbl);
+    g_free(m->ptr);
+    g_free(m->time);
+    m->ptr = NULL;
+    g_timeout_add (m->timeout, timerfunc, m);
+    return FALSE;
+}
+
 
 static gboolean w1temp_fill (
     PanelApplet *applet,
@@ -275,6 +297,7 @@ static gboolean w1temp_fill (
     g_free(pixfile);
     
     gtk_image_set_from_pixbuf (GTK_IMAGE (m.image), pixbuf);
+    g_object_unref(pixbuf);
     m.label = gtk_label_new ("???");
     GtkWidget *hbox1 = gtk_hbox_new (FALSE, 0);
     m.tips = gtk_tooltips_new ();
