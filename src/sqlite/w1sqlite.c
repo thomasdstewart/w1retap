@@ -90,6 +90,43 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 
     w1->numdev = n;
     w1->devs=devs;
+
+    if(sqlite3_get_table (db, "select name,value from ratelimit",
+                          &rt, &nr, &nc, &err) == SQLITE_OK)
+    {
+        if(nr > 0 && nc > 0)
+        {
+            int offset = 0;
+            char *s,*sv;
+            float v;
+            for(n = 0; n < nr; n++)
+            {
+                offset += nc;
+                GETVALUE(0, s);
+                GETVALUE(1, sv);
+                if(s && *s && sv && *sv)
+                {
+                    float v = strtof(sv, NULL);
+                    w1_sensor_t *sensor;
+                    if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                    {
+                        sensor->roc = v;
+                    }
+                }
+                if (s) free(s);
+                if (sv) free(sv);
+            }
+            sqlite3_free_table(rt);
+        }
+    }
+    else
+    {
+        if(err)
+        {
+            sqlite3_free(err);
+        }
+    }
+    
     sqlite3_close(db);
 }
 

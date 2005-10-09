@@ -46,10 +46,10 @@ src/libusblinux300: The Dallas PD 1-wire SDK
 doc: Documentation on configuring and using w1retap
 
 contrib: Various scripts and applications, including a web page
-builder, a wunderground.com reporting script, RSS feeder, and GNOME
-panel applet.
+builder, a wunderground.com reporting script, RSS feeder, and a GNOME
+panel applet (actually two, using different transports).
 
 Please see the docs sub-directory for information on building,
 installing and running w1retap.
 
-Jonathan Hudson, Netley Marsh, August 2005
+Jonathan Hudson, Netley Marsh, October 2005

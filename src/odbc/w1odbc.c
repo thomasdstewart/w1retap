@@ -45,76 +45,123 @@ void w1_init(w1_devlist_t *w1, char *params)
     SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
     SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
     SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc);
-    SQLDriverConnect(dbc, NULL, params, SQL_NTS,
+    ret = SQLDriverConnect(dbc, NULL, params, SQL_NTS,
                      NULL, 0, NULL, SQL_DRIVER_COMPLETE);
 
-    SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-    SQLExecDirect(stmt, (char *)sql, SQL_NTS);
-
-    SQLNumResultCols(stmt, &columns);
-    SQLRowCount(stmt, &rows);
-    devs = malloc(sizeof(w1_device_t)*rows);
-    memset(devs, 0, sizeof(w1_device_t)*rows);
-
-    while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
+    if (SQL_SUCCEEDED(ret))
     {
-        int  i;
-        for (i = 0; i < columns; i++)
+        SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
+        SQLExecDirect(stmt, (char *)sql, SQL_NTS);
+
+        SQLNumResultCols(stmt, &columns);
+        SQLRowCount(stmt, &rows);
+        devs = malloc(sizeof(w1_device_t)*rows);
+        memset(devs, 0, sizeof(w1_device_t)*rows);
+
+        while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
         {
+            int  i;
+            for (i = 0; i < columns; i++)
+            {
+                SQLINTEGER indicator;
+                char buf[512];
+                
+                ret = SQLGetData(stmt, i+1, SQL_C_CHAR, buf, sizeof(buf),
+                                 &indicator);
+                if (SQL_SUCCEEDED(ret))
+                {
+                    char *sv;
+                    if (indicator == SQL_NULL_DATA)
+                    {
+                        sv = NULL;
+                    }
+                    else
+                    {
+                        sv = strdup(buf);
+                    }
+                    
+                    switch (i)
+                    {
+                        case 0:
+                            devs[n].serial = sv;
+                            break;
+                        case 1:
+                            devs[n].devtype = sv;
+                            break;
+                        case 2:
+                            devs[n].s[0].abbrv = sv;
+                            break;
+                        case 3:
+                            devs[n].s[0].name = sv;
+                            break;
+                        case 4:
+                            devs[n].s[0].units = sv;
+                            break;
+                        case 5:
+                            devs[n].s[1].abbrv = sv;
+                            break;
+                        case 6:
+                            devs[n].s[1].name = sv;
+                            break;
+                        case 7:
+                            devs[n].s[1].units = sv;
+                            break;
+                    }
+                }
+            }
+            n++;
+        }
+        w1->numdev = n;
+        w1->devs=devs;
+        SQLFreeHandle(SQL_HANDLE_STMT, stmt);    
+        
+        SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
+        ret = SQLExecDirect(stmt, "select name,value from ratelimit", SQL_NTS);
+        SQLNumResultCols(stmt, &columns);
+        SQLRowCount(stmt, &rows);
+        while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
+        {
+            int  i;
             SQLINTEGER indicator;
             char buf[512];
-
-            ret = SQLGetData(stmt, i+1, SQL_C_CHAR, buf, sizeof(buf),
+            char *s, *sv;
+            ret = SQLGetData(stmt, 1, SQL_C_CHAR, buf, sizeof(buf),
                              &indicator);
             if (SQL_SUCCEEDED(ret))
             {
-                char *sv;
                 if (indicator == SQL_NULL_DATA)
                 {
-                    sv = NULL;
+                    s = NULL;
                 }
                 else
                 {
-                    sv = strdup(buf);
-                }
-
-                switch (i)
-                {
-                    case 0:
-                        devs[n].serial = sv;
-                        break;
-                    case 1:
-                        devs[n].devtype = sv;
-                        break;
-                    case 2:
-                        devs[n].s[0].abbrv = sv;
-                        break;
-                    case 3:
-                        devs[n].s[0].name = sv;
-                        break;
-                    case 4:
-                        devs[n].s[0].units = sv;
-                        break;
-                    case 5:
-                        devs[n].s[1].abbrv = sv;
-                        break;
-                    case 6:
-                        devs[n].s[1].name = sv;
-                        break;
-                    case 7:
-                        devs[n].s[1].units = sv;
-                        break;
+                    s = strdup(buf);
+                    ret = SQLGetData(stmt, 2, SQL_C_CHAR, buf, sizeof(buf),
+                                     &indicator);
+                    if (SQL_SUCCEEDED(ret))
+                    {
+                        if (indicator == SQL_NULL_DATA)
+                        {
+                            sv = NULL;
+                        }
+                        else
+                        {
+                            float v = strtof(buf, NULL);
+                            w1_sensor_t *sensor;
+                            if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                            {
+                                sensor->roc = v;
+                            }                            
+                        }
+                    }
+                    free(s);
                 }
             }
-            
         }
-        n++;
+        SQLFreeHandle(SQL_HANDLE_STMT, stmt);    
     }
-    w1->numdev = n;
-    w1->devs=devs;
     SQLFreeHandle(SQL_HANDLE_DBC, dbc);
     SQLFreeHandle(SQL_HANDLE_ENV, env);
-    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 }
 
 static SQLHENV env;

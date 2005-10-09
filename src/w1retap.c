@@ -90,7 +90,43 @@ static void w1_make_serial(char * asc, unsigned char *bin)
     }
 }
 
-static int w1_read_temp(int portnum, w1_device_t *w)
+static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
+{
+    s->valid = 1;
+    if(s->roc != 0)
+    {
+        if (s->ltime > 0 && s->ltime != w1->logtime)
+        {
+            float rate = fabs(s->value - s->lval) * 60.0 /
+                (w1->logtime -s->ltime);
+            if (rate > s->roc)
+            {
+                s->valid = 0;
+                if(w1->repfile)
+                {
+                    FILE *rfp;
+                    if(NULL != (rfp = fopen(w1->repfile,"a")))
+                    {
+                        char buf[80];
+                        logtimes(w1->logtime, buf);
+                        fprintf(rfp,"%s %s %f %f %d\n",
+                                buf, s->abbrv, s->value, rate, w1->logtime);
+                        fclose(rfp);
+                    }
+                }
+            }
+        }
+        if(s->valid)
+        {
+            s->ltime = w1->logtime;
+            s->lval = s->value;
+        }
+    }
+    (int)s->valid;
+}
+
+
+static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
 {
     static unsigned char serno[8];
     if(w->init  == 0)
@@ -99,9 +135,12 @@ static int w1_read_temp(int portnum, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(portnum, serno))
+    if(w1_check_device(w1->portnum, serno))
     {
-        w->s[0].valid = ReadTemperature(portnum, serno, &w->s[0].value);
+        if (ReadTemperature(w1->portnum, serno, &w->s[0].value))
+        {
+            w1_validate(w1, &w->s[0]);
+        }
     }
     else
     {
@@ -111,7 +150,7 @@ static int w1_read_temp(int portnum, w1_device_t *w)
     return (w->s[0].valid);
 }
 
-static int w1_read_rainfall(int portnum, w1_device_t *w)
+static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
 {
     static unsigned char serno[8];
     unsigned long cnt;
@@ -123,23 +162,23 @@ static int w1_read_rainfall(int portnum, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(portnum, serno))
+    if(w1_check_device(w1->portnum, serno))
     {
         if(w->s[0].abbrv)
         {
-            if((w->s[0].valid = ReadCounter(portnum, serno, 14, &cnt)))
+            if((w->s[0].valid = ReadCounter(w1->portnum, serno, 14, &cnt)))
             {
                 w->s[0].value = cnt;
-                nv++;
+                nv += w1_validate(w1, &w->s[0]);
             }
         }
     
         if(w->s[1].abbrv)
         {
-            if((w->s[1].valid = ReadCounter(portnum, serno, 15, &cnt)))
+            if((w->s[1].valid = ReadCounter(w1->portnum, serno, 15, &cnt)))
             {
                 w->s[1].value = cnt;
-                nv++;
+                nv += w1_validate(w1, &w->s[1]);
             }
         }
     }
@@ -150,7 +189,7 @@ static int w1_read_rainfall(int portnum, w1_device_t *w)
     return nv;
 }
 
-static int w1_read_humidity(int portnum, w1_device_t *w)
+static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
 {
     static unsigned char serno[8];
     float humid,temp;
@@ -163,9 +202,9 @@ static int w1_read_humidity(int portnum, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(portnum, serno))
+    if(w1_check_device(w1->portnum, serno))
     {
-        Vdd = ReadAtoD(portnum,TRUE, serno);
+        Vdd = ReadAtoD(w1->portnum,TRUE, serno);
         if(Vdd > 5.8)
         {
             Vdd = (float)5.8;
@@ -175,8 +214,8 @@ static int w1_read_humidity(int portnum, w1_device_t *w)
             Vdd = (float) 4.0;
         }
         
-        Vad = ReadAtoD(portnum, FALSE, serno);
-        temp = Get_Temperature(portnum, serno);
+        Vad = ReadAtoD(w1->portnum, FALSE, serno);
+        temp = Get_Temperature(w1->portnum, serno);
         
         humid = (((Vad/Vdd) - 0.16)/0.0062)/(1.0546 - 0.00216 * temp);
         if(humid > 100)
@@ -192,8 +231,7 @@ static int w1_read_humidity(int portnum, w1_device_t *w)
         {
             w->s[0].value = (strcasestr(w->s[0].name, "Humidity"))
                 ? humid : temp;
-            w->s[0].valid = 1;
-            nv++;
+            nv += w1_validate(w1, &w->s[0]);
         }
         else
         {
@@ -204,8 +242,7 @@ static int w1_read_humidity(int portnum, w1_device_t *w)
         {
             w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
                 ? temp : humid;
-            w->s[1].valid = 1;
-            nv++;            
+            nv += w1_validate(w1, &w->s[1]);
         }
         else
         {
@@ -219,7 +256,7 @@ static int w1_read_humidity(int portnum, w1_device_t *w)
     return nv;
 }
 
-static int w1_read_pressure(int portnum, w1_device_t *w)
+static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
 {
     static unsigned char serno[8];
     float temp,pres;
@@ -231,25 +268,23 @@ static int w1_read_pressure(int portnum, w1_device_t *w)
         w->init = 1;
     }
     
-    if(w1_check_device(portnum, serno))
+    if(w1_check_device(w1->portnum, serno))
     {
         if(w->init == 1)
         {
-            if(Init_Pressure(portnum, serno))
+            if(Init_Pressure(w1->portnum, serno))
             {
                 w->init = 2;
             }
         }
         
-        if(ReadPressureValues (portnum, &temp, &pres) &&
-           (pres > 900 && pres < 1100) )
+        if(ReadPressureValues (w1->portnum, &temp, &pres) )
         {
             if(w->s[0].name)
             {
                 w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
                     ? pres : temp;
-                w->s[0].valid = 1;
-                nv++;
+                nv += w1_validate(w1, &w->s[0]);
             }
             else
             {
@@ -260,8 +295,7 @@ static int w1_read_pressure(int portnum, w1_device_t *w)
             {
                 w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
                     ? temp : pres;
-                w->s[1].valid = 1;
-                nv++;
+                nv += w1_validate(w1, &w->s[1]);
             }
             else
             {
@@ -404,10 +438,15 @@ static void w1_show(w1_devlist_t *w1, int forced)
             {
                 if(w1->devs[i].s[j].abbrv)
                 {
-                    fprintf(stderr, "\t1: %s %s %s\n",
+                    fprintf(stderr, "\t1: %s %s %s",
                             w1->devs[i].s[j].abbrv, w1->devs[i].s[j].name,
                             (w1->devs[i].s[j].units) ?
                             (w1->devs[i].s[j].units) : "");
+                    if(w1->devs[i].s[j].roc != 0.0)
+                    {
+                        fprintf(stderr," (%.4f /min)", w1->devs[i].s[j].roc);
+                    }
+                    fputc('\n', stderr);
                 }
             }
         }
@@ -438,26 +477,25 @@ static int w1_read_all_sensors(w1_devlist_t *w1)
     {
         w1_device_t *d;
         int n;
-        time_t now = time(NULL);
 
         for(d = w1->devs, n = 0; n < w1->numdev; n++, d++)
         {
             switch(d->stype)
             {
                 case W1_TEMP:
-                    nv += w1_read_temp(w1->portnum, d);
+                    nv += w1_read_temp(w1, d);
                     break;
                     
                 case W1_HUMID:
-                    nv += w1_read_humidity(w1->portnum, d);
+                    nv += w1_read_humidity(w1, d);
                     break;
                     
                 case W1_PRES:
-                    nv += w1_read_pressure(w1->portnum, d);
+                    nv += w1_read_pressure(w1, d);
                     break;
                     
                 case W1_RAIN:
-                    nv += w1_read_rainfall(w1->portnum, d);
+                    nv += w1_read_rainfall(w1, d);
                     break;
                     
                 case W1_INVALID:
@@ -466,10 +504,6 @@ static int w1_read_all_sensors(w1_devlist_t *w1)
             }
         }
 
-        if(nv && w1->logtime == 0)
-        {
-            w1->logtime = now;
-        }
     }
     return nv;
 }
@@ -528,7 +562,7 @@ int main(int argc, char **argv)
     
     read_config(w1);
     
-    while((c = getopt (argc, argv,"dt:i:TvNh?Vw")) != EOF)
+    while((c = getopt (argc, argv,"r:dt:i:TvNh?Vw")) != EOF)
     {
         switch(c)
         {
@@ -556,6 +590,9 @@ int main(int argc, char **argv)
             case 'V':
                 w1->verbose = 1;
                 doversion = 1;
+                break;
+            case 'r':
+                w1->repfile = strdup(optarg);
                 break;
             case 'h':
             case '?':
@@ -598,6 +635,11 @@ int main(int argc, char **argv)
         
         if(immed)
         {
+            if(w1->logtime == 0)
+            {
+                w1->logtime =time(NULL);
+            }
+            
             nv = w1_read_all_sensors(w1);
         
             if(nv)
@@ -651,9 +693,8 @@ int main(int argc, char **argv)
                     w1_show(w1, 1);
                 }
                 gettimeofday(&now, NULL);
-
                 then.tv_sec = w1->delay * (1 + now.tv_sec / w1->delay);
-                then.tv_nsec = 100*1000*1000; /* ensure tick crossed */
+                then.tv_nsec = 200*1000*1000; /* ensure tick crossed */
                 nnow.tv_sec = now.tv_sec;
                 nnow.tv_nsec = now.tv_usec * 1000;
                 nanosub(&then, &nnow, &req);
@@ -661,7 +702,28 @@ int main(int argc, char **argv)
                 if(ns == 0)
                 {
                     gettimeofday(&now, NULL);
-                    w1->logtime = now.tv_sec;
+                    if(now.tv_sec % w1->delay == 0)
+                    {
+                        w1->logtime = now.tv_sec;
+                    }
+                    else
+                    {
+                        w1->logtime = then.tv_sec;
+                        {
+                            FILE *fp = fopen("/tmp/w1retap.tlog", "a");
+                            if(fp)
+                            {
+                                fprintf(fp,
+                                        "Start : %d %09d\n"
+                                        "Expect: %d %09d\n"
+                                        "Actual: %d %09d\n",
+                                        then.tv_sec, then.tv_nsec,
+                                        nnow.tv_sec, nnow.tv_nsec,
+                                        now.tv_sec, now.tv_usec * 1000);
+                                fclose(fp);
+                            }
+                        }
+                    }
                     if(w1->verbose)
                         fputs(ctime(&now.tv_sec),stderr);
                 }

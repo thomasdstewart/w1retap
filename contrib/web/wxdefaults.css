@@ -1,0 +1,93 @@
+body { font-family: "vera sans", sans-serif; }
+tr.titlebar  { background-color: rgb(200, 200, 200); 
+      text-align: center}
+#left {float: left; width: 800px}
+#right {margin-left: 820px}
+#base {float: left;  clear: both ;   margin-left: auto; margin-right: auto; }
+img.graph { width: 400px; height: 200px; float: right}
+tr.grey1 {background-color: rgb(240, 240, 240)}
+tr.grey2 {background-color: rgb(253, 253, 253)}
+img.cimag {display:block; padding-bottom:10px;
+  margin-left: auto; margin-right: auto;
+  border: 0;
+}
+.aleft {text-align: left;  padding-left: 2px}
+.aright {text-align: right; padding-right: 2px}
+.acentre {text-align: center; padding-left: 2px; padding-right: 2px}
+object.igraph { width: 400px; height: 200px; float: right}
+object.cimag {display:block; padding-bottom:10px;
+  margin-left: auto; margin-right: auto;
+  border: 0;
+}
+
+div.rfigure {
+  float: right;
+  width: 20%;
+  border: thin silver solid;
+  margin: 0.5em;
+  padding: 0.5em;
+}
+
+div.lfigure {
+  float:left;
+  width: 20%;
+  border: thin silver solid;
+  margin: 0.5em;
+  padding: 0.5em;
+}
+
+div.lfigure p {
+  text-align: center;
+  font-style: italic;
+  font-size: smaller;
+  text-indent: 0;
+}
+
+div.rfigure p {
+  text-align: center;
+  font-style: italic;
+  font-size: smaller;
+  text-indent: 0;
+}
+
+.citalics {
+  text-align: center;
+  font-style: italic;
+  font-size: smaller;
+  text-indent: 0;
+}
+
+img.border0 { border: 0; margin-right: 0;  }
+img.sflogo {border:0; width: 125px; height: 37px; } 
+
+.homebg {background-color: rgb(255, 255, 235)}
+.dockbg {background-color: rgb(235, 255, 255)}
+
+DIV.left {
+  border: none; float: left; margin: 0; padding: 0; width: 50%;
+  height: 200px;
+}
+  
+DIV.right {
+    border: none; float: right; margin: 0; 
+    padding: 0; width: 50%; height: 200px;
+}
+
+DIV.space-line {
+  clear: both; margin: 0; padding: 0; width: auto;
+}
+    
+DIV.table-row {
+        margin-top: 0; margin-right: auto; margin-bottom: 0; margin-left: auto;
+  padding: 0;  width: 804px;
+}
+
+.base {
+        margin-top: 0; margin-right: auto; margin-bottom: 0; margin-left: auto;
+  padding: 0;  width: 100%;
+}
+
+.indent { margin-left: 5px; margin-right: 5px }
+
+div.bctable {display:block; margin-left: auto; margin-right: auto; 
+  width: 960px; padding: 1em;  }

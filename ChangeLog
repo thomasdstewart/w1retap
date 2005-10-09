@@ -15,4 +15,13 @@
 
 0.0.3	Fixed the pgsql driver to actually work.
 
+0.0.4   Moved to Ruby scripts. 
+	Changed web pages to use CSS.
+	Added ratelimit table to catch bogus readings
+	Again changed timer algorithm to catch clock being adjusted
+	underneath us.
+	Added XMLRPC based Gnome applet
+	Added configure options to limit what is built
+	Fixed memory leaks in applets
+	
 	
