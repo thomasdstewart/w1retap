@@ -148,6 +148,32 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         w1->numdev = n;
         w1->devs=devs;
         mysql_free_result(res); 
+
+        if (!mysql_query(conn, "select name,value from ratelimit"))
+        {
+            res = mysql_store_result(conn);        
+            int nn = mysql_num_rows(res);
+            for (n = 0; n < nn; n++)        
+            {
+                int j;
+                row = mysql_fetch_row(res);
+                char *s = row[0];
+                if(s && *s)
+                {
+                    char *sv = row[1];
+                    if(sv && *sv)
+                    {
+                        float v = strtof(sv, NULL);
+                        w1_sensor_t *sensor;
+                        if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                        {
+                            sensor->roc = v;
+                        }
+                    }
+                }
+            }
+        }
+        mysql_free_result(res); 
         mysql_close(conn);
     }
 }

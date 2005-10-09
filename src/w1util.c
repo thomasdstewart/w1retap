@@ -27,6 +27,7 @@
 #include <time.h>
 #include <sys/file.h>
 #include <gmodule.h>
+#include <math.h>
 #include "w1retap.h"
 
 
@@ -42,6 +43,26 @@ char * w1_get_from_home(const char *f)
         stpcpy(q,f);
     }
     return fname;
+}
+
+w1_sensor_t * w1_find_sensor(w1_devlist_t * w1, const char * s)
+{
+    w1_sensor_t *sensor = NULL;
+    w1_device_t * devs;
+    int i,j;
+    
+    for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
+    {
+        for (j = 0; j < 2; j++)
+        {
+            if(devs->s[j].abbrv && (0 == strcmp(devs->s[j].abbrv, s)))
+            {
+                sensor = &devs->s[j];
+                break;
+            }
+        }
+    }
+    return sensor;
 }
 
 void w1_enumdevs(w1_device_t * w)
@@ -63,6 +84,7 @@ void w1_enumdevs(w1_device_t * w)
         w->stype=W1_RAIN;
     }
 }
+
 
 void w1_freeup(w1_devlist_t * w1)
 {

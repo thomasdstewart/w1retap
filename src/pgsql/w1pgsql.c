@@ -60,7 +60,6 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         for (n = 0; n < nn; n++)        
         {
             int j;
-            
             for(j = 0; j < 8; j++)
             {
                 char *s = PQgetvalue(res, n, j);
@@ -96,9 +95,35 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             w1_enumdevs(devs+n);
         }
     }
-    
     w1->numdev = n;
     w1->devs=devs;
+    PQclear(res);
+    
+    res = PQexec(db, "select name,value from ratelimit");
+    if (PQresultStatus(res) == PGRES_TUPLES_OK)
+    {
+        int nn = PQntuples(res);
+        for (n = 0; n < nn; n++)        
+        {
+            char *s, *sv;
+            float v;
+            int i;
+            s = PQgetvalue(res, n, 0);
+            if(s && *s)
+            {
+                w1_sensor_t *sensor;
+                sv = PQgetvalue(res, n, 1);
+                if(sv && *sv)
+                {
+                    v = strtof(sv, NULL);
+                    if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                    {
+                        sensor->roc = v;
+                    }
+                }
+            }
+        }
+    }
     PQclear(res);
     PQfinish(db);
 }
