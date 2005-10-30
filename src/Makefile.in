@@ -62,8 +62,6 @@ host_triplet = @host@
 AR = @AR@
 AS = @AS@
 CC = @CC@
-CURL_CFLAGS = @CURL_CFLAGS@
-CURL_LIBS = @CURL_LIBS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
@@ -100,14 +98,8 @@ USE_APPLET = @USE_APPLET@
 USE_MYSQL = @USE_MYSQL@
 USE_ODBC = @USE_ODBC@
 USE_PGSQL = @USE_PGSQL@
-USE_RPC = @USE_RPC@
-USE_RPCCGI = @USE_RPCCGI@
 USE_SQLITE = @USE_SQLITE@
 VERSION = @VERSION@
-XMLRPCCGI_CFLAGS = @XMLRPCCGI_CFLAGS@
-XMLRPCCGI_LIBS = @XMLRPCCGI_LIBS@
-XMLRPC_CFLAGS = @XMLRPC_CFLAGS@
-XMLRPC_LIBS = @XMLRPC_LIBS@
 
 SUBDIRS = $(USE_SQLITE) $(USE_MYSQL) $(USE_PGSQL) $(USE_ODBC) libusblinux300
 DIST_SUBDIRS = sqlite mysql pgsql odbc libusblinux300
@@ -398,6 +390,14 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+w1conf.o: w1conf.c w1retap.h ../config.h
+w1csv.lo w1csv.o : w1csv.c w1retap.h ../config.h
+w1file.lo w1file.o : w1file.c w1retap.h ../config.h
+w1retap.o: w1retap.c libusblinux300/ownet.h libusblinux300/temp10.h \
+	libusblinux300/atod26.h libusblinux300/cnt1d.h \
+	libusblinux300/pressure.h w1retap.h ../config.h
+w1util.o: w1util.c w1retap.h ../config.h
+w1xml.lo w1xml.o : w1xml.c w1retap.h ../config.h
 
 info-am:
 info: info-recursive

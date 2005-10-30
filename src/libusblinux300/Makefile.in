@@ -62,8 +62,6 @@ host_triplet = @host@
 AR = @AR@
 AS = @AS@
 CC = @CC@
-CURL_CFLAGS = @CURL_CFLAGS@
-CURL_LIBS = @CURL_LIBS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
@@ -100,14 +98,8 @@ USE_APPLET = @USE_APPLET@
 USE_MYSQL = @USE_MYSQL@
 USE_ODBC = @USE_ODBC@
 USE_PGSQL = @USE_PGSQL@
-USE_RPC = @USE_RPC@
-USE_RPCCGI = @USE_RPCCGI@
 USE_SQLITE = @USE_SQLITE@
 VERSION = @VERSION@
-XMLRPCCGI_CFLAGS = @XMLRPCCGI_CFLAGS@
-XMLRPCCGI_LIBS = @XMLRPCCGI_LIBS@
-XMLRPC_CFLAGS = @XMLRPC_CFLAGS@
-XMLRPC_LIBS = @XMLRPC_LIBS@
 
 EXTRA_DIST = $(wildcard *.c) $(wildcard *.h) makefile.orig README ReadMe.txt
 
@@ -264,6 +256,42 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+atod26.o: atod26.c ownet.h atod26.h
+cnt1d.o: cnt1d.c ownet.h cnt1d.h
+crcutil.o: crcutil.c ownet.h
+ioutil.o: ioutil.c ownet.h
+libusbds2490.o: libusbds2490.c ownet.h libusbds2490.h usb.h
+libusbllnk.o: libusbllnk.c ownet.h libusbds2490.h usb.h
+libusbnet.o: libusbnet.c ownet.h libusbds2490.h usb.h
+libusbses.o: libusbses.c ownet.h libusbds2490.h usb.h
+libusbtran.o: libusbtran.c ownet.h libusbds2490.h usb.h
+mbappreg.o: mbappreg.c ownet.h mbappreg.h
+mbee.o: mbee.c ownet.h mbee.h
+mbee77.o: mbee77.c ownet.h mbee77.h mbscrx77.h pw77.h
+mbeprom.o: mbeprom.c ownet.h mbeprom.h
+mbnv.o: mbnv.c ownet.h mbnv.h mbscr.h mbscree.h mbscrex.h mbscrcrc.h \
+	mbsha.h mbnvcrc.h
+mbnvcrc.o: mbnvcrc.c ownet.h mbnv.h mbnvcrc.h
+mbscr.o: mbscr.c ownet.h mbscr.h mbscree.h mbscrex.h mbscrcrc.h mbsha.h
+mbscrcrc.o: mbscrcrc.c ownet.h mbscrcrc.h mbscr.h
+mbscree.o: mbscree.c mbscree.h ownet.h
+mbscrex.o: mbscrex.c ownet.h mbscrex.h
+mbscrx77.o: mbscrx77.c ownet.h mbscrx77.h pw77.h
+mbsha.o: mbsha.c ownet.h mbsha.h
+mbshaee.o: mbshaee.c ownet.h mbshaee.h
+owcache.o: owcache.c ownet.h owfile.h
+owerr.o: owerr.c ownet.h
+owfile.o: owfile.c owfile.h ownet.h rawmem.h mbeprom.h
+owpgrw.o: owpgrw.c owfile.h ownet.h rawmem.h
+owprgm.o: owprgm.c ownet.h owfile.h rawmem.h mbeprom.h
+pressure.o: pressure.c ownet.h swt12.h owfile.h
+pw77.o: pw77.c ownet.h mbee77.h pw77.h mbscrx77.h
+rawmem.o: rawmem.c rawmem.h owfile.h ownet.h mbnv.h mbappreg.h mbeprom.h \
+	mbnvcrc.h mbshaee.h mbscrcrc.h mbscrex.h mbsha.h mbscree.h \
+	mbscr.h mbee77.h mbscrx77.h mbee.h pw77.h
+screenio.o: screenio.c ownet.h
+swt12.o: swt12.c ownet.h swt12.h
+temp10.o: temp10.c ownet.h temp10.h
 
 info-am:
 info: info-am

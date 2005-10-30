@@ -22,12 +22,6 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `curl' library (-lcurl). */
-#undef HAVE_LIBCURL
-
-/* Define to 1 if you have the `expat' library (-lexpat). */
-#undef HAVE_LIBEXPAT
-
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
@@ -42,9 +36,6 @@
 
 /* Define to 1 if you have the `usb' library (-lusb). */
 #undef HAVE_LIBUSB
-
-/* Define to 1 if you have the `xmlrpc' library (-lxmlrpc). */
-#undef HAVE_LIBXMLRPC
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H

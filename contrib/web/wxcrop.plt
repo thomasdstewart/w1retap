@@ -164,7 +164,7 @@
 
 #proc getdata
  file: w5.dat
- fieldnames times gtemp otemp
+ fieldnames times gtemp otemp htemp btemp
 
 #proc page
  outfilename temps.@DEVICE
@@ -174,7 +174,7 @@
 #proc areadef
   title: Comparative Temperatures
   titledetails: align=C
-  yautorange: datafield=gtemp,otemp
+  yautorange: datafield=gtemp,otemp,htemp,btemp
   xscaletype: datetime yyyy-mm-dd.hh:mm
   xautorange: datafield=times hifix=@edate nearest=hours
   rectangle: @RAREA
@@ -191,6 +191,18 @@
   grid: color=gray(0.8)
   label: DegC
   labeldetails: adjust=@ADJ1,0
+
+#proc lineplot
+ yfield: btemp
+ xfield: times
+ linedetails: width=@LW color=skyblue
+ legendlabel: Garage
+
+#proc lineplot
+ yfield: htemp
+ xfield: times
+ linedetails: width=@LW color=yelloworange
+ legendlabel: Sitting Room
 
 #proc lineplot
  yfield: gtemp
@@ -342,7 +354,7 @@
 #proc yaxis
   stubs: incremental 
   grid: color=gray(0.8)
-  label: Inches/hour
+  label: Rate
   labeldetails: adjust=@ADJ1,0
 
 #proc lineplot
