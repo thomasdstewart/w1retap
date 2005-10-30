@@ -25,10 +25,15 @@
 # define VERSION "undef"
 #endif
 
+#include <stdarg.h>
 #include <gmodule.h>
 
 enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_RAIN};
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
+
+#define W1_ROC (1 << 0)
+#define W1_RMIN (1 << 1)
+#define W1_RMAX (1 << 2)
 
 #define ALLOCDEV 8
 #define TBUF_SZ 32
@@ -52,6 +57,9 @@ typedef struct
     char *units;
     float value;
     short valid;
+    short flags;
+    float rmin;
+    float rmax;
     float roc;
     float lval;
     time_t ltime;
@@ -64,6 +72,7 @@ typedef struct
     short init;
     enum W1_type stype;
     w1_sensor_t s[2];
+    unsigned char serno[8];
 } w1_device_t;
 
 struct w1_devlist
@@ -82,6 +91,7 @@ struct w1_devlist
     short logtmp;
     short doread;
     w1_device_t *devs;
+    char *lastmsg;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);
@@ -93,6 +103,6 @@ extern void dll_parse(w1_devlist_t *, int, char *);
 extern void read_config(w1_devlist_t *);
 extern FILE * w1_file_open(char *);
 extern w1_sensor_t * w1_find_sensor(w1_devlist_t *, const char *);
-
+extern void w1_replog(w1_devlist_t *, const char *,...);
 #endif
 

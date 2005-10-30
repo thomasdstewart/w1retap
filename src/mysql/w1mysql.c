@@ -111,7 +111,8 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         {
             int j;
             row = mysql_fetch_row(res);
-            for(j = 0; j < 6; j++)
+            int nf = mysql_num_fields(res);            
+            for(j = 0; j < nf; j++)
             {
                 char *s = row[j];
                 char *sv = (s && *s) ? strdup(s) : NULL;
@@ -149,7 +150,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         w1->devs=devs;
         mysql_free_result(res); 
 
-        if (!mysql_query(conn, "select name,value from ratelimit"))
+        if (!mysql_query(conn, "select name,value,rmin,rmax from ratelimit"))
         {
             res = mysql_store_result(conn);        
             int nn = mysql_num_rows(res);
@@ -158,17 +159,42 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
                 int j;
                 row = mysql_fetch_row(res);
                 char *s = row[0];
+                short flags = 0;
+                float roc,rmin,rmax;
+
                 if(s && *s)
                 {
                     char *sv = row[1];
                     if(sv && *sv)
                     {
-                        float v = strtof(sv, NULL);
-                        w1_sensor_t *sensor;
-                        if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
-                        {
-                            sensor->roc = v;
-                        }
+                        roc = strtof(sv, NULL);
+                        flags |= W1_ROC;
+                    }
+                    sv = row[2];
+                    if(sv && *sv)
+                    {
+                        rmin = strtof(sv, NULL);
+                        flags |= W1_RMIN;
+                    }
+                    sv = row[3];
+                    if(sv && *sv)
+                    {
+                        rmax = strtof(sv, NULL);
+                        flags |= W1_RMAX;
+                    }
+                }
+                if(flags)
+                {
+                    w1_sensor_t *sensor;
+                    if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                    {
+                        sensor->flags = flags;
+                        if(flags & W1_ROC)
+                            sensor->roc = roc;
+                        if(flags & W1_RMIN)
+                            sensor->rmin = rmin;
+                        if(flags & W1_RMAX)
+                            sensor->rmax = rmax;
                     }
                 }
             }

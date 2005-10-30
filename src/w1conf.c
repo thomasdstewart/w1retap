@@ -31,8 +31,11 @@ void read_config(w1_devlist_t *w1)
 {
     FILE *fp;
     char buf[256];
-    w1->rcfile = w1_get_from_home(".config/w1retap/rc");
-
+    if(w1->rcfile == NULL)
+    {
+	w1->rcfile = w1_get_from_home(".config/w1retap/rc");
+    }
+    
     if(w1->rcfile && access(w1->rcfile,R_OK) != 0)
     {
         free(w1->rcfile);
@@ -48,10 +51,11 @@ void read_config(w1_devlist_t *w1)
     {
         while(fgets(buf, sizeof(buf), fp))
         {
-            char *l = NULL,*c = NULL;
+            char *l = NULL,*c = NULL,*r=NULL;
             
             sscanf(buf,"log = %a[^\n]", &l) ||
                 sscanf(buf,"init = %a[^\n]", &c) ||
+                sscanf(buf,"rep = %a[^\n]", &r) ||                
                 sscanf(buf,"device = %a[^\n]", &w1->iface) ||
                 sscanf(buf,"delay = %d", &w1->delay) ||
                 sscanf(buf,"demonise = %hd", &w1->daemonise) ||
@@ -67,6 +71,11 @@ void read_config(w1_devlist_t *w1)
             {
                 dll_parse(w1, 'c', c);
                 free(c);
+            }
+            if(r)
+            {
+                dll_parse(w1, 'r', r);
+                free(r);
             }
         }
         fclose(fp);

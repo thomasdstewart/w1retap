@@ -3,7 +3,7 @@
 
 AC_INIT(configure.ac)
 PACKAGE=w1retap
-VERSION=0.0.4
+VERSION=0.0.5
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AM_CONFIG_HEADER(config.h)
@@ -14,19 +14,16 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
-AC_ARG_WITH(xmlrpc, AC_HELP_STRING([--with-xmlrpc], [Force sppport for XMLRPC]))
+AC_ARG_WITH(mysql, AC_HELP_STRING([--without-applet], [Don't build the applet]))
 AC_ARG_WITH(mysql, AC_HELP_STRING([--without-mysql], [Don't build for MySQL]))
 AC_ARG_WITH(postgres, AC_HELP_STRING([--without-postgres], [Don't build for PostgreSQL]))
 AC_ARG_WITH(sqlite, AC_HELP_STRING([--without-sqlite], [Don't build for SQLite]))
 AC_ARG_WITH(odbc, AC_HELP_STRING([--without-odbc], [Don't build for ODBC]))
 
 # Checks for libraries.
-AC_CHECK_LIB([curl], [curl_easy_init])
-AC_CHECK_LIB([expat], [XML_ParserCreate])
 AC_CHECK_LIB([usb], [usb_control_msg])
 AC_CHECK_LIB([sqlite3], [sqlite3_open])
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
-AC_CHECK_LIB([xmlrpc], [xmlrpc_array_new],,,[-lexpat])
 # But don't set fscking LIBS ....
 LIBS=
 AC_CHECK_LIB([m], [sin], [])
@@ -112,56 +109,26 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
 
 if test "$PKG_CONFIG" = "no" ; then
  AC_MSG_ERROR([Sorry, we need pkg-config])
+else
+ PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
 fi
 
-PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
-#AC_MSG_RESULT(OK)
 
-dnl need expat for starters for the applet
-if test "$ac_cv_lib_expat_XML_ParserCreate" = "yes"
-then
- GTK_REQUIRED=2.2.0
- LIBPANEL_REQUIRED=2.6.0
- PKG_CHECK_MODULES(GNOME_APPLETS, gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,,false)
- if test -z "$GNOME_APPLETS_PKG_ERRORS" ; then
-  if test "$ac_cv_lib_curl_curl_easy_init" = "yes"
-  then
-   if test "$ac_cv_lib_xmlrpc_xmlrpc_array_new" = "yes" -a "$with_xmlrpc" = "yes"
-   then	
-    USE_RPC=w1temp-rpc
-    USE_RPCCGI=wxrpc
-    XMLRPC_CFLAGS="$(xmlrpc-c-config client --cflags)"
-    XMLRPC_LIBS="$(xmlrpc-c-config client --libs)"
-    XMLRPCCGI_CFLAGS="$(xmlrpc-c-config cgi-server --cflags)"
-    XMLRPCCGI_LIBS="$(xmlrpc-c-config cgi-server --libs)"
-    AC_SUBST(XMLRPC_CFLAGS)
-    AC_SUBST(XMLRPC_LIBS)
-    AC_SUBST(XMLRPCCGI_CFLAGS)
-    AC_SUBST(XMLRPCCGI_LIBS)
-   else
-    USE_APPLET=w1temp
-    CURL_CFLAGS="$(curl-config --cflags)"
-    CURL_LIBS="$(curl-config --libs)"
-    AC_SUBST(CURL_CFLAGS)
-    AC_SUBST(CURL_LIBS)
-   fi
-  fi
- else
-  : #echo "************ FAILS **************"
- fi
-fi
 AC_MSG_CHECKING(for fine weather)
-
 GLIB_CFLAGS="$GLIB_MODULE_CFLAGS"
 GLIB_LIBS="$GLIB_MODULE_LIBS"
-AC_SUBST(USE_APPLET)
-AC_SUBST(USE_RPC)
-AC_SUBST(USE_RPCCGI)
 AC_SUBST(GNOME_APPLETS_CFLAGS)
 AC_SUBST(GNOME_APPLETS_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 AC_MSG_RESULT(perhaps)
+
+if test "$with_applet" != "no" ; then
+ USE_APPLET=w1temp
+ AC_CONFIG_SUBDIRS(contrib/w1temp)
+fi
+
+AC_SUBST(USE_APPLET)	
 
 AC_OUTPUT(
 Makefile
@@ -172,16 +139,12 @@ src/mysql/Makefile
 src/pgsql/Makefile
 src/odbc/Makefile
 contrib/Makefile
-contrib/w1temp/Makefile
-contrib/w1temp-rpc/Makefile
-contrib/wxrpc/Makefile
 )
+
 
 echo
 echo "Configuration:"
-if test -n "$USE_APPLET"; then echo ' * Gnome applet with cURL' ; fi
-if test -n "$USE_RPC"; then echo ' * Gnome applet with xmlrpc-c' ; fi
-if test -n "$USE_RPCCGI"; then echo ' * xmlrpc-c CGI application' ; fi
+if test -n "$USE_APPLET"; then echo ' * Gnome applet' ; fi
 if test -n "$USE_MYSQL"; then echo ' * MySQL plugin' ; fi
 if test -n "$USE_ODBC"; then echo ' * ODBC plugin' ; fi
 if test -n "$USE_PGSQL"; then echo ' * PostgreSQL plugin' ; fi

@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <gmodule.h>
+#include <math.h>
 
 #include "ownet.h"
 #include "temp10.h"
@@ -61,6 +62,56 @@ static void sig_usr2(int x)
     sigme |= W1_SHOWCF;
 }
 
+void w1_replog(w1_devlist_t *w1, const char *fmt,...)
+{
+    static FILE *fp;
+    va_list va;
+    char *p;
+    int nc;
+    
+    va_start (va, fmt);
+    if ((nc = vasprintf (&p, fmt, va)) != -1)
+    {
+        int n;
+        w1->lastmsg = p;
+        for(n = 0; n < w1->ndll; n++)
+        {
+            if (w1->dlls[n].type == 'r' && w1->dlls[n].func)
+            {
+                (w1->dlls[n].func)(w1, w1->dlls[n].param);
+            }
+        }
+        w1->lastmsg = NULL;
+        
+        if(w1->repfile)
+        {
+            if(fp == NULL)
+            {
+                if(*w1->repfile != '-')
+                {
+                    fp = fopen(w1->repfile, "a");
+                }
+                else
+                {
+                    fp = stderr;
+                }
+            }
+            if(fp)
+            {
+                char s[64];
+                logtimes(w1->logtime, s);
+                fputs(s, fp);
+                fputc(' ', fp);                
+                fputs(p, fp);
+                fputc('\n', fp);
+                fflush(fp);
+            }
+        }
+        free(p);
+    }
+    va_end (va);
+}
+
 static int  w1_check_device(int portnum, u_char serno[8])
 {
     u_char thisdev[8];
@@ -92,28 +143,34 @@ static void w1_make_serial(char * asc, unsigned char *bin)
 
 static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
 {
+    int chk = 0;
+    float act =  s->value;
+    float rate = 0;
+    
     s->valid = 1;
-    if(s->roc != 0)
+
+    if((s->flags & W1_RMIN) && (s->value < s->rmin))
+    {
+        s->value = (s->ltime) ? s->lval : s->rmin;
+        chk = 1;
+    }
+    if((s->flags & W1_RMAX) && (s->value > s->rmax))
+    {
+        s->value = (s->ltime) ? s->lval : s->rmax;
+        chk = 2;
+    }
+
+    if(chk == 0 && (s->flags & W1_ROC))
     {
         if (s->ltime > 0 && s->ltime != w1->logtime)
         {
-            float rate = fabs(s->value - s->lval) * 60.0 /
+            rate = fabs(s->value - s->lval) * 60.0 /
                 (w1->logtime -s->ltime);
             if (rate > s->roc)
             {
                 s->valid = 0;
-                if(w1->repfile)
-                {
-                    FILE *rfp;
-                    if(NULL != (rfp = fopen(w1->repfile,"a")))
-                    {
-                        char buf[80];
-                        logtimes(w1->logtime, buf);
-                        fprintf(rfp,"%s %s %f %f %d\n",
-                                buf, s->abbrv, s->value, rate, w1->logtime);
-                        fclose(rfp);
-                    }
-                }
+                s->value = s->lval;
+                chk = 3;
             }
         }
         if(s->valid)
@@ -122,22 +179,26 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
             s->lval = s->value;
         }
     }
-    (int)s->valid;
+    if(chk != 0)
+    {
+        w1_replog (w1, "%s %.2f %.2f %.2f %.2f %d %d (%d)",
+                   s->abbrv, s->value, act, rate,
+                   s->lval, s->ltime, w1->logtime, chk);
+    }
+    return (int)s->valid;
 }
-
 
 static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
 {
-    static unsigned char serno[8];
-    if(w->init  == 0)
+    if(w->init == 0)
     {
-        w1_make_serial(w->serial, serno);
+        w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, serno))
+    if(w1_check_device(w1->portnum, w->serno))
     {
-        if (ReadTemperature(w1->portnum, serno, &w->s[0].value))
+        if (ReadTemperature(w1->portnum, w->serno, &w->s[0].value))
         {
             w1_validate(w1, &w->s[0]);
         }
@@ -152,21 +213,19 @@ static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
 
 static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
 {
-    static unsigned char serno[8];
     unsigned long cnt;
     int nv = 0;
-    
-    if(w->init  == 0)
+    if(w->init == 0)
     {
-        w1_make_serial(w->serial, serno);
+        w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, serno))
+    if(w1_check_device(w1->portnum, w->serno))
     {
         if(w->s[0].abbrv)
         {
-            if((w->s[0].valid = ReadCounter(w1->portnum, serno, 14, &cnt)))
+            if((w->s[0].valid = ReadCounter(w1->portnum, w->serno, 14, &cnt)))
             {
                 w->s[0].value = cnt;
                 nv += w1_validate(w1, &w->s[0]);
@@ -175,7 +234,7 @@ static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
     
         if(w->s[1].abbrv)
         {
-            if((w->s[1].valid = ReadCounter(w1->portnum, serno, 15, &cnt)))
+            if((w->s[1].valid = ReadCounter(w1->portnum, w->serno, 15, &cnt)))
             {
                 w->s[1].value = cnt;
                 nv += w1_validate(w1, &w->s[1]);
@@ -191,42 +250,37 @@ static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
 
 static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
 {
-    static unsigned char serno[8];
-    float humid,temp;
-    float Vdd,Vad;
+    float humid=0,temp=0;
+    float vdd =0 ,vad =0 ,vddx =0;
     int nv = 0;
+    char vind=' ';
     
-    if(w->init  == 0)
+    if(w->init == 0)
     {
-        w1_make_serial(w->serial, serno);
+        w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, serno))
+    if(w1_check_device(w1->portnum, w->serno))
     {
-        Vdd = ReadAtoD(w1->portnum,TRUE, serno);
-        if(Vdd > 5.8)
+        vdd = vddx = ReadAtoD(w1->portnum,TRUE, w->serno);
+        vad = ReadAtoD(w1->portnum, FALSE, w->serno);
+        temp = Get_Temperature(w1->portnum, w->serno);
+
+        if(vdd > 5.8)
         {
-            Vdd = (float)5.8;
+
+            vdd = (float)5.8;
+            vind='+';
         }
-        else if(Vdd < 4.0)
+        else if(vdd < 4.0)
         {
-            Vdd = (float) 4.0;
+            vdd = (float) 4.0;
+            vind = '-';
         }
-        
-        Vad = ReadAtoD(w1->portnum, FALSE, serno);
-        temp = Get_Temperature(w1->portnum, serno);
-        
-        humid = (((Vad/Vdd) - 0.16)/0.0062)/(1.0546 - 0.00216 * temp);
-        if(humid > 100)
-        {
-            humid = 100;
-        }
-        else if(humid < 0)
-        {
-            humid = 0;
-        }
-        
+
+        humid = (((vad/vdd) - 0.16)/0.0062)/(1.0546 - 0.00216 * temp);
+
         if(w->s[0].name)
         {
             w->s[0].value = (strcasestr(w->s[0].name, "Humidity"))
@@ -237,7 +291,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
         {
             w->s[0].valid = 0;
         }
-        
+
         if(w->s[1].name)
         {
             w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
@@ -253,55 +307,65 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
     {
         w->s[0].valid = w->s[1].valid = 0;
     }
+    
+    if(w->s[0].valid == 0 || w->s[1].valid == 0 )
+    {
+        w1_replog (w1, "%f %f %f %f %c", vddx, vad, temp, humid, vind);
+    }
     return nv;
 }
 
 static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
 {
-    static unsigned char serno[8];
     float temp,pres;
     int nv = 0;
-    
-    if(w->init  == 0)
+    if(w->init == 0)
     {
-        w1_make_serial(w->serial, serno);
+        w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
     
-    if(w1_check_device(w1->portnum, serno))
+    if(w1_check_device(w1->portnum, w->serno))
     {
         if(w->init == 1)
         {
-            if(Init_Pressure(w1->portnum, serno))
+            if(Init_Pressure(w1->portnum, w->serno))
             {
                 w->init = 2;
             }
         }
-        
-        if(ReadPressureValues (w1->portnum, &temp, &pres) )
+        if (w->init == 2)
         {
-            if(w->s[0].name)
+            if(ReadPressureValues (w1->portnum, &temp, &pres) )
             {
-                w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
-                    ? pres : temp;
-                nv += w1_validate(w1, &w->s[0]);
+                if(w->s[0].name)
+                {
+                    w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
+                        ? pres : temp;
+                    nv += w1_validate(w1, &w->s[0]);
+                }
+                else
+                {
+                    w->s[0].valid = 0;
+                }
+                
+                if(w->s[1].name)
+                {
+                    w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
+                        ? temp : pres;
+                    nv += w1_validate(w1, &w->s[1]);
+                }
+                else
+                {
+                    w->s[1].valid = 0;
+                }
             }
             else
             {
-                w->s[0].valid = 0;
-            }
-        
-            if(w->s[1].name)
-            {
-                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
-                    ? temp : pres;
-                nv += w1_validate(w1, &w->s[1]);
-            }
-            else
-            {
-                w->s[1].valid = 0;
+                w->init = 0;
             }
         }
+        
     }
     else
     {
@@ -340,6 +404,16 @@ static void do_init(w1_devlist_t *w1)
                                   (gpointer *)&w1->dlls[n].func)))
             {
                 perror("logger");
+                exit(1);
+            }
+        }
+        else if (w1->dlls[n].type == 'r')
+        {
+            if(!(g_module_symbol (w1->dlls[n].handle,
+                                 "w1_report",
+                                  (gpointer *)&w1->dlls[n].func)))
+            {
+                perror("replogger");
                 exit(1);
             }
         }
@@ -442,9 +516,17 @@ static void w1_show(w1_devlist_t *w1, int forced)
                             w1->devs[i].s[j].abbrv, w1->devs[i].s[j].name,
                             (w1->devs[i].s[j].units) ?
                             (w1->devs[i].s[j].units) : "");
-                    if(w1->devs[i].s[j].roc != 0.0)
+                    if(w1->devs[i].s[j].flags & W1_ROC)
                     {
-                        fprintf(stderr," (%.4f /min)", w1->devs[i].s[j].roc);
+                        fprintf(stderr,", %.4f /min", w1->devs[i].s[j].roc);
+                    }
+                    if(w1->devs[i].s[j].flags & W1_RMIN)
+                    {
+                        fprintf(stderr,", min=%.2f", w1->devs[i].s[j].rmin);
+                    }
+                    if(w1->devs[i].s[j].flags & W1_RMAX)
+                    {
+                        fprintf(stderr,", max=%.2f", w1->devs[i].s[j].rmax);
                     }
                     fputc('\n', stderr);
                 }
@@ -470,7 +552,6 @@ static void w1_show(w1_devlist_t *w1, int forced)
 
 static int w1_read_all_sensors(w1_devlist_t *w1)
 {
-
     int nv = 0;
 
     if(w1->doread)
@@ -536,7 +617,7 @@ int main(int argc, char **argv)
     int immed = 1;
     int n;
     int c;
-
+    char *p;
     
     if(!g_module_supported())
     {
@@ -559,9 +640,13 @@ int main(int argc, char **argv)
     w1->logtmp = 1;
     w1->portnum = -1; 
     w1->doread = 1;
-    
+
+    if((p = getenv("W1RCFILE")))
+    {
+	w1->rcfile = strdup(p);
+    }
     read_config(w1);
-    
+
     while((c = getopt (argc, argv,"r:dt:i:TvNh?Vw")) != EOF)
     {
         switch(c)
@@ -601,7 +686,6 @@ int main(int argc, char **argv)
         }
     }
 
-
     if(w1->verbose)
     {
         fputs("w1retap v" VERSION " (c) 2005 Jonathan Hudson\n", stderr);
@@ -624,6 +708,9 @@ int main(int argc, char **argv)
     }
     
     do_init(w1);
+    w1->logtime =time(NULL);
+    w1_replog (w1, "Startup w1retap v" VERSION);
+    
     on_exit(cleanup, w1);
     w1_show(w1, 0);
     if(w1->daemonise)
@@ -635,18 +722,13 @@ int main(int argc, char **argv)
         
         if(immed)
         {
-            if(w1->logtime == 0)
-            {
-                w1->logtime =time(NULL);
-            }
-            
             nv = w1_read_all_sensors(w1);
         
             if(nv)
             {
                 for(n = 0; n < w1->ndll; n++)
                 {
-                    if (w1->dlls[n].func)
+                    if (w1->dlls[n].type == 'l' && w1->dlls[n].func)
                     {
                         (w1->dlls[n].func)(w1, w1->dlls[n].param);
                     }

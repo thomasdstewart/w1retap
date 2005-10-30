@@ -39,7 +39,7 @@ module Wug
     ("%.3f" % (mb/33.8638864))
   end
 
-  def Wug.upload stn, w, flag=nil
+  def Wug.upload stn, flag, w
     q = {}
     q['humidity'] = ("%.1f" % w['humid'])
     q['tempf'] = CtoF w['temp']
@@ -81,5 +81,5 @@ if __FILE__ == $0
   s.finish
   flag = true if (now - w['udate']) > 180 
   
-  Wug.upload stn, w, flag
+  Wug.upload stn, flag, w
 end

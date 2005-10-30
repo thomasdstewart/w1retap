@@ -15,6 +15,7 @@ require 'wug.rb'
 BASEDIR = '/var/www/roo/wx'
 G = -9.80665
 R = 287.04
+HFACT = 0.96
 
 def pr_msl p0, temp, z
   zdiff = (0 - z)
@@ -43,9 +44,11 @@ now = Time.now
 
 $opt_S = 'dbi:Pg:sensors'
 $opt_W = 'dbi:Pg:docks'
-
+$opt_i = 1200
 opts = OptionParser.new
+
 opts.on("-t")                        {|val| $opt_t = val }
+opts.on("-i")                        {|val| $opt_i = val.to_i }
 opts.on("-f")                        {|val| $opt_f = val }
 opts.on("-s")                        {|val| $opt_s = val }
 opts.on("-g")                        {|val| $opt_s = val }
@@ -65,7 +68,7 @@ else
   itype='png'
 end
 
-if test(?d,base) and $opt_t.nil?
+if test(?d,base) 
   Dir.chdir(base) 
 else
   $opt_t = true
@@ -77,21 +80,24 @@ ithen = now.to_i - 24*3600
 sleep 10 if (now.min % 10) == 0 and !$opt_t
 
 f=File.open('w0.dat','w')
-
+f1=File.open('w_3.dat','w')
 dbh = DBI.connect($opt_W, 'jrh', '')
-smt = dbh.execute "select reportdate, wind_dirn, wind_speed, wind_speed1, tide from observations where reportdate > #{ithen} order by reportdate"
+smt = dbh.execute "select reportdate, wind_dirn, wind_speed, wind_speed1, tide, pressure from observations where reportdate > #{ithen} order by reportdate"
 
 dock = []
-smt.each do |s|
-  f.printf("%s %.1f %.1f %.1f %s\n", 
-	   Time.at(s[0].to_i).strftime("%Y-%m-%d.%H:%M"), 
-	   s[1].to_f, 0.8 * s[2].to_f, 0.8 * s[3].to_f, s[4])
-  dock = s
+smt.each do |dock|
+  d = Time.at(dock[0].to_i).strftime("%Y-%m-%d.%H:%M")
+  f.printf("%s %.1f %.1f %.1f %s\n", d, 
+	   dock[1].to_f, 0.8 * dock[2].to_f, 0.8 * dock[3].to_f, dock[4])
+  f1.printf("%s %.1f\n", d,dock[5])
 end
-
 smt.finish
 f.close
+f1.close
 dbh.disconnect
+
+dock[2] = 0.8 * dock[2].to_f
+dock[3] = 0.8 * dock[3].to_f
 
 fh = []
 fh[0] = File.open('w1.dat', 'w')
@@ -115,14 +121,14 @@ hmax = -1
 ltim = -1
 d1 = -1
 d2 = -2
-gtemp = 0
-temp = press = humid = nil
+gtemp = temp = press = humid = htemp = btemp = nil
 sdate=edate=nil
 ld = r0 = r1 = 0
 lt0 = lt1 = nil
 ast = 0
-rpress = 0
+rpress = nil
 d = ''
+h = {}
 
 smt = dbh.execute "select date, name, value from readings where date > #{ithen} order by date"
 smt.each do |s|
@@ -137,30 +143,43 @@ smt.each do |s|
   when 'OTMP0'
     temp = s[2].to_f
 
+  when 'OTMP1'
+    htemp = s[2].to_f
+
+  when 'OTMP2'
+    btemp = s[2].to_f
+
   when 'OPRS'
     rpress = s[2].to_f
 
   when 'OHUM'
-    humid = s[2].to_f
+    humid = HFACT * s[2].to_f
     hmax = humid if humid > hmax
 
   when 'RGC0'
     if (r0 == 0)
-      r0 = s[2].to_f
+      r0 = s[2].to_i
       lt0 = ast
     end
-    r1 = s[2].to_f
+    r1 = s[2].to_i
     lt1 = ast
+    h[s[0]]=s[2].to_i
   end
 
   if ltim != ast
     d = Time.at(ast).strftime("%Y-%m-%d.%H:%M")
-    fh[0].printf("%s %.1f\n", d, gtemp)
-    fh[1].printf("%s %.1f\n", d, temp)
-    press=pr_msl(rpress, temp, stn['altitude'].to_f)
-    fh[2].printf("%s %.1f\n", d, press)
-    fh[3].printf("%s %.1f\n", d, humid)
-    fh[4].printf("%s %.1f %.1f\n", d, gtemp, temp)
+    fh[0].printf("%s %.1f\n", d, gtemp) unless gtemp.nil?
+    if ! temp.nil?
+     fh[1].printf("%s %.1f\n", d, temp)
+     if !rpress.nil?
+      press=pr_msl(rpress, temp, stn['altitude'].to_f)
+      fh[2].printf("%s %.1f\n", d, press)
+     end 
+    end 
+    fh[3].printf("%s %.1f\n", d, humid) unless humid.nil?
+
+
+    fh[4].printf("%s %.1f %.1f %.1f %.1f\n", d, gtemp, temp, htemp, btemp) unless (temp.nil? or gtemp.nil? or htemp.nil? or btemp.nil?)
     sdate=d if sdate.nil?
     edate=d
     ltim = ast
@@ -169,12 +188,17 @@ end
 
 if ltim != ast
   d = Time.at(ast).strftime("%Y-%m-%d.%H:%M")
-  fh[0].printf("%s %.1f\n", d, gtemp)
-  fh[1].printf("%s %.1f\n", d, temp)
-  press=pr_msl(rpress, temp, stn['altitude'])
-  fh[2].printf("%s %.1f\n", d, press)
-  fh[3].printf("%s %.1f\n", d, humid)
-  fh[4].printf("%d %.1f %.1f\n", d, gtemp, temp)
+  fh[0].printf("%s %.1f\n", d, gtemp) unless gtemp.nil?
+  if ! temp.nil?
+    fh[1].printf("%s %.1f\n", d, temp)
+    if !rpress.nil?
+      press=pr_msl(rpress, temp, stn['altitude'].to_f)
+      fh[2].printf("%s %.1f\n", d, press)
+    end 
+  end 
+  fh[3].printf("%s %.1f\n", d, humid) unless humid.nil?
+
+    fh[4].printf("%s %.1f %.1f %.1f %.1f\n", d, gtemp, temp, htemp, btemp) unless (temp.nil? or gtemp.nil? or htemp.nil? or btemp.nil?)
   sdate=d if sdate.nil?
   edate=d
   ltim = ast
@@ -183,51 +207,67 @@ smt.finish
 fh.each {|f| f.close}
 d2 = lt1
 
+if press < 900 || press > 1200
+  press = dock[5];
+  File.rename("w_3.dat", "w3.dat")
+end
+
 dewpt= dewpoint temp, humid
 logdate = d.sub(/\./, ' ')
 
 rain = 0
+rain1 = 0
 rain24 = 0
 
-if stn['rfact']
-  l1h = lt1 - 3600
-  r1h = r1
-  as = []
-
-  st = dbh.execute "select value from readings where date = #{l1h} and name='RGC0'"
-  st.each do |s|
-    as = s
-  end
-  st.finish
-
-  if !as.empty?
-    r1h =as[0].to_i
-    print "Rain1(0) #{r1h}\n" if $opt_t
-  else
-    st = dbh.execute "select date, value from readings where name = 'RGC0' and date > #{l1h} order by date  asc limit 1"
-    st.each do |s|
-      as = s
-    end
-    st.finish
-    if !as.empty?
-      l1h = as[0]
-      r1h = as[1].to_i
-    end
-  end
-  stn['rfact'] = stn['rfact'].to_f
-  rain = 3600 * stn['rfact']*(r1 - r1h)/(lt1 - l1h)
-  print "Rain #{rain}\n" if $opt_t
-  if ((r1 - r0) and (lt1 - lt0))
-    rain24 = 24*3600 * stn['rfact']*(r1 - r0)/(lt1 - lt0)
-  end
-  print "Rain24 #{rain24}\n" if $opt_t
-else
-  rain = 0;
+if ((r1 - r0) and (lt1 - lt0))
+  rain24 = 24*3600 * stn['rfact']*(r1 - r0)/(lt1 - lt0)
 end
+print "Rain 24hr #{rain24}\n" if $opt_t
+
+rmax = 0.0
+lh1 = lt1 - 3600
+r1h = 0
+rast = 0
+raet = 0
+lrr = 0
+radr = 0
+
+fh = File.open 'w6.dat', 'w'
+h.keys.sort.each do |k|
+  j = (k.to_i - $opt_i)
+  rain = 0
+  if h.has_key?(j)
+    rain = (h[k] - h[j]) * stn['rfact']
+    rmax = rain if rain > rmax
+    if rain != 0 
+      radr = k
+      if lrr == 0
+	rast = k
+	raet = 0
+      end
+    else
+      raet = k if raet == 0  and rast != 0
+    end
+  end
+  lrr = rain
+  if k >= lh1 and r1h == 0
+    r1h = h[k]
+    lh1 = k
+    puts " RAIN 1 ** #{r1h} #{lh1}"
+  end
+  d = Time.at(k).strftime("%Y-%m-%d.%H:%M")
+  fh.printf "%s %.4f\n", d,rain
+end
+fh.close
+
+puts "R1 #{rain1}"
+rain1 = 3600 * stn['rfact']*(r1 - r1h)/(lt1 - lh1)
+print "Rain 1hr #{rain1}\n" if $opt_t
+h.clear
 
 dock[0] = Time.at(dock[0].to_i).strftime("%Y-%m-%d %H:%M") 
 use_t = true # Workaround for b0rken SQLite3  DBI
-if now.min % 10 == 0 or $opt_f
+if (now.min % 10 == 0 or $opt_f)  and !$opt_t
   begin
     dbh['AutoCommit'] = false
   rescue
@@ -236,7 +276,7 @@ if now.min % 10 == 0 or $opt_f
   begin
     dbh.do "delete from latest where udate < #{ithen}"
     dbh.do "insert into latest values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-      d2, logdate, gtemp, maxt, mint, temp, press, humid, rain,
+      d2, logdate, gtemp, maxt, mint, temp, press, humid, rain1,
       dewpt, dock[0], dock[2], dock[1], dock[4]
 
     if now.hour == 0 and now.min  == 0
@@ -250,21 +290,6 @@ if now.min % 10 == 0 or $opt_f
     dbh.rollback if use_t
   end
 end
-
-rmax = 0.0;
-
-fh = File.open 'w6.dat', 'w'
-s = dbh.execute "select gstamp,rain from latest order by udate"
-s.fetch do |r|
-  date,value = r[0],r[1].to_f
-  date = date.to_s
-  date.sub!(/(....-..-..) (..:..):00/,'\1.\2')
-  fh.print "#{date} #{value}\n"
-  rmax = value if value > rmax
-end
-s.finish
-fh.print "#{edate} #{rain}\n"
-fh.close
 
 rmax += 0.01
 hmax *= 1.05
@@ -309,6 +334,20 @@ cells.each do |cl|
   nc += 1
 end
 
+raintimes=''
+raintimes = "start: #{Time.at(rast).strftime("%H:%M")} " if rast != 0
+raintimes += "last: #{Time.at(radr).strftime("%H:%M")} " if radr != 0
+raintimes += "end: #{Time.at(raet).strftime("%H:%M")}" if raet != 0
+puts "Raintimes #{raintimes}" if $opt_t
+
+wx_notice=''
+begin
+  fh = File.open 'wx_notice.html', 'r'
+  wx_notice = fh.read
+  fh.close
+rescue
+end
+
 tmpl.param({
              'gtype' => itype,
              'temp' => "%.1f&deg;C / %.1f&deg;F" % [temp, CtoF(temp)],
@@ -319,19 +358,24 @@ tmpl.param({
              'press' => "%.1f hPa / %.1f inHg" % [press, mbtoin(press)],
              'humid' => "%.1f" % humid,
              'dewpt' => "%.1f&deg;C / %.1f&deg;F" % [dewpt, CtoF(dewpt)],
-             'rain' => "%.2fin / %.1fmm" % [rain, rain*25.4],
+             'rain' => "%.2fin / %.1fmm" % [rain1, rain1*25.4],
              'rain24' => "%.2fin / %.1fmm" % [rain24, rain24*25.4],
              'pdate' => dock[0],
              'wdirn' => dock[1],
              'wspeed' => dock[2],
              'wgust' => dock[3],
              'tide' => dock[4],
-             'rainlist' => rainlist
+             'rainlist' => rainlist,
+	     'raintimes' => raintimes,
+	     'wx_notice' => wx_notice
            })
 File.open('w.html', 'w') do |f|
   f.print tmpl.output
 end
 File.rename('w.html','index.html')
+
+rstr = ''
+rstr += "(#{Time.at(radr).strftime("%H:%M")})" if radr != 0 and rain1 > 0
 
 tmpl.load 'wx.static.tmpl'
 tmpl.param({
@@ -340,12 +384,13 @@ tmpl.param({
 	     'temp' => "%.2f" % temp,
 	     'press' => "%.2f" % press,
 	     'humid' => "%.2f" % humid,
-	     'rain' => "%.4f" % rain,
+	     'rain' => "%.2f" % rain1,
+	     'rstr' => rstr,
 	     'dewpt' => "%.2f" % dewpt,
 	     'gtemp' => "%.2f" % gtemp,
 	     'wspd' => dock[2],
 	     'wdir' => dock[1],
-	     'tide' => dock[4]
+	     'tide' => dock[4],
 	   })
 
 File.open('wx_static.xml', 'w') do |f|
@@ -356,12 +401,15 @@ tmpl.load('wx.text.tmpl')
 tmpl.param({
 	     'udate' => d2,
 	     'idate' => Time.at(d2).strftime("%FT%T%z"),
-	     'temp' => "%.2f" % temp,
-	     'press' => "%.2f" % press,
-	     'humid' => "%.2f" % humid,
-	     'rain' => "%.4f" % rain,
-	     'dewpt' => "%.2f" % dewpt,
-	     'gtemp' => "%.2f" % gtemp,
+	     'temp' => "%.1f" % temp,
+	     'press' => "%.1f" % press,
+	     'humid' => "%.1f" % humid,
+	     'rain' => "%.2f" % rain1,
+	     'rstr' => rstr,
+	     'dewpt' => "%.1f" % dewpt,
+	     'gtemp' => "%.1f" % gtemp,
+	     'htemp' => "%.1f" % htemp,
+	     'btemp' => "%.1f" % btemp,
 	     'wspd' => dock[2],
 	     'wdir' => dock[1],
 	     'tide' => dock[4]
@@ -370,13 +418,14 @@ File.open('/tmp/.wx_static.dat', 'w') do |f|
   f.print tmpl.output
 end
 
-w = {}
-w['humid'] = humid
-w['temp'] = temp
-w['dewpt'] = dewpt
-w['pres'] = press
-w['rain'] = rain
-w['udate'] = now.to_i
 
-Wug.upload(stn, w, $opt_t) if now.min % 10 == 0
+Wug.upload(stn, $opt_t,
+	   {
+	     'humid' => humid,
+	     'temp' => temp,
+	     'dewpt' => dewpt,
+	     'pres' => press,
+	     'rain' => rain1,
+	     'udate' => now.to_i
+	   } ) if now.min % 10 == 0
 

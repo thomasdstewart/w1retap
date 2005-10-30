@@ -45,13 +45,13 @@ void w1_init(w1_devlist_t *w1, char *params)
     SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
     SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
     SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc);
-    ret = SQLDriverConnect(dbc, NULL, params, SQL_NTS,
+    ret = SQLDriverConnect(dbc, NULL, (unsigned char *)params, SQL_NTS,
                      NULL, 0, NULL, SQL_DRIVER_COMPLETE);
 
     if (SQL_SUCCEEDED(ret))
     {
         SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-        SQLExecDirect(stmt, (char *)sql, SQL_NTS);
+        SQLExecDirect(stmt, (unsigned char *)sql, SQL_NTS);
 
         SQLNumResultCols(stmt, &columns);
         SQLRowCount(stmt, &rows);
@@ -116,7 +116,7 @@ void w1_init(w1_devlist_t *w1, char *params)
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);    
         
         SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-        ret = SQLExecDirect(stmt, "select name,value from ratelimit", SQL_NTS);
+        ret = SQLExecDirect(stmt, (unsigned char *)"select name,value,rmin,rmax from ratelimit", SQL_NTS);
         SQLNumResultCols(stmt, &columns);
         SQLRowCount(stmt, &rows);
         while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
@@ -124,7 +124,10 @@ void w1_init(w1_devlist_t *w1, char *params)
             int  i;
             SQLINTEGER indicator;
             char buf[512];
-            char *s, *sv;
+            char *s;
+            short flags = 0;
+            float roc,rmin,rmax;
+            
             ret = SQLGetData(stmt, 1, SQL_C_CHAR, buf, sizeof(buf),
                              &indicator);
             if (SQL_SUCCEEDED(ret))
@@ -140,18 +143,44 @@ void w1_init(w1_devlist_t *w1, char *params)
                                      &indicator);
                     if (SQL_SUCCEEDED(ret))
                     {
-                        if (indicator == SQL_NULL_DATA)
+                        if (indicator != SQL_NULL_DATA)
                         {
-                            sv = NULL;
+                            roc = strtof(buf, NULL);
+                            flags |= W1_ROC;
                         }
-                        else
+                    }
+                    ret = SQLGetData(stmt, 3, SQL_C_CHAR, buf, sizeof(buf),
+                                     &indicator);
+                    if (SQL_SUCCEEDED(ret))
+                    {
+                        if (indicator != SQL_NULL_DATA)
                         {
-                            float v = strtof(buf, NULL);
-                            w1_sensor_t *sensor;
-                            if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
-                            {
-                                sensor->roc = v;
-                            }                            
+                            rmin = strtof(buf, NULL);
+                            flags |= W1_RMIN;
+                        }
+                    }
+                    ret = SQLGetData(stmt, 4, SQL_C_CHAR, buf, sizeof(buf),
+                                     &indicator);
+                    if (SQL_SUCCEEDED(ret))
+                    {
+                        if (indicator != SQL_NULL_DATA)
+                        {
+                            rmax = strtof(buf, NULL);
+                            flags |= W1_RMAX;
+                        }
+                    }
+                    if(flags)
+                    {
+                        w1_sensor_t *sensor;
+                        if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                        {
+                            sensor->flags = flags;
+                            if(flags & W1_ROC)
+                                sensor->roc = roc;
+                            if(flags & W1_RMIN)
+                                sensor->rmin = rmin;
+                            if(flags & W1_RMAX)
+                                sensor->rmax = rmax;
                         }
                     }
                     free(s);
@@ -187,10 +216,10 @@ void w1_logger (w1_devlist_t *w1, char *params)
         SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
         SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
         SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc);
-        SQLDriverConnect(dbc, NULL, params, SQL_NTS,
+        SQLDriverConnect(dbc, NULL, (unsigned char *)params, SQL_NTS,
                          NULL, 0, NULL, SQL_DRIVER_COMPLETE);
         SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-        SQLPrepare (stmt, "insert into readings values (?,?,?)", SQL_NTS);
+        SQLPrepare (stmt, (unsigned char *)"insert into readings values (?,?,?)", SQL_NTS);
     }
 
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
