@@ -91,30 +91,68 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     w1->numdev = n;
     w1->devs=devs;
 
-    if(sqlite3_get_table (db, "select name,value from ratelimit",
+    if(sqlite3_get_table (db, "select name,value,rmin,rmax from ratelimit",
                           &rt, &nr, &nc, &err) == SQLITE_OK)
     {
+        float roc,rmin,rmax;
+
         if(nr > 0 && nc > 0)
         {
             int offset = 0;
-            char *s,*sv;
-            float v;
             for(n = 0; n < nr; n++)
             {
+                char *s = NULL,*sv=NULL;
+                short flags = 0;                
                 offset += nc;
                 GETVALUE(0, s);
-                GETVALUE(1, sv);
-                if(s && *s && sv && *sv)
+                if(s && *s)
                 {
-                    float v = strtof(sv, NULL);
-                    w1_sensor_t *sensor;
-                    if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                    GETVALUE(1, sv);
+                    if(sv)
                     {
-                        sensor->roc = v;
+                        if(*sv)
+                        {
+                            roc = strtof(sv, NULL);
+                            flags |= W1_ROC;
+                        }
+                        if (sv) free(sv);                        
+                    }
+                    GETVALUE(2, sv);
+                    if(sv)
+                    {
+                        if(*sv)
+                        {
+                            rmin = strtof(sv, NULL);
+                            flags |= W1_RMIN;
+                        }
+                        if (sv) free(sv);                        
+                    }
+                    GETVALUE(3, sv);
+                    if(sv)
+                    {
+                        if(*sv)
+                        {
+                            rmax = strtof(sv, NULL);
+                            flags |= W1_RMAX;
+                        }
+                        if (sv) free(sv);                        
+                    }
+                    if(flags)
+                    {
+                        w1_sensor_t *sensor;
+                        if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
+                        {
+                            sensor->flags = flags;
+                            if(flags & W1_ROC)
+                                sensor->roc = roc;
+                            if(flags & W1_RMIN)
+                                sensor->rmin = rmin;
+                            if(flags & W1_RMAX)
+                                sensor->rmax = rmax;
+                        }
                     }
                 }
                 if (s) free(s);
-                if (sv) free(sv);
             }
             sqlite3_free_table(rt);
         }

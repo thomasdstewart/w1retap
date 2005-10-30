@@ -23,5 +23,10 @@
 	Added XMLRPC based Gnome applet
 	Added configure options to limit what is built
 	Fixed memory leaks in applets
+
+0.0.5   Fixed MySQL and ODBC plugins
+	Added reportlog table
+	Changed the GNOME applet to have own configure
+	Fixed ratelimit methods
 	
 	

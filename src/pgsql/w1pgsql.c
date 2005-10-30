@@ -99,26 +99,52 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     w1->devs=devs;
     PQclear(res);
     
-    res = PQexec(db, "select name,value from ratelimit");
+    res = PQexec(db, "select name,value,rmin,rmax from ratelimit");
     if (PQresultStatus(res) == PGRES_TUPLES_OK)
     {
+        float roc,rmin,rmax;
         int nn = PQntuples(res);
+
         for (n = 0; n < nn; n++)        
         {
             char *s, *sv;
-            float v;
             int i;
+            short flags = 0;
             s = PQgetvalue(res, n, 0);
             if(s && *s)
             {
-                w1_sensor_t *sensor;
                 sv = PQgetvalue(res, n, 1);
                 if(sv && *sv)
                 {
-                    v = strtof(sv, NULL);
+                    roc = strtof(sv, NULL);
+                    flags |= W1_ROC;
+                }
+
+                sv = PQgetvalue(res, n, 2);
+                if(sv && *sv)
+                {
+                    rmin = strtof(sv, NULL);
+                    flags |= W1_RMIN;
+                }
+
+                sv = PQgetvalue(res, n, 3);
+                if(sv && *sv)
+                {
+                    rmax = strtof(sv, NULL);
+                    flags |= W1_RMAX;
+                }
+                if(flags)
+                {
+                    w1_sensor_t *sensor;    
                     if (NULL != (sensor = w1_find_sensor(w1, (const char *)s)))
                     {
-                        sensor->roc = v;
+                        sensor->flags = flags;
+                        if(flags & W1_ROC)
+                            sensor->roc = roc;
+                        if(flags & W1_RMIN)
+                            sensor->rmin = rmin;
+                        if(flags & W1_RMAX)
+                            sensor->rmax = rmax;
                     }
                 }
             }
@@ -130,12 +156,14 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 
 static PGconn *db;
 static char *stmt;
+static char *stml;
 
 void w1_cleanup(void)
 {
     if(db)
     {
         stmt = NULL;
+        stml = NULL;
         PQfinish(db);
         db = NULL;
     }
@@ -172,7 +200,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 #error "Bad PG version"        
 #endif
     }
-
+    
     res = PQexec(db,"begin");
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
@@ -199,6 +227,48 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         }
     }
     res = PQexec(db,"commit");
+}
+
+void w1_report(w1_devlist_t *w1, char *dbnam)
+{
+    int i;
+    w1_device_t *devs;
+    PGresult *res;
+
+    if(w1->lastmsg)
+    {
+        if(db == NULL)
+        {
+            db = w1_opendb(dbnam);
+        }
+
+        if(stml == NULL)
+        {
+            stml = "insrl";
+
+#if PGV == 7
+#warning "Pg Version 7"
+            PQexec(db, "prepare insrl(timestamp with time zone,text) as "
+                   "insert into replog values ($1,$2)");
+#elif PGV == 8
+            res = PQprepare(db, stml,
+                            "insert into replog values ($1,$2)", 0, NULL);
+#else
+#error "Bad PG version"        
+#endif
+        }
+
+        res = PQexec(db,"begin");
+        {
+            const char * pvals[2];
+            char tstr[64];
+            logtimes(w1->logtime, tstr);
+            pvals[0] = tstr;
+            pvals[1] = w1->lastmsg;
+            res = PQexecPrepared(db, stml, 2, pvals, NULL, NULL, 0);
+        }
+        res = PQexec(db,"commit");
+    }
 }
 
 #if defined(TESTBIN)

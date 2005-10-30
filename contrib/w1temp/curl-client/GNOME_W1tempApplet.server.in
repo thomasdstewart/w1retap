@@ -1,0 +1,28 @@
+<oaf_info>
+<oaf_server iid="OAFIID:w1tempApplet_Factory" type="exe"
+            location="@LIBEXECDIR@/w1temp">
+        <oaf_attribute name="repo_ids" type="stringv">
+                <item value="IDL:Bonobo/GenericFactory:1.0"/>
+                <item value="IDL:Bonobo/Unknown:1.0"/>
+        </oaf_attribute>
+        <oaf_attribute name="name" type="string" value="w1temp Applet Factory"/>
+        <oaf_attribute name="description" type="string" value="Factory to create the w1temp applet"/>
+</oaf_server>
+
+<oaf_server iid="OAFIID:w1tempApplet" type="factory"
+            location="OAFIID:w1tempApplet_Factory">
+
+        <oaf_attribute name="repo_ids" type="stringv">
+                <item value="IDL:GNOME/Vertigo/PanelAppletShell:1.0"/>
+                <item value="IDL:Bonobo/Control:1.0"/>
+                <item value="IDL:Bonobo/Unknown:1.0"/>
+        </oaf_attribute>
+        <oaf_attribute name="name" type="string" 
+	value="One-wire Temperature"/>
+        <oaf_attribute name="description" type="string"
+        value="One wire temperature Applet"/>
+        <oaf_attribute name="panel:category" type="string" value="Amusements"/>
+        <oaf_attribute name="panel:icon" type="string" value="w1temp.png"/>
+</oaf_server>
+</oaf_info>
+
