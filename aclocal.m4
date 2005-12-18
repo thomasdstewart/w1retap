@@ -1200,31 +1200,31 @@ _LT_AC_TAGCONFIG
 # -----------------
 AC_DEFUN([_LT_VERSION_CHECK],
 [AC_MSG_CHECKING([for correct ltmain.sh version])
-if test -z "$ltmain"; then
+if test "x$ltmain" = "x" ; then
   AC_MSG_RESULT(no)
-  echo
-  echo "*** [Gentoo] sanity check failed! ***"
-  echo "*** \$ltmain is not defined, please check the patch for consistency! ***"
-  echo
-  exit 1
+  AC_MSG_ERROR([
+
+*** @<:@Gentoo@:>@ sanity check failed! ***
+*** \$ltmain is not defined, please check the patch for consistency! ***
+])
 fi
 gentoo_lt_version="1.5.20"
-gentoo_ltmain_version=`grep '^[[:space:]]*VERSION=' $ltmain | sed -e 's|^[[:space:]]*VERSION=||'`
-if test "$gentoo_lt_version" != "$gentoo_ltmain_version"; then
+gentoo_ltmain_version=`grep '^@<:@ 	@:>@*VERSION=' $ltmain | sed -e 's|^@<:@ 	@:>@*VERSION=||'`
+if test "x$gentoo_lt_version" != "x$gentoo_ltmain_version" ; then
   AC_MSG_RESULT(no)
-  echo
-  echo "*** [Gentoo] sanity check failed! ***"
-  echo "*** libtool.m4 and ltmain.sh have a version mismatch! ***"
-  echo "*** (libtool.m4 = $gentoo_lt_version, ltmain.sh = $gentoo_ltmain_version) ***"
-  echo
-  echo "Please run:"
-  echo
-  echo "  libtoolize --copy --force"
-  echo
-  echo "if appropriate, please contact the maintainer of this"
-  echo "package (or your distribution) for help."
-  echo
-  exit 1
+  AC_MSG_ERROR([
+
+*** @<:@Gentoo@:>@ sanity check failed! ***
+*** libtool.m4 and ltmain.sh have a version mismatch! ***
+*** (libtool.m4 = $gentoo_lt_version, ltmain.sh = $gentoo_ltmain_version) ***
+
+Please run:
+
+  libtoolize --copy --force
+
+if appropriate, please contact the maintainer of this
+package (or your distribution) for help.
+])
 else
   AC_MSG_RESULT(yes)
 fi
@@ -2425,7 +2425,14 @@ freebsd* | dragonfly*)
     *) objformat=elf ;;
     esac
   fi
-  version_type=freebsd-$objformat
+  # Handle Gentoo/FreeBSD as it was Linux
+  case $host_vendor in
+    gentoo)
+      version_type=linux ;;
+    *)
+      version_type=freebsd-$objformat ;;
+  esac
+
   case $version_type in
     freebsd-elf*)
       library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext} $libname${shared_ext}'
@@ -2435,6 +2442,12 @@ freebsd* | dragonfly*)
     freebsd-*)
       library_names_spec='${libname}${release}${shared_ext}$versuffix $libname${shared_ext}$versuffix'
       need_version=yes
+      ;;
+    linux)
+      library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
+      soname_spec='${libname}${release}${shared_ext}$major'
+      need_lib_prefix=no
+      need_version=no
       ;;
   esac
   shlibpath_var=LD_LIBRARY_PATH
