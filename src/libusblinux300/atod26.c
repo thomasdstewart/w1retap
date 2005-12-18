@@ -313,8 +313,12 @@ double Get_Temperature(int portnum,uchar *SNum)
       }
       else
          return ret;    
-      
-      ret = (((send_block[4] << 8) | send_block[3]) >> 3) * 0.03125;
+
+       // JH - fix sign for -ve values
+       short itemp;
+       itemp = ((send_block[4] << 8) | send_block[3]) >> 3 ;
+       if (itemp & 0x1000) itemp |= ~0xFFF ;
+       ret = itemp * 0.03125;
    }//Access
 
    return ret;
