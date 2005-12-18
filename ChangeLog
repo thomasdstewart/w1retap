@@ -29,4 +29,5 @@
 	Changed the GNOME applet to have own configure
 	Fixed ratelimit methods
 	
-	
+0.0.6   Fixed signed temp values for humidity sensors, thanks to some very
+	cold weather.
