@@ -591,7 +591,7 @@ static int w1_read_all_sensors(w1_devlist_t *w1)
 
 static void usage(void)
 {
-    fputs("w1retap v" VERSION " (c) 2005 Jonathan Hudson\n"
+    fputs("w1retap v" VERSION " (c) 2005,2006 Jonathan Hudson\n"
           "$ w1retap [-T] [-d] [-i interface] [-N] [-v] [-t sec]\n", stderr);
     exit(1);
 }
