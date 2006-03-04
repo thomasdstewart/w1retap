@@ -31,3 +31,6 @@
 	
 0.0.6   Fixed signed temp values for humidity sensors, thanks to some very
 	cold weather.
+
+0.0.7	Fixed the egregious memory leak in the pgsql module.
+	Fixed the information leak in etemp.

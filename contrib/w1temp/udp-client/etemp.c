@@ -88,6 +88,8 @@ int main (int argc, char **argv)
             if(0 == strcmp(data,auth))
             {
                 int fd;
+		strcpy(data,"No data, alas");
+		n = sizeof ("No data, alas") -1;
                 if((fd = open(fnam, O_RDONLY)) != -1)
                 {
                     n = read(fd, data, sizeof(data));

@@ -51,7 +51,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     db = w1_opendb(dbnam);
     res = PQexec(db, sql);
 
-    if (PQresultStatus(res) == PGRES_TUPLES_OK)
+    if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         int nn = PQntuples(res);
         devs = malloc(sizeof(w1_device_t)*nn);
@@ -97,10 +97,10 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     }
     w1->numdev = n;
     w1->devs=devs;
-    PQclear(res);
+    if(res) PQclear(res);
     
     res = PQexec(db, "select name,value,rmin,rmax from ratelimit");
-    if (PQresultStatus(res) == PGRES_TUPLES_OK)
+    if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         float roc,rmin,rmax;
         int nn = PQntuples(res);
@@ -150,7 +150,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             }
         }
     }
-    PQclear(res);
+    if (res) PQclear(res);
     PQfinish(db);
 }
 
@@ -173,7 +173,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 {
     int i;
     w1_device_t *devs;
-    PGresult *res;
+    PGresult *res = NULL;
     
     if (access("/tmp/.w1retap.lock", F_OK) == 0)
     {
@@ -191,7 +191,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 
 #if PGV == 7
 #warning "Pg Version 7"
-        PQexec(db, "prepare insrt(integer,text,real) as "
+        res = PQexec(db, "prepare insrt(integer,text,real) as "
                "insert into readings values ($1,$2,$3)");
 #elif PGV == 8
         res = PQprepare(db, stmt,
@@ -199,9 +199,12 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 #else
 #error "Bad PG version"        
 #endif
+        if(res) PQclear(res);        
+
     }
     
     res = PQexec(db,"begin");
+    if(res) PQclear(res);
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
         if(devs->init)
@@ -221,12 +224,14 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
                     pvals[1] = devs->s[j].abbrv;
                     pvals[2] = rval;
                     res = PQexecPrepared(db, stmt, 3, pvals, NULL, NULL, 0);
+                    if(res) PQclear(res);                    
                     free(rval);
                 }
             }
         }
     }
     res = PQexec(db,"commit");
+    if(res) PQclear(res);    
 }
 
 void w1_report(w1_devlist_t *w1, char *dbnam)
@@ -248,7 +253,7 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
 
 #if PGV == 7
 #warning "Pg Version 7"
-            PQexec(db, "prepare insrl(timestamp with time zone,text) as "
+            res = PQexec(db, "prepare insrl(timestamp with time zone,text) as "
                    "insert into replog values ($1,$2)");
 #elif PGV == 8
             res = PQprepare(db, stml,
@@ -256,9 +261,11 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
 #else
 #error "Bad PG version"        
 #endif
+            if(res) PQclear(res);                        
         }
 
         res = PQexec(db,"begin");
+        if(res) PQclear(res);
         {
             const char * pvals[2];
             char tstr[64];
@@ -266,8 +273,10 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
             pvals[0] = tstr;
             pvals[1] = w1->lastmsg;
             res = PQexecPrepared(db, stml, 2, pvals, NULL, NULL, 0);
+            if (res) PQclear(res);            
         }
         res = PQexec(db,"commit");
+        if(res) PQclear(res);        
     }
 }
 
