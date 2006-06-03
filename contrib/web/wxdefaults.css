@@ -1,7 +1,7 @@
 body { font-family: luxi, "vera sans", sans-serif; }
 tr.titlebar  { background-color: rgb(200, 200, 200); 
       text-align: center}
-#left {float: left; width: 800px}
+#left {float: left; width: 800px; display:table;   }
 #right {margin-left: 820px}
 #base {float: left;  clear: both ;   margin-left: auto; margin-right: auto; }
 img.graph { width: 400px; height: 200px; float: right}
@@ -65,13 +65,21 @@ img.sflogo {border:0; width: 125px; height: 37px; }
 
 DIV.left {
   border: none; float: left; margin: 0; padding: 0; width: 50%;
-  height: 200px;
+    clear:none;
 }
   
 DIV.right {
     border: none; float: right; margin: 0; 
-    padding: 0; width: 50%; height: 200px;
+    padding: 0; width: 50%; 
+    clear:none;
 }
+
+DIV.rightd {
+    border: none; float: right; margin: 0; 
+    padding: 0; width: 50%; 
+    clear:none;
+}
+
 
 DIV.space-line {
   clear: both; margin: 0; padding: 0; width: auto;

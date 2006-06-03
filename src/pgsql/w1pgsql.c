@@ -25,6 +25,8 @@
 #include <ctype.h>
 #include <time.h>
 #include <sys/file.h>
+#include <syslog.h>
+
 #include "libpq-fe.h"
 #include "w1retap.h"
 
@@ -44,12 +46,12 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
     char *sql = "select device,type,abbrv1,name1,units1,abbrv2,name2,units2 from w1sensors";
-    PGconn *db;
+    PGconn *idb;
     PGresult *res;
     int n = 0;
 
-    db = w1_opendb(dbnam);
-    res = PQexec(db, sql);
+    idb = w1_opendb(dbnam);
+    res = PQexec(idb, sql);
 
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
@@ -99,7 +101,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     w1->devs=devs;
     if(res) PQclear(res);
     
-    res = PQexec(db, "select name,value,rmin,rmax from ratelimit");
+    res = PQexec(idb, "select name,value,rmin,rmax from ratelimit");
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         float roc,rmin,rmax;
@@ -151,12 +153,70 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         }
     }
     if (res) PQclear(res);
-    PQfinish(db);
+    PQfinish(idb);
 }
 
 static PGconn *db;
 static char *stmt;
 static char *stml;
+static int retry;
+
+static void db_syslog(char *p)
+{
+    char *q = NULL,*qq;
+    int qa = 0;
+    
+    if (p)
+    {
+        if ((q = strdup(p)))
+        {
+            qa = 1;
+            if(qq = strchr(q,'\n'))
+            {
+                *qq = 0;
+            }
+        }
+    }
+    
+    if (q == NULL)
+    {
+        q = "retry";
+    }
+    
+    if(q)
+    {
+        openlog("w1retap", LOG_PID, LOG_USER);
+        syslog(LOG_ERR, "psql: %s", q);
+        closelog();
+    }
+    if(qa) free(q);
+}
+
+
+static void db_status(char *dbnam)
+{
+    if(db == NULL)
+    {
+        db = w1_opendb(dbnam);
+    }
+    else if (PQstatus(db) == CONNECTION_BAD)
+    {
+        PQreset(db);
+        stmt = NULL;
+        stml = NULL;
+        retry++;
+    }
+    else
+    {
+        retry = 0;
+    }
+
+    if ((retry % 10) == 1)
+    {
+        db_syslog(PQerrorMessage(db));
+    }
+}
+
 
 void w1_cleanup(void)
 {
@@ -166,6 +226,7 @@ void w1_cleanup(void)
         stml = NULL;
         PQfinish(db);
         db = NULL;
+        retry = 0;
     }
 }
 
@@ -180,11 +241,8 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         return;
     }
     
-    if(db == NULL)
-    {
-        db = w1_opendb(dbnam);
-    }
-
+    db_status(dbnam);
+    
     if(stmt == NULL)
     {
         stmt = "insrt";
@@ -200,7 +258,6 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 #error "Bad PG version"        
 #endif
         if(res) PQclear(res);        
-
     }
     
     res = PQexec(db,"begin");
@@ -242,11 +299,7 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
 
     if(w1->lastmsg)
     {
-        if(db == NULL)
-        {
-            db = w1_opendb(dbnam);
-        }
-
+        db_status(dbnam);
         if(stml == NULL)
         {
             stml = "insrl";

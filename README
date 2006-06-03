@@ -50,6 +50,6 @@ builder, a wunderground.com reporting script, RSS feeder, and a GNOME
 panel applet (actually two, using different transports).
 
 Please see the docs sub-directory for information on building,
-installing and running w1retap.
+installing and running w1retap. In particular, README.udev
 
-Jonathan Hudson, Netley Marsh, October 2005
+Jonathan Hudson, Netley Marsh, England.

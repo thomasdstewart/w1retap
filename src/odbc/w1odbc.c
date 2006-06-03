@@ -38,7 +38,7 @@ void w1_init(w1_devlist_t *w1, char *params)
     SQLSMALLINT columns; 
     const char *sql =
         "select device,type,abbrv1,name1,units1,abbrv2,name2,units2 from w1sensors";
-    SQLINTEGER rows = 0;
+    SQLLEN rows = 0;
     w1_device_t * devs = NULL;
     int n = 0;
     
@@ -63,7 +63,7 @@ void w1_init(w1_devlist_t *w1, char *params)
             int  i;
             for (i = 0; i < columns; i++)
             {
-                SQLINTEGER indicator;
+                SQLLEN indicator;
                 char buf[512];
                 
                 ret = SQLGetData(stmt, i+1, SQL_C_CHAR, buf, sizeof(buf),
@@ -122,7 +122,7 @@ void w1_init(w1_devlist_t *w1, char *params)
         while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
         {
             int  i;
-            SQLINTEGER indicator;
+            SQLLEN indicator;
             char buf[512];
             char *s;
             short flags = 0;
@@ -231,7 +231,7 @@ void w1_logger (w1_devlist_t *w1, char *params)
             {
                 if(devs->s[j].valid)
                 {
-                   SQLINTEGER psz;
+                   SQLLEN psz;
                    int res;
                    psz = sizeof(int);
                    res = SQLBindParameter(stmt, 1, SQL_PARAM_INPUT,

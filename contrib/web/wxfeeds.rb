@@ -48,14 +48,16 @@ rr.each do |r|
   item = RSS::Rss::Channel::Item.new
   item.title = "Weather in Netley Marsh #{r['gstamp']}"
   fn = "rss_#{r['udate']}.html"
+  hstr = r['humid'] ?  '%.1f' % r['humid']  : ''
+  dstr = r['dewpt'] ? '%.1f' % r['dewpt'] : ''
   c= %Q{<table>
   	<tr><td>Time</td><td>#{r['gstamp']}</td></tr>
  	<tr><td>Greenhouse</td><td>#{'%.1f' % r['temp']}°C</td></tr>
         <tr><td>Outside</td><td>#{'%.1f' % r['temp']}°C</td></tr>
         <tr><td>Pressure</td><td>#{'%.1f' % r['pres']}hPa</td></tr>
-        <tr><td>Rel. Humidity</td><td>#{'%.1f' % r['humid']}%</td></tr>
-        <tr><td>Rainfall</td><td>#{'%.1f' % r['rain']}in/hr</td></tr>
-        <tr><td>Dew Point</td><td>#{'%.1f' % r['dewpt']}°C</td></tr>
+        <tr><td>Rel. Humidity</td><td>#{hstr}%</td></tr>
+        <tr><td>Rainfall</td><td>#{'%.2f' % r['rain']}in/hr</td></tr>
+        <tr><td>Dew Point</td><td>#{dstr}°C</td></tr>
         </table>}
   item.description = c
   item.pubDate = Time.at(r['udate'])
@@ -101,7 +103,10 @@ if not $opt_h.nil?
     files = ftp.nlst
     files.each do |m|
       d = m.match(/^rss_(\d+).html$/)
-      ftp.delete m if !d.nil? and d[1].to_i < lrss
+      begin
+	ftp.delete m if !d.nil? and d[1].to_i < lrss
+      rescue
+      end
     end
 
     files = %w{gtemp.png press.png temp.png tide.png wdirn.png wspeed.png
@@ -109,7 +114,14 @@ if not $opt_h.nil?
             temps.png rain.png wx_static.xml wx.rss2.xml wx.rss1.xml}
     files << "rss_#{last}.html"
     files.each do |f|
-      ftp.put f
+      if File.exists?(f)
+	ftp.put f 
+      else
+	begin
+	  ftp.delete f
+	rescue
+	end
+      end
     end
   end
 end

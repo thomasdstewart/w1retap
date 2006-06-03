@@ -1,5 +1,40 @@
-0.0.1	Fix the delay time to be in the second we want. First public
-	release.
+0.0.9   2006-06-02
+	Increased resiliance to psql errors.
+	Documented udev setting for non-root operation on recent Linux (e.g.
+	Ubuntu 6.06 Dapper.
+
+0.0.8   2006-04-14. (never publically released)
+	Reversed the Changelog to have most recent entries at the top.
+	Fixed the configure scripts to recognise missing header files for
+	odbc and sqlite plugins (reported by Stephen Searby).
+	
+	Fixed GCC 4 compiler warnings in libusblinux300 (reported by Stephen
+	Searby), and in w1odbc.c
+
+	Updated may of the contrib/web scripts, and added reporting to CWOP
+	(Citizen Weather Observer Program)
+
+0.0.7	Fixed the egregious memory leak in the pgsql module.
+	Fixed the information leak in etemp.
+
+0.0.6   Fixed signed temp values for humidity sensors, thanks to some very
+	cold weather.
+
+0.0.5   Fixed MySQL and ODBC plugins
+	Added reportlog table
+	Changed the GNOME applet to have own configure
+	Fixed ratelimit methods
+
+0.0.4   Moved to Ruby scripts. 
+	Changed web pages to use CSS.
+	Added ratelimit table to catch bogus readings
+	Again changed timer algorithm to catch clock being adjusted
+	underneath us.
+	Added XMLRPC based Gnome applet
+	Added configure options to limit what is built
+	Fixed memory leaks in applets
+
+0.0.3	Fixed the pgsql driver to actually work.
 
 0.0.2	Add a (code) constraint on the pressure reading (about once a
 	month my sensor reports a single value way out of range).
@@ -13,24 +48,6 @@
 	Remove duplicate files and .svn files from the distributed tar
 	ball.
 
-0.0.3	Fixed the pgsql driver to actually work.
+0.0.1	Fix the delay time to be in the second we want. First public
+	release.
 
-0.0.4   Moved to Ruby scripts. 
-	Changed web pages to use CSS.
-	Added ratelimit table to catch bogus readings
-	Again changed timer algorithm to catch clock being adjusted
-	underneath us.
-	Added XMLRPC based Gnome applet
-	Added configure options to limit what is built
-	Fixed memory leaks in applets
-
-0.0.5   Fixed MySQL and ODBC plugins
-	Added reportlog table
-	Changed the GNOME applet to have own configure
-	Fixed ratelimit methods
-	
-0.0.6   Fixed signed temp values for humidity sensors, thanks to some very
-	cold weather.
-
-0.0.7	Fixed the egregious memory leak in the pgsql module.
-	Fixed the information leak in etemp.
