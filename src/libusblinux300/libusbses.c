@@ -171,6 +171,10 @@ int owAcquireEx(char *port_zstr)
 		return -1;
     }
 
+#ifdef LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP
+    usb_detach_kernel_driver_np(usb_dev_handle_list[portnum],0);
+#endif /* LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP */
+   
     // set the configuration
     if (usb_set_configuration(usb_dev_handle_list[portnum], 1)) 
     {
@@ -179,7 +183,7 @@ int owAcquireEx(char *port_zstr)
         usb_close(usb_dev_handle_list[portnum]); // close handle
 	    return -1;
     }
-
+    
     // claim the interface
     if (usb_claim_interface(usb_dev_handle_list[portnum], 0)) 
     {

@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(configure.ac)
+AC_INIT(w1retap,0.0.9)
 PACKAGE=w1retap
-VERSION=0.0.7
+VERSION=0.0.9
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AM_CONFIG_HEADER(config.h)
@@ -63,11 +63,19 @@ USE_APPLET=
 GLIB_CFLAGS=
 GLIB_LIBS=
 
-if test "$ac_cv_lib_sqlite3_sqlite3_open = yes" -a "$with_sqlite" != "no" ; then
+if test "$ac_cv_header_sqlite3_h" = "no" -o "$ac_cv_lib_sqlite3_sqlite3_open" = "no" ; then
+ with_sqlite="no"
+fi
+
+if test "$with_sqlite" != "no" ; then
  USE_SQLITE=sqlite
 fi
 
-if test "$ac_cv_lib_odbc_SQLAllocHandle = yes" -a "$with_odbc" != "no"; then
+if test "$ac_cv_header_sql_h" = "no" -o "$ac_cv_lib_odbc_SQLAllocHandle" = "no" ; then
+ with_odbc="no"
+fi
+
+if test "$with_odbc" != "no"; then
  USE_ODBC=odbc
 fi
 
@@ -140,7 +148,6 @@ src/pgsql/Makefile
 src/odbc/Makefile
 contrib/Makefile
 )
-
 
 echo
 echo "Configuration:"

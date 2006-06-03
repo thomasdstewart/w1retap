@@ -70,7 +70,7 @@
   xautorange: datafield=times hifix=@edate nearest=hours
   rectangle: @RAREA
   areacolor: white
-
+  
 #proc xaxis
   stubs: inc 1 hour
   stubformat: hh:mm
@@ -87,7 +87,8 @@
  yfield: otemp
  xfield: times
  linedetails: width=@LW color=red
-
+ stairstep: no
+ 
 //Pressure 
 
 #proc getdata
@@ -139,7 +140,7 @@
 #proc areadef
   title: Relative Humidity
   titledetails: align=C
-  yautorange: datafield=humid hifix=@hmax
+  yautorange: datafield=humid hifix=@hmax lowfix=0
   xscaletype: datetime yyyy-mm-dd.hh:mm
   xautorange: datafield=times hifix=@edate nearest=hours
   rectangle: @RAREA
@@ -220,6 +221,7 @@
  location: min+1 max
  seglen: 0.2
 
+#if @dodock = 1
 #proc getdata
  file: w0.dat
  fieldnames times dirn ws gs tide
@@ -327,6 +329,7 @@
  yfield: dirn
  xfield: times
  linedetails: width=@LW color=red
+#endif
 
 #proc getdata
  file: w6.dat

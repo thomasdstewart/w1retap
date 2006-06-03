@@ -33,10 +33,18 @@ module SvgWind
 	self.style = SVG::Style.new(:stroke_width => sw, :stroke=>'black' ) }
     end
 
-    svg << SVG::Polygon.new(SVG::Point[100, 20, 120, 60, 105, 40, 110, 120, 100, 110, 90, 120, 95, 40, 80, 60 ]) { 
-      self.transform = 'rotate('+dirn.to_s+',100,100)'
-      self.style = SVG::Style.new(:fill => 'red', :fill_opacity => 0.5 )} 
-    
+    if dirn >= 0
+      svg << SVG::Polygon.new(SVG::Point[100, 20, 120, 60, 105, 40, 110, 120, 100, 110, 90, 120, 95, 40, 80, 60 ]) { 
+	self.transform = 'rotate('+dirn.to_s+',100,100)'
+	self.style = SVG::Style.new(:fill => 'red', :fill_opacity => 0.5 )} 
+    else
+      svg <<  SVG::Text.new(53, 108, "No data") {
+	  self.style = SVG::Style.new(:font_size => 28,
+				      :font_family => 'Arial',
+				      :fill => 'red' )}
+
+    end
+
     tf = Tempfile.new('wind')
     tf.open
     tf.print svg.to_s
@@ -46,7 +54,7 @@ module SvgWind
 end
 
 if __FILE__ == $0
-  dirn = ARGV[0].to_i || 0
+  dirn = ARGV[0].to_i || -1
   SvgWind.makeimage dirn
 end
 

@@ -1,0 +1,95 @@
+
+*************************************************
+**************** See README.udev ****************
+*************************************************
+
+The DallasSem "tstfind" program may be used to find devices on the
+1-wire bus.
+
+The libusblinux300 supplied with w1retap can build all the Dallas test
+programs.
+
+$ cd libusblinux300
+$ make -f makefile.orig linux
+
+Run tstfind with the name of the device as a parameter, for the DS2490
+USB device:
+
+$ ./tstfind DS2490-1
+
+You will then see output like:
+
+ -------------------- Start of search
+(1) 9B000800C142A910
+(2) AD00000067A46D28
+(3) A9000000346BFC12
+(4) 30000000344A1B12
+(5) AB00000051883726
+(6) 8B00000024847E81
+(7) 8900000005B19B1D
+-------------------- End of search
+
+listing the devices on the 1-wire bus. The numbers after the (n) are
+the device addresses you need for w1retap. Unfortunately these are
+byte reversed compared to the w1retap parameters.
+
+# select device,type from w1sensors ;
+      device      |    type
+------------------+-------------
+ 286DA467000000AD | Temperature
+ 12FC6B34000000A9 | Pressure
+ 1D9BB10500000089 | RainGauge
+ 10A942C10008009B | Temperature
+ 26378851000000AB | Humidity
+(5 rows)
+
+For w1retap (and other excellent tools like owfs), the output from
+tstfind is inverted. 
+
+For the w1retap / owfs format, the first two digits are the device
+type, a full list of which may be found at the owfs site
+<http://owfs.sourceforge.net/commands.html>.
+
+So 28 is a DS18B20 temperature sensors, 10 is a DS1920/DS1820
+temperature sensor. In the above example, 7 devices are found but on 5
+are listed for w1retap, because (3) A9000000346BFC12 and (4)
+30000000344A1B12 are part of the pressure device, but w1retap just
+needs one address, the DS2490 USB adaptor address is not required.
+
+The following ruby script will dump out the devices supported by
+w1retap.
+
+#!/usr/bin/ruby
+
+state=0
+ARGF.each do |l|
+  case state
+  when 0
+    state = 1 if l.match /Start of search/
+  when 1
+    if m = l.match(/\((\d+)\)\s+(\S+)/)
+      dev = m[2]
+      dev.sub!(/(..)(..)(..)(..)(..)(..)(..)(..)/,'\8\7\6\5\4\3\2\1')
+      type = case dev
+	     when /^10/
+	       "18S20 thermometer"
+	     when /^1D/
+	       "2423 Counter"
+	     when /^12/
+	       "2406/2407 switch"
+	     when /^26/
+	       "2438 voltage monitor"
+	     when /^28/
+	       "18B20 thermometer"
+	     when /^81/
+	       "USB device"
+	     end
+      puts "#{dev} #{type}"
+    else
+      state = 2 if l.match /End of search/
+    end
+  when 2
+    break
+  end
+end
+

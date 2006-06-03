@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN'
+        'DTD/xhtml1-strict.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+      <meta http-equiv="refresh" content="300" />
+	<meta name="description" content="Personal Weather Station" />
+	  <meta name="keywords" content=
+	    "Jonathan Hudson,Daria Hudson,Linux,Weather,1-wire,Dallas,
+	    Netley Marsh,Southampton" />
+	    <title>Weather</title>
+	    <link rel="stylesheet" type="text/css" href="wxdefaults.css"/>
+	    <link rel="alternate" type="application/rss+xml" title="RSS"
+	    href="wx.rss2.xml" />
+  </head>
+  
+  <body>
+    <h1>Weather in Netley Marsh and Southampton Water</h1>
+    <div id="left">
+      <table cellspacing='0' border='0' summary="xxx" cellpadding='0'>
+	<colgroup>
+	  <col width='50%' />
+	    <col width='50%' />
+	</colgroup>
+	<tbody>
+	  <tr>
+	    <th class="homebg"><h4 class="indent">Netley Marsh</h4><hr/></th>
+	<th class="dockbg"><h4 class="indent">Southampton Water</h4><hr/></th>
+	  </tr>
+	  <tr>
+	  <td class="homebg">
+	    <p class="indent">
+	      <img
+		src="thermo.<!-- var:gtype -->" 
+		alt="" style="float: right; margin-right: 1em"
+		title="Temperature in Daria's Greenhouse (<!-- var:gtemp -->)" 
+		/>
+		Timestamp:
+		<!-- var:date --><br />
+		  <b>Greenhouse</b><br />
+		    <!-- var:gtemp --> (24 hour min
+		    <!-- var:gmin -->, max
+		    <!-- var:gmax -->)<br />
+		      <b>Garden Weather</b><br />
+			Temperature:
+			<!-- var:temp --><br />
+			  Pressure:
+			  <!-- var:press --><br />
+			    Relative Humidity:
+			    <!-- var:humid -->%<br />
+			      Dew Point:
+			      <!-- var:dewpt --><br />
+				Rainfall, last hour:
+				<!-- var:rain -->, 24 hours: <!-- var:rain24 -->
+				<!-- var:raintimes -->
+	    </p>
+         </td>
+          <td class="dockbg">
+          <p class="indent">
+	    Timestamp:
+	    <!-- var:pdate --><br />
+	      Direction:
+	      <!-- var:wdirn -->&deg;<br />
+		Average Speed:
+		<!-- var:wspeed -->kts (adjusted to 10m)<br />
+		  Gust:
+		  <!-- var:wgust -->kts (adjusted to 10m)<br />
+		    Tide:
+		    <!-- var:tide -->m<br /></p>
+	  <hr />
+	    <p class="indent">
+	      Data is from the <a href=
+		"http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
+	      <a href="http://www.sotonmet.co.uk/wap">WAP</a> feed and adjusted
+	      for the wind sensor height.
+	    </p>
+	    <hr />
+	  </td>
+        </tr>
+      </tbody>
+      </table>
+
+      <!-- Images start here -->
+      <div class="table-row">
+	<div class="left homebg">
+	  <img 
+	    src="gtemp.<!-- var:gtype -->" class="graph" alt=""
+	    title="24 hour temperature in Daria's greenhouse (now: <!-- var:gtemp -->)"	/>
+	</div>
+	<div class="right dockbg">
+	  <img 
+	    src="wdirn.<!-- var:gtype -->" class="graph" alt=""
+	    title="24 hour Southampton Water wind direction (now: <!-- var:wdirn -->&deg;)" />
+	</div>
+	<div class="space-line"></div>
+      </div>
+      <div class="table-row">
+	<div class="left homebg">
+	  <img 
+	    src="temp.<!-- var:gtype -->" class="graph" alt=""
+	    title="24 hour outside temperature (now: <!-- var:temp -->)" />
+	</div>
+	<div class="right dockbg">
+	  <img 
+	    src="wspeed.<!-- var:gtype -->" class="graph" alt=""
+	    title="24 hour wind speed on Southampton Water (now: <!-- var:wspeed -->kts)" />
+	</div>
+	<div class="space-line"></div>
+      </div>
+      <div class="table-row">
+	<div class="left homebg">
+	  <img
+	    src="press.<!-- var:gtype -->" class="graph" alt=""
+	    title="24 hour pressure (now: <!-- var:press -->)" />
+	</div>
+	<div class="right dockbg">
+	  <img 
+	    src="tide.<!-- var:gtype -->" alt="" class="graph" 
+	    title="24 hour Southampton tide level (now: <!-- var:tide -->m)" />
+	</div>
+	<div class="space-line"></div>
+      </div>
+      <div class="table-row">
+	<div class="left homebg">
+	  <img 
+	    src="humid.<!-- var:gtype -->" alt="" class="graph"
+	    title="24 hour relative humidity (now: <!-- var:humid -->%)" />
+	</div>
+	<div class="right homebg">
+	  <img 
+	    src="temps.<!-- var:gtype -->" alt="" class="graph"
+	    title="Comparison of greenhouse and exterior temperatures" />
+	</div>
+	<div class="space-line"></div>
+      </div>
+      <div class="table-row">
+	<div class="left homebg">
+	    <img src="rain.<!-- var:gtype -->" alt="" class="graph"
+	    title="Rainfall" />
+	</div>
+	<div class="right homebg" >
+	    <table style="float: right; margin:0; padding: 5px;"
+	    cellspacing='0' border='0' summary="Rain Check" cellpadding='0'>
+	    <colgroup>
+	      <col width='35%' />
+		<col width='15%' />
+		  <col width='15%' />
+		    <col width='30%'/>
+	    </colgroup>
+	    <tbody>
+	      <tr class="titlebar" >
+		<th/>
+		  <th colspan="2" >
+		    Rainfall</th>
+		  <th/>
+	      </tr>
+	      <tr class="titlebar" >
+		<th class="aleft">Date</th>
+		<th>Inch</th>
+		<th>mm</th>
+		<th>Avg. Month mm</th>
+	      </tr>
+	      <!-- begin:rainlist -->
+	      <tr class="<!-- var:pcol -->">
+		<td class='aleft'><!-- var:pnam --></td>
+		<td class='acentre'><!-- var:vali --></td>
+		<td class='acentre'><!-- var:valm --></td>
+		<td class='acentre'><!-- var:vala --></td>
+	      </tr>
+	      <!-- end:rainlist -->
+	    </tbody>
+	  </table>
+	</div>
+	<div class="space-line"></div>
+      </div>
+    </div>
+    <div id="right">
+      <p>
+	<img src="stnmap.png" alt="Map" class="cimag"
+	  title= "Netley Marsh weather station location (50.9N,1.5W)" />
+      </p>
+      <p>
+	  <img src="winddirn.<!-- var:gtype -->" alt="" class="cimag"
+            title="Wind Direction on Southampton Water (<!-- var:wdirn -->&deg;)" />
+	</p>
+      <p>
+	The Netley Marsh data is obtained from a number of
+	1-wire weather sensors in our garden. You can find out more
+	information about the <b>hardware and <i>w1retap</i> software</b> used <a
+          href= "tech.html">(Linux, 1-wire, postgresql)</a>, on the
+	<a href="tech.html">technical description page</a>.
+      </p>
+      <p>
+	There are also some pictures of the sensors and 
+	Daria's greenhouse in
+	the <a href="images/">image gallery</a>.
+      </p>
+      <p>Our garden is surrounded by trees, therefore we do not
+	have an anemometer; as we sail at <a
+	href="http://www.weston.org.uk/">Weston Sailing Club</a> on
+	Southampton Water, it is convenient to use the <a href=
+          "http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
+	<a href="http://www.sotonmet.co.uk/wap">WAP</a> feed for wind
+	information. The wind speed is normalised from the value
+	measured at 53m to a more normal 10m for display.
+      </p>
+      <p>
+	In the rainfall table, the <i>Avg. Month mm</i> column is the
+	expected historic rainfall for the month, taken from the
+	<a
+	  href="http://uk.weather.com/weather/climatology/UKXX0138">
+	  Weather Channel climate statistics</a>
+      </p>
+      <p>
+	This site aims to be standards compliant. If it doesn't
+	look right in your browser, that's may be because you're
+	using a somewhat non-compliant and broken browser. You
+	may wish to consider upgrading to a <a
+	  href="http://getfirefox.com/"
+	  title="Get Firefox - The Browser, Reloaded.">
+	  more secure, standards' compliant browser</a>.
+      </p>
+      <p >
+	<a href="http://validator.w3.org/check?uri=referer"><img
+	    src="xhtmlvalid.png" 
+	    alt="Valid XHTML 1.0 Transitional" class="cimag" /> </a>
+
+	<a href="wx.wrss1.xml"><img src="rss-1.0-icon.png" 
+	    alt="RSS 1.0 Feed" class="cimag"/></a>
+	<a href="wx.rss2.xml"><img src="rss-2.0-icon.png" 
+	    alt="RSS 2.0 Feed"  class="cimag" /></a>
+	<a href="http://www.mozilla.org/products/firefox/">
+	  <img src="firefox80x15.png" alt="Get Firefox" 
+	    class="cimag"/></a>
+	<a href="http://www.ffii.org/">
+	  <img src="no_patents-icon.png" alt="No Software Patents" 
+	    class="cimag"/></a>
+
+	<a href="http://www.ruby-lang.org/en/"><img
+	    src="Ruby-POWERED.png" 
+	    alt="Remember. Understand. Believe. Yield!" class="cimag" /> </a>
+      </p>
+      <h6>Weather Forecast Links</h6>
+      <p>
+	<a
+	href="http://www.bbc.co.uk/weather/5day.shtml?id=3485&amp;links">
+	  BBC Weather Centre</a>
+	<br/>
+	  <a
+	    href="http://uk.weather.com/weather/local/UKXX0138?x=0&amp;y=0">
+	    Weather.com</a>
+	  <br />
+	    <a
+	      href="http://www.wunderground.com/global/stations/03865.html">
+	      Wunderground.com</a>
+	    <br />
+	      <a href="http://theyr.net/cg/cny/I1f8484/F=js*L=NC*v*050712*12*EN*engl_Southampton">
+	      Theyr Weather Forecasts</a>
+
+      </p>
+      <!-- var:wx_notice -->
+    </div>
+    <div class="space-line" />
+    <div class="base">
+	<p>
+	<a style="float: right;" href="http://getfirefox.com/" 
+	  title="Get Firefox - The Browser, Reloaded.">
+	  <img src="getfirefox_small.png" alt="Get Firefox" class="border0"/></a>
+      <a
+	href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#104;&#43;&#119;&#49;&#114;&#101;&#116;&#97;&#112;&#64;&#100;&#97;&#114;&#105;&#97;&#46;&#99;&#111;&#46;&#117;&#107;">Jonathan Hudson</a>
+	</p>
+    </div>
+  </body>
+</html>
