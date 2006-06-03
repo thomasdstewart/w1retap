@@ -260,11 +260,11 @@ atod26.o: atod26.c ownet.h atod26.h
 cnt1d.o: cnt1d.c ownet.h cnt1d.h
 crcutil.o: crcutil.c ownet.h
 ioutil.o: ioutil.c ownet.h
-libusbds2490.o: libusbds2490.c ownet.h libusbds2490.h usb.h
-libusbllnk.o: libusbllnk.c ownet.h libusbds2490.h usb.h
-libusbnet.o: libusbnet.c ownet.h libusbds2490.h usb.h
-libusbses.o: libusbses.c ownet.h libusbds2490.h usb.h
-libusbtran.o: libusbtran.c ownet.h libusbds2490.h usb.h
+libusbds2490.o: libusbds2490.c ownet.h libusbds2490.h
+libusbllnk.o: libusbllnk.c ownet.h libusbds2490.h
+libusbnet.o: libusbnet.c ownet.h libusbds2490.h
+libusbses.o: libusbses.c ownet.h libusbds2490.h
+libusbtran.o: libusbtran.c ownet.h libusbds2490.h
 mbappreg.o: mbappreg.c ownet.h mbappreg.h
 mbee.o: mbee.c ownet.h mbee.h
 mbee77.o: mbee77.c ownet.h mbee77.h mbscrx77.h pw77.h

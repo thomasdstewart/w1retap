@@ -6,16 +6,16 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/glib-2.0/glib/gtypes.h \
   /usr/lib/glib-2.0/include/glibconfig.h \
   /usr/include/glib-2.0/glib/gmacros.h \
-  /usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/stddef.h \
-  /usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/limits.h \
-  /usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/syslimits.h \
+  /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/stddef.h \
+  /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/limits.h \
+  /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/syslimits.h \
   /usr/include/limits.h /usr/include/features.h /usr/include/sys/cdefs.h \
   /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
   /usr/include/gnu/stubs-32.h /usr/include/bits/posix1_lim.h \
   /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
   /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
   /usr/include/bits/stdio_lim.h \
-  /usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/float.h \
+  /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/float.h \
   /usr/include/glib-2.0/glib/garray.h \
   /usr/include/glib-2.0/glib/gasyncqueue.h \
   /usr/include/glib-2.0/glib/gthread.h \
@@ -23,11 +23,14 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/glib-2.0/glib/gatomic.h \
   /usr/include/glib-2.0/glib/gbacktrace.h \
   /usr/include/glib-2.0/glib/gcache.h /usr/include/glib-2.0/glib/glist.h \
-  /usr/include/glib-2.0/glib/gmem.h \
+  /usr/include/glib-2.0/glib/gmem.h /usr/include/glib-2.0/glib/gslice.h \
   /usr/include/glib-2.0/glib/gcompletion.h \
   /usr/include/glib-2.0/glib/gconvert.h \
   /usr/include/glib-2.0/glib/gdataset.h \
-  /usr/include/glib-2.0/glib/gdate.h /usr/include/glib-2.0/glib/gdir.h \
+  /usr/include/glib-2.0/glib/gdate.h /usr/include/time.h \
+  /usr/include/bits/time.h /usr/include/bits/types.h \
+  /usr/include/bits/typesizes.h /usr/include/xlocale.h \
+  /usr/include/glib-2.0/glib/gdir.h \
   /usr/include/glib-2.0/glib/gfileutils.h \
   /usr/include/glib-2.0/glib/ghash.h /usr/include/glib-2.0/glib/ghook.h \
   /usr/include/glib-2.0/glib/giochannel.h \
@@ -35,7 +38,7 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/glib-2.0/glib/gstring.h \
   /usr/include/glib-2.0/glib/gunicode.h \
   /usr/include/glib-2.0/glib/gutils.h \
-  /usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/stdarg.h \
+  /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/stdarg.h \
   /usr/include/glib-2.0/glib/gkeyfile.h \
   /usr/include/glib-2.0/glib/gmappedfile.h \
   /usr/include/glib-2.0/glib/gmarkup.h \
@@ -93,7 +96,6 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-animation.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-simple-anim.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-io.h /usr/include/stdio.h \
-  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
   /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
   /usr/include/bits/wchar.h /usr/include/gconv.h \
   /usr/include/bits/sys_errlist.h /usr/include/bits/stdio.h \
@@ -311,19 +313,18 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/gtk-2.0/gtk/gtkvscale.h \
   /usr/include/gtk-2.0/gtk/gtkvseparator.h /usr/include/stdlib.h \
   /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
-  /usr/include/endian.h /usr/include/bits/endian.h /usr/include/xlocale.h \
-  /usr/include/sys/types.h /usr/include/time.h /usr/include/sys/select.h \
+  /usr/include/endian.h /usr/include/bits/endian.h \
+  /usr/include/sys/types.h /usr/include/sys/select.h \
   /usr/include/bits/select.h /usr/include/bits/sigset.h \
-  /usr/include/bits/time.h /usr/include/sys/sysmacros.h \
-  /usr/include/bits/pthreadtypes.h /usr/include/alloca.h \
-  /usr/include/string.h /usr/include/bits/string.h \
+  /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
+  /usr/include/alloca.h /usr/include/string.h /usr/include/bits/string.h \
   /usr/include/bits/string2.h /usr/include/ctype.h \
   /usr/include/panel-2.0/panel-applet.h \
   /usr/include/libgnomeui-2.0/libgnomeui/gnome-ui-init.h \
-  /usr/include/libgnome-2.0/libgnome/gnome-program.h /usr/include/popt.h \
-  /usr/include/errno.h /usr/include/bits/errno.h \
-  /usr/include/linux/errno.h /usr/include/asm/errno.h \
-  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
+  /usr/include/libgnome-2.0/libgnome/gnome-program.h /usr/include/errno.h \
+  /usr/include/bits/errno.h /usr/include/linux/errno.h \
+  /usr/include/asm/errno.h /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/errno-base.h /usr/include/popt.h \
   /usr/include/libgnomeui-2.0/libgnomeui/gnome-client.h \
   /usr/include/unistd.h /usr/include/bits/posix_opt.h \
   /usr/include/bits/environments.h /usr/include/bits/confname.h \
@@ -423,11 +424,11 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/glib-2.0/glib/gmacros.h:
 
-/usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/stddef.h:
+/usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/stddef.h:
 
-/usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/limits.h:
+/usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/limits.h:
 
-/usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/syslimits.h:
+/usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/syslimits.h:
 
 /usr/include/limits.h:
 
@@ -453,7 +454,7 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/bits/stdio_lim.h:
 
-/usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/float.h:
+/usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/float.h:
 
 /usr/include/glib-2.0/glib/garray.h:
 
@@ -475,6 +476,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/glib-2.0/glib/gmem.h:
 
+/usr/include/glib-2.0/glib/gslice.h:
+
 /usr/include/glib-2.0/glib/gcompletion.h:
 
 /usr/include/glib-2.0/glib/gconvert.h:
@@ -482,6 +485,16 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/glib-2.0/glib/gdataset.h:
 
 /usr/include/glib-2.0/glib/gdate.h:
+
+/usr/include/time.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/xlocale.h:
 
 /usr/include/glib-2.0/glib/gdir.h:
 
@@ -503,7 +516,7 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/glib-2.0/glib/gutils.h:
 
-/usr/lib/gcc/i686-pc-linux-gnu/3.4.6/include/stdarg.h:
+/usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/stdarg.h:
 
 /usr/include/glib-2.0/glib/gkeyfile.h:
 
@@ -632,10 +645,6 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-io.h:
 
 /usr/include/stdio.h:
-
-/usr/include/bits/types.h:
-
-/usr/include/bits/typesizes.h:
 
 /usr/include/libio.h:
 
@@ -1117,19 +1126,13 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/bits/endian.h:
 
-/usr/include/xlocale.h:
-
 /usr/include/sys/types.h:
-
-/usr/include/time.h:
 
 /usr/include/sys/select.h:
 
 /usr/include/bits/select.h:
 
 /usr/include/bits/sigset.h:
-
-/usr/include/bits/time.h:
 
 /usr/include/sys/sysmacros.h:
 
@@ -1151,8 +1154,6 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/libgnome-2.0/libgnome/gnome-program.h:
 
-/usr/include/popt.h:
-
 /usr/include/errno.h:
 
 /usr/include/bits/errno.h:
@@ -1164,6 +1165,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/asm-generic/errno.h:
 
 /usr/include/asm-generic/errno-base.h:
+
+/usr/include/popt.h:
 
 /usr/include/libgnomeui-2.0/libgnomeui/gnome-client.h:
 
