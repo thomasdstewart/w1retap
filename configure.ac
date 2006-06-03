@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(w1retap,0.0.9)
+AC_INIT(w1retap,0.0.10)
 PACKAGE=w1retap
-VERSION=0.0.9
+VERSION=0.0.10
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AM_CONFIG_HEADER(config.h)
@@ -35,6 +35,7 @@ AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/tim
 
 AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_HEADERS(sql.h)
+AC_CHECK_HEADERS(usb.h)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

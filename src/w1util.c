@@ -17,7 +17,6 @@
  */
 
 #include <stdio.h>
-#include <sqlite3.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>

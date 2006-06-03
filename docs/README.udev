@@ -32,3 +32,20 @@ usermod -aG w1retap jrh
 The user(s) need to login in again to acquire the group.
 
 Failure to do this wil cause w1retap to fail as non-root.
+
+It is also necesary to ensure the ds9490 module is not loaded.
+
+# rmmod ds9490
+
+in /etc/modprobe.d/blacklist
+
+------------------------------8<----------------
+# for w1retap
+blacklist ds9490r
+------------------------------8<----------------
+
+then
+
+# /sbin/depmod -a
+
+Now plugging the adaptor should not cause the module to load.
