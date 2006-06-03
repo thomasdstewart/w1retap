@@ -32,6 +32,7 @@
 //
 
 #include "ownet.h"
+#include <string.h>
 #include "libusbds2490.h"
 
 
@@ -307,9 +308,9 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
     SMALLINT bufferlength = 0;
 
     // initialize buffer
-    memset(&buffer[0],0x00,32);
+    memset(&buffer[0],0x00,sizeof(buffer));
     // get status buffer
-    bufferlength = usb_bulk_read(hDevice,DS2490_EP1,&buffer[0],32,TIMEOUT_LIBUSB);
+    bufferlength = usb_bulk_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);
 
     if (bufferlength < 0)
     {
@@ -407,7 +408,7 @@ SMALLINT DS2490Read(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
     // read
     nBytes = usb_bulk_read(hDevice,         // handle
 	 	           DS2490_EP3,      // which endpoint to read from
-			   buffer,          // buffer to contain read results
+			   (char *)buffer,  // buffer to contain read results
 			   *pnBytes,        // number of bytes to read
 			   TIMEOUT_LIBUSB); // libusb timeout
 
@@ -439,7 +440,7 @@ SMALLINT DS2490Write(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
    // write
    nBytes = usb_bulk_write(hDevice,         // handle
 		           DS2490_EP2,      // which endpoint to write
-			   buffer,          // buffer to write to endpoint
+			   (char*) buffer,  // buffer to write to endpoint
 			   *pnBytes,        // number of bytes to write
 			   TIMEOUT_LIBUSB); // libusb timeout
    if (nBytes < 0)

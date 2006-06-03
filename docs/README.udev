@@ -1,0 +1,34 @@
+######################## IMPORTANT #########################
+
+On recent versions of Linux (e.g. Ubuntu 6.06 "Dapper"), the permissions on
+USB devices are set by the udev process. In order to allow non-root users to
+read the device, it is necessary to set permissions by adding a rules file
+to those under /etc/udev/rules.d/, associating the device with a group, and
+adding the w1retap user to that group.
+
+In this case, the group is 'w1retap' and the user is 'jrh'.
+
+As root:
+
+1. Create the file /etc/udev/rules.d/45-w1retap.rules, which contains:
+
+################################################################
+# udev rules file for w1retap
+SUBSYSTEM!="usb_device", GOTO="w1retap_rules_end"
+# DS2940
+SYSFS{idVendor}=="04fa", SYSFS{idProduct}=="2490", GROUP="w1retap",
+MODE="0664"
+LABEL="w1retap_rules_end"
+################################################################
+
+2. Create the w1retap group
+
+# groupadd w1retap
+
+3. Add the user(s) to the group
+
+usermod -aG w1retap jrh
+
+The user(s) need to login in again to acquire the group.
+
+Failure to do this wil cause w1retap to fail as non-root.

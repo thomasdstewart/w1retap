@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-# Copyright (c) 2005 Jonathan Hudson <jh+w1retap@daria.co.uk>
+# Copyright (c) 2006 Jonathan Hudson <jh+w1retap@daria.co.uk>
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,49 +22,43 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'dbi'
-require 'uri'
-require 'net/http'
+require 'socket'
 
-module Wug
-  G = -9.80665
-  R = 287.04
-  WHOST = 'weatherstation.wunderground.com'
-  WURL = '/weatherstation/updateweatherstation.php'
+module CWOP
+  HOST = 'rotate.aprs.net'
 
-  def Wug.CtoF c
-    ('%.1f' % ((9.0/5.0)*c + 32.0))
-  end
-  
-  def Wug.mbtoin mb
-    ("%.3f" % (mb/33.8638864))
+  def CWOP.CtoF c
+    ((9.0/5.0)*c + 32.0).to_i
   end
 
-  def Wug.upload stn, flag, w
-    q = {}
-    q['humidity'] = (w['humid']) ? ("%.1f" % w['humid']) : 'N/A'
-    q['tempf'] = CtoF w['temp']
-    q['dewptf'] = (w['dewpt']) ? CtoF(w['dewpt']) : 'N/A'
-    q['baromin'] = mbtoin(w['pres'])
-    q['softwaretype'] = stn['software']
-    q['weather'] = q['clouds'] = 'NA'
-    q['dateutc'] = Time.at(w['udate']).gmtime.strftime("%Y-%m-%d %H:%M")
-    q['rainin'] = w['rain']
-    
-    url = WURL+'?action=updateraw&ID=' + stn['wu_user'] + '&PASSWORD=' +
-      stn['wu_pass']
+  def CWOP.fixll fmt,flg,val
+    sgn = ((val < 0) ? flg[1] : flg[0]).chr
+    val = val.abs
+    d = val.to_i
+    m = (val - d) * 60.0
+    (fmt % [d,m]) + "#{sgn}"
+  end
 
-    q.keys.sort.each do |s|
-      url += '&' + s + '=' + q[s].to_s
-    end
+  def CWOP.upload stn, flag, w
+    s = "#{stn['cwop_user']}>APRS,TCPXX*:"
+    s += Time.at(w['udate']).gmtime.strftime("@%d%H%Mz")
+    s += fixll("%02d%05.2f", 'NS', stn['stnlat']) + '/' +
+      fixll("%03d%05.2f", 'EW', stn['stnlong'])
+    s += '_.../...g...'
+    s += "t%03d" % CtoF(w['temp'])
+    s += (w['rain']) ? "r%03d" % (w['rain']*100.0).to_i : ''
+    s += (w['rain24']) ?"p%03d" % (w['rain24']*100.0).to_i : ''
+    s += (w['humid']) ? ("h%02d" % (w['humid'].to_i % 100)) : ''
+    s += "b%05d" % (w['pres']*10.0).to_i
+    s += stn['software']
 
-    uri = URI.escape('http://'+WHOST+url)
-    uri = URI.parse(uri)
     if flag.nil?
-      res = Net::HTTP.get_response(uri)
-      puts "#{res.message} #{res.code}"
-      puts res.body
+      TCPSocket.open(HOST,23) do |skt|
+	skt.puts "user #{stn['cwop_user']} pass -1 vers #{stn['software']}\r"
+	skt.puts "#{s}\r"
+      end
     else
-      puts uri
+      puts s
     end
   end  
 end
@@ -80,6 +74,5 @@ if __FILE__ == $0
   w  = s.fetch_hash
   s.finish
   flag = true if (now - w['udate']) > 180 
-  
-  Wug.upload stn, flag, w
+  CWOP.upload stn, flag, w
 end
