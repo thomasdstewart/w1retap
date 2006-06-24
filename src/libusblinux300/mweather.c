@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 //                                 {0x01, 0xCC, 0x57, 0x00, 0x02, 0x00, 0x00, 0x54},
 //                                 {0x01, 0xD4, 0x57, 0x00, 0x02, 0x00, 0x00, 0xAE}  }  };
 
-   time_t tlong;
+   time_t tint;
    struct tm *tstruct;
    float current_temp;
    double revolution_sec;
@@ -128,8 +128,8 @@ int main(int argc, char **argv)
 //   {
 //      if(ReadWet(portnum, &weather1, &current_temp, &direction, &revolution_sec))
 //      {
-//         time(&tlong);
-//         tstruct = localtime(&tlong);
+//         time(&tint);
+//         tstruct = localtime(&tint);
 //         printf("%02d:%02d:%02d,",tstruct->tm_hour,tstruct->tm_min,tstruct->tm_sec);
 //         printf("%5.1f, ",current_temp);
 //         printf("%02d,",direction);
@@ -142,8 +142,8 @@ int main(int argc, char **argv)
 //   {
 //      if(ReadWet(portnum, &weather2, &current_temp, &direction, &revolution_sec))
 //      {
-//         time(&tlong);
-//         tstruct = localtime(&tlong);
+//         time(&tint);
+//         tstruct = localtime(&tint);
 //         printf("%02d:%02d:%02d,",tstruct->tm_hour,tstruct->tm_min,tstruct->tm_sec);
 //         printf("%5.1f, ",current_temp);
 //         printf("%02d,",direction);
@@ -160,8 +160,8 @@ int main(int argc, char **argv)
       {
          if(ReadWet(portnum, &weather1, &current_temp, &direction, &revolution_sec))
          {
-            time(&tlong);
-            tstruct = localtime(&tlong);
+            time(&tint);
+            tstruct = localtime(&tint);
             printf("%02d:%02d:%02d,",tstruct->tm_hour,tstruct->tm_min,tstruct->tm_sec);
             printf("%5.1f, ",current_temp);
             printf("%02d,",direction);

@@ -36,14 +36,14 @@
 #define MAXDEVICES  4
 
 // local functions
-void     ComputeSHAVM(uchar* MT, long* hash);
-long     NLF (long B, long C, long D, int n);
+void     ComputeSHAVM(uchar* MT, int* hash);
+int     NLF (int B, int C, int D, int n);
 SMALLINT ConvertPS(int portnum, uchar *MT, int key, int len);
 int getNumber (int min, int max);
 
 
 //constants used in SHA computation
-static const long KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
+static const int KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
 
 
 int main(int argc, char** argv)
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 
 //----------------------------------------------------------------------
 // computes a SHA given the 64 byte MT digest buffer.  The resulting 5
-// long values are stored in the given long array, hash.
+// int values are stored in the given int array, hash.
 //
 // Note: This algorithm before's the SHA-1 algorithm as specified in the
 // datasheet for the DS1961S, where the last step (which only involves
@@ -136,12 +136,12 @@ int main(int argc, char** argv)
 // 'MT'        - buffer containing the message digest
 // 'hash'      - result buffer
 //
-void ComputeSHAVM(uchar* MT, long* hash)
+void ComputeSHAVM(uchar* MT, int* hash)
 {
-   unsigned long MTword[80];
+   unsigned int MTword[80];
    int i;
-   long ShftTmp;
-   long Temp;
+   int ShftTmp;
+   int Temp;
 
    for(i=0;i<16;i++)
    {
@@ -176,7 +176,7 @@ void ComputeSHAVM(uchar* MT, long* hash)
 }
 
 // calculation used for the SHA MAC
-long NLF (long B, long C, long D, int n)
+int NLF (int B, int C, int D, int n)
 {
    if(n<20)
       return ((B&C)|((~B)&D));
@@ -191,8 +191,8 @@ long NLF (long B, long C, long D, int n)
 SMALLINT ConvertPS(int portnum,uchar *MT, int key, int len)
 {
    int    i,j;
-   long   temp;
-   long   hash[5];
+   int   temp;
+   int   hash[5];
    uchar  secret[8];
    uchar  ID[8];
    uchar  psxor[4];

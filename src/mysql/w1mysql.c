@@ -262,7 +262,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
 #if MYSQL_VERSION_ID > MINVERS
             MYSQL_BIND   bind[3];
             my_bool is_null = 0;
-            unsigned long length[3];
+            unsigned int length[3];
 #endif
             for (j = 0; j < 2; j++)
             {

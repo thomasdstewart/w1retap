@@ -96,5 +96,5 @@ SMALLINT copySpad(int portnum, int addr, uchar *SNum, uchar *extra_buf,
                   uchar *memory);
 SMALLINT ReadAuthPage(SMALLINT bank, int portnum, int addr, uchar *SNum,
                       uchar *data, uchar *extra);
-void ComputeSHA(unsigned int *MT,long *A,long *B, long *C, long *D,long *E);
+void ComputeSHA(unsigned int *MT,int *A,int *B, int *C, int *D,int *E);
 

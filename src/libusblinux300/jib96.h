@@ -294,7 +294,7 @@ LPRESPONSEAPDU DeleteAppletByNumber(int portnum, uchar p_AppletNumber);
 LPRESPONSEAPDU DeleteAppletByAID(int portnum, LPAID p_lpAID);
 LPRESPONSEAPDU LoadApplet(int portnum, 
                           uchar* p_lpAppletBuffer, 
-                          ulong  p_AppletLen,
+                          uint  p_AppletLen,
                           LPAID  p_lpAID);
 void SetJiBError(ushort p_Error);
 ushort GetJiBError();

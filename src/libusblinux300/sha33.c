@@ -691,7 +691,7 @@ SMALLINT InstallSystemSecret33(int portnum, SMALLINT pagenum,
 {
    int offset = 0, bytes_left = 0;
    uchar data[32],scratchpad[32],MT[64],MAC[20];
-   long hash[5];
+   int hash[5];
 
    memset(currentSecret, 0x00, 8);
 
@@ -759,7 +759,7 @@ SMALLINT BindSecretToiButton33(int portnum, SMALLINT pagenum,
                                SMALLINT resume)
 {
    uchar MT[64],MAC[20];
-   long hash[5];
+   int hash[5];
 
    // digest buffer padding
    memset(MT, 0xFF, 64);
@@ -797,10 +797,10 @@ SMALLINT BindSecretToiButton33(int portnum, SMALLINT pagenum,
 }
 
 //constants used in SHA computation
-static const long KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
+static const int KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
 
 // calculation used for the SHA MAC
-static long NLF (long B, long C, long D, int n)
+static int NLF (int B, int C, int D, int n)
 {
    if(n<20)
       return ((B&C)|((~B)&D));
@@ -814,7 +814,7 @@ static long NLF (long B, long C, long D, int n)
 
 //----------------------------------------------------------------------
 // computes a SHA given the 64 byte MT digest buffer.  The resulting 5
-// long values are stored in the given long array, hash.
+// int values are stored in the given int array, hash.
 //
 // Note: This algorithm is the SHA-1 algorithm as specified in the
 // datasheet for the DS1961S, where the last step of the official
@@ -824,12 +824,12 @@ static long NLF (long B, long C, long D, int n)
 // 'MT'        - buffer containing the message digest
 // 'hash'      - result buffer
 //
-void ComputeSHAVM(uchar* MT, long* hash)
+void ComputeSHAVM(uchar* MT, int* hash)
 {
-   unsigned long MTword[80];
+   unsigned int MTword[80];
    int i;
-   long ShftTmp;
-   long Temp;
+   int ShftTmp;
+   int Temp;
 
    for(i=0;i<16;i++)
    {
@@ -864,7 +864,7 @@ void ComputeSHAVM(uchar* MT, long* hash)
 }
 
 //----------------------------------------------------------------------
-// Converts the 5 long numbers that represent the result of a SHA
+// Converts the 5 int numbers that represent the result of a SHA
 // computation into the 20 bytes (with proper byte ordering) that the
 // SHA iButton's expect.
 //
@@ -872,9 +872,9 @@ void ComputeSHAVM(uchar* MT, long* hash)
 // 'MAC'       - 20-byte, LSB-first message authentication code for SHA
 //                iButtons.
 //
-void HashToMAC(long* hash, uchar* MAC)
+void HashToMAC(int* hash, uchar* MAC)
 {
-   long temp;
+   int temp;
    SMALLINT i, j, offset;
 
    //iButtons use LSB first, so we have to turn

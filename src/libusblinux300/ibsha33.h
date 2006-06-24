@@ -39,7 +39,7 @@
    typedef unsigned char  uchar;
    #ifdef WIN32
       typedef unsigned short ushort;
-      typedef unsigned long  ulong;
+      typedef unsigned int  uint;
    #endif
 #endif
 
@@ -92,7 +92,7 @@ typedef struct
    uchar  pkt_cont_ptr;     // packet continuation pointer
    uchar  inv_crc[2];
     
-   ulong  write_cycle_cnt;  // write cycle counter
+   uint  write_cycle_cnt;  // write cycle counter
    uchar  money_page;       // monetary page
    uchar  serial_num[7];    // ibutton serial number (no CRC8)
 
@@ -135,7 +135,7 @@ typedef struct
    // internal state of sha engine
    ushort address;
    uchar  sha_cmd;
-   ulong  target_secret; 
+   uint  target_secret; 
    uchar  randnum[3];
    uchar  temp_buffer[64];
    int    buf_len;
@@ -151,9 +151,9 @@ int CopyScratchSHAEE(int,ushort,uchar *,uchar *, uchar *);
 int NextSecret(int,ushort,uchar *);
 int ReadAuthPageSHAEE(int,ushort,uchar *,uchar *,uchar *,uchar *);
 int SelectSHAEE(int);
-void ComputeSHAEE(unsigned int *,long *,long *, long *, long *,long *);
-long KTN(int);
-long NLF(long,long,long,int);
+void ComputeSHAEE(unsigned int *,int *,int *, int *, int *,int *);
+int KTN(int);
+int NLF(int,int,int,int);
 
 
 

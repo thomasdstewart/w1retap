@@ -110,8 +110,8 @@ SMALLINT owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
    ushort buf_len;
    uchar lastcrc8;
    ushort  nBytes = 8;
-   ulong nOutput = 0;
-   long limit;
+   uint nOutput = 0;
+   int limit;
    STATUS_PACKET status;
    uchar  nResult;
    SMALLINT ret = 0;

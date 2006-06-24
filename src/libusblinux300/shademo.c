@@ -49,7 +49,7 @@ int main(int argc, char** argv)
    int oflags = 0;
    FileEntry fe = {"COPR",0};
    //timing variables
-   long a,b,c,d,e;
+   int a,b,c,d,e;
    //hold's user's old balance and new balance from acct info
    int oldBalance, newBalance;
    char inputChar = 0;

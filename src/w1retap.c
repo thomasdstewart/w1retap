@@ -213,7 +213,7 @@ static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
 
 static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
 {
-    unsigned long cnt;
+    unsigned int cnt;
     int nv = 0;
     if(w->init == 0)
     {

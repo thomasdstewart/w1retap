@@ -74,6 +74,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
     *(lstr+np+1)='\0';
     fputs(lstr, lfp);
     free(lstr);
+    fflush(lfp);
 }
 
 

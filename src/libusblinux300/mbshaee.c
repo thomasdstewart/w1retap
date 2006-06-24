@@ -32,8 +32,8 @@
 #include "ownet.h"
 #include "mbshaee.h"
 
-long KTN (int n);
-long NLF (long B, long C, long D, int n);
+int KTN (int n);
+int NLF (int B, int C, int D, int n);
 
 // General command defines
 #define READ_MEMORY_SHAEE       0xF0
@@ -1237,8 +1237,8 @@ SMALLINT copySpad(int portnum, int addr, uchar *SNum, uchar *extra_buf, uchar *m
    int i;
    uchar scratch[8],es,test;
    unsigned MT[64];
-   long A,B,C,D,E;
-   long Temp;
+   int A,B,C,D,E;
+   int Temp;
 
    for(i=0;i<4;i++)
       MT[i] = local_secret[i];
@@ -1681,8 +1681,8 @@ SMALLINT computeNextSecret(int portnum, int addr, uchar *SNum, uchar *secret)
 {
    int i;
    unsigned MT[64];
-   long A,B,C,D,E;
-   long Temp;
+   int A,B,C,D,E;
+   int Temp;
    uchar memory[32],scratch[8],es;
    ushort tmpadd;
    uchar send_block[32];
@@ -1868,12 +1868,12 @@ void setChallenge(uchar *new_challenge)
 // 'E'   - part of the 160 bits
 //
 //
-void ComputeSHA(unsigned int *MT,long *A,long *B, long *C, long *D,long *E)
+void ComputeSHA(unsigned int *MT,int *A,int *B, int *C, int *D,int *E)
 {
-   unsigned long MTword[80];
+   unsigned int MTword[80];
    int i;
-   long ShftTmp;
-   long Temp;
+   int ShftTmp;
+   int Temp;
 
    for(i=0;i<16;i++)
       MTword[i] = (MT[i*4] << 24) | (MT[i*4+1] << 16) |
@@ -1905,7 +1905,7 @@ void ComputeSHA(unsigned int *MT,long *A,long *B, long *C, long *D,long *E)
 }
 
 // calculation used for the MAC
-long KTN (int n)
+int KTN (int n)
 {
    if(n<20)
       return 0x5a827999;
@@ -1918,7 +1918,7 @@ long KTN (int n)
 }
 
 // calculation used for the MAC
-long NLF (long B, long C, long D, int n)
+int NLF (int B, int C, int D, int n)
 {
    if(n<20)
       return ((B&C)|((~B)&D));

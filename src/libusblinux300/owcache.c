@@ -68,7 +68,7 @@ void InitDHash(void)
 //
 uchar HashFunction(uchar *SNum, int page)                    
 {
-   ulong h;
+   uint h;
    uchar tmp_page;
    
    tmp_page = (uchar) page;
@@ -89,7 +89,7 @@ uchar HashFunction(uchar *SNum, int page)
 //                  
 uchar FindNew(uchar hashnum) 
 {
-   ulong tm,otm;
+   uint tm,otm;
    static uchar spot = 0;  // spot pointer
    uchar t = 0xFF;     
    uchar oldest,i;   
@@ -260,7 +260,7 @@ SMALLINT FindPage(int portnum, uchar *SNum, PAGE_TYPE *page, uchar mflag,
    static uchar DidInit=0;
    uchar hs,ptr=0xFF; 
    short i=0;                    
-   ulong tm;
+   uint tm;
     
    // initialize the file page cache (DSS 3.11) automatically
    if (!DidInit)

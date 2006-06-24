@@ -637,10 +637,10 @@ void InterpretStatus(MissionStatus *mstatus)
 {
    timedate td,tdtmp;
    int offset;
-   ulong tmtmp;
+   uint tmtmp;
    
 #ifndef __MC68K__
-   time_t tlong; 
+   time_t tint; 
    time_t temp;
    struct tm *tstruct; 
 #endif
@@ -661,9 +661,9 @@ void InterpretStatus(MissionStatus *mstatus)
 
    // number of samples in this mission
 #ifdef __MC68K__
-   mstatus->mission_samples = (((ulong) mstatus->status_raw[0x1C]) * 65536) +
-   							  (((ulong) mstatus->status_raw[0x1B]) * 256) +
-   							  ((ulong) mstatus->status_raw[0x1A]); 
+   mstatus->mission_samples = (((uint) mstatus->status_raw[0x1C]) * 65536) +
+   							  (((uint) mstatus->status_raw[0x1B]) * 256) +
+   							  ((uint) mstatus->status_raw[0x1A]); 
 #else
    mstatus->mission_samples = (mstatus->status_raw[0x1C] << 16) |
                               (mstatus->status_raw[0x1B] << 8) | 
@@ -674,9 +674,9 @@ void InterpretStatus(MissionStatus *mstatus)
 
    // total number of samples 
 #ifdef __MC68K__
-   mstatus->samples_total   = (((ulong) mstatus->status_raw[0x1F]) * 65536) +
-   							  (((ulong) mstatus->status_raw[0x1E]) * 256) +
-   							  ((ulong) mstatus->status_raw[0x1D]);    
+   mstatus->samples_total   = (((uint) mstatus->status_raw[0x1F]) * 65536) +
+   							  (((uint) mstatus->status_raw[0x1E]) * 256) +
+   							  ((uint) mstatus->status_raw[0x1D]);    
 #else
    mstatus->samples_total = (mstatus->status_raw[0x1F] << 16) |
                             (mstatus->status_raw[0x1E] << 8) | 
@@ -764,8 +764,8 @@ void InterpretStatus(MissionStatus *mstatus)
 #ifdef __MC68K__
    mstatus->download_time = TimGetSeconds();
 #else
-   temp = time(&tlong);
-   tstruct = localtime(&tlong); 
+   temp = time(&tint);
+   tstruct = localtime(&tint); 
    td.day = tstruct->tm_mday;
    td.month = tstruct->tm_mon + 1;  // (1.01)
    td.year = tstruct->tm_year + 1900;
@@ -785,7 +785,7 @@ void InterpretStatus(MissionStatus *mstatus)
 void FormatMission(MissionStatus *mstatus)
 {
    int i;
-   time_t tlong; 
+   time_t tint; 
    time_t temp;
 #ifndef __MC68K__
    struct tm *tstruct;
@@ -798,16 +798,16 @@ void FormatMission(MissionStatus *mstatus)
    
    // Real Time Clock
 #ifdef __MC68K__
-   tlong = TimGetSeconds();
+   tint = TimGetSeconds();
 #else
-   temp = time(&tlong);
+   temp = time(&tint);
 #endif
-   tlong++;  // add 1 second
+   tint++;  // add 1 second
    
 #ifdef __MC68K__
-   TimSecondsToDateTime(tlong, tstruct);
+   TimSecondsToDateTime(tint, tstruct);
 #else
-   tstruct = localtime(&tlong);
+   tstruct = localtime(&tint);
 #endif
 
    // convert to BCD
@@ -871,7 +871,7 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
    int cnt=0,i;
    timedate td;
 #ifndef __MC68K__
-   time_t tlong; 
+   time_t tint; 
    time_t temp;
    struct tm *tstruct;
 #else 
@@ -956,8 +956,8 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
 
 #ifndef __MC68K__
    // current PC time
-   temp = time(&tlong);
-   tstruct = localtime(&tlong);
+   temp = time(&tint);
+   tstruct = localtime(&tint);
  
    cnt += sprintf(&str[cnt],"Current PC Time: %02d/%02d/%04d  %02d:%02d:%02d\n",
        tstruct->tm_mon + 1,tstruct->tm_mday,tstruct->tm_year + 1900,
@@ -1027,7 +1027,7 @@ void HistogramToString(Histogram *hist, int ConvertToF, char *str)
 void InterpretAlarms(TempAlarmEvents *alarm, MissionStatus *mstatus)
 {
    int i;
-   ulong event_mission_count;
+   uint event_mission_count;
    uchar duration;
 
    // low events
@@ -1143,7 +1143,7 @@ void AlarmsToString(TempAlarmEvents *alarm, char *str)
 //
 void InterpretLog(Log *log, MissionStatus *mstatus)
 {
-   ulong loops=0,overlap=0,lastlog=2048,i;
+   uint loops=0,overlap=0,lastlog=2048,i;
    int logcnt=0;
 
    // check if wrap occurred
@@ -1188,7 +1188,7 @@ void InterpretLog(Log *log, MissionStatus *mstatus)
 void LogToString(Log *log, int ConvertToF, char *str)
 {
    int i,cnt=0;
-   ulong logtime;
+   uint logtime;
    timedate td;
 
    // title
@@ -1280,14 +1280,14 @@ uchar BCDToBin(uchar bcd)
 
 
 //--------------------------------------------------------------------------
-// Take a 4 byte long string and convert it into a timedata structure.
+// Take a 4 byte int string and convert it into a timedata structure.
 //
 static int dm[] = { 0,0,31,59,90,120,151,181,212,243,273,304,334,365 };
 
-void SecondsToDate(timedate *td, ulong x)
+void SecondsToDate(timedate *td, uint x)
 {
    short tmp,i,j;
-   ulong y;
+   uint y;
    
    // check to make sure date is not over 2070 (sanity check)
    if (x > 0xBBF81E00L)
@@ -1297,7 +1297,7 @@ void SecondsToDate(timedate *td, ulong x)
    x = y/60;  td->minute = (ushort)(y-60*x);
    y = x/24;  td->hour   = (ushort)(x-24*y);
    x = 4*(y+731);  td->year = (ushort)(x/1461);
-   i = (int)((x-1461*(ulong)(td->year))/4);  td->month = 13;
+   i = (int)((x-1461*(uint)(td->year))/4);  td->month = 13;
    
    do
    {
@@ -1320,9 +1320,9 @@ void SecondsToDate(timedate *td, ulong x)
 // DateToSeconds takes a time/date structure and converts it into the 
 // number of seconds since 1970
 //
-ulong DateToSeconds(timedate *td)
+uint DateToSeconds(timedate *td)
 {
-   ulong Sv,Bv,Xv;
+   uint Sv,Bv,Xv;
 
    // convert the date/time values into the 5 byte format used in the touch 
    if (td->year >= 2000) 
@@ -1337,7 +1337,7 @@ ulong DateToSeconds(timedate *td)
 
    Xv = 365 * (Sv-2) + (Sv-1)/4 + dm[td->month] + td->day + Bv - 1;
 
-   Xv = 86400 * Xv + (ulong)(td->second) + 60*((ulong)(td->minute) + 60*(ulong)(td->hour));
+   Xv = 86400 * Xv + (uint)(td->second) + 60*((uint)(td->minute) + 60*(uint)(td->hour));
 
    return Xv;
 }

@@ -68,11 +68,11 @@ SMALLINT getControlRegisterBit(int, uchar *, int, SMALLINT *);
 SMALLINT getStatusRegisterBit(int, uchar *, int, SMALLINT *);
 
 // The "setters" functions
-SMALLINT setRTC(int, uchar *, ulong, SMALLINT);
+SMALLINT setRTC(int, uchar *, uint, SMALLINT);
 SMALLINT setRTCFromPC(int, uchar *, SMALLINT);
 SMALLINT setOscillator(int, uchar *, SMALLINT);
-SMALLINT setRTCA(int, uchar *, ulong, SMALLINT);
-SMALLINT setRTCAFromPCOffset(int, uchar *, ulong, SMALLINT);
+SMALLINT setRTCA(int, uchar *, uint, SMALLINT);
+SMALLINT setRTCAFromPCOffset(int, uchar *, uint, SMALLINT);
 SMALLINT setRTCAEnable(int, uchar *, SMALLINT);
 SMALLINT setWriteProtectionAndExpiration(int, uchar *, SMALLINT, SMALLINT);
 SMALLINT setControlRegister(int, uchar *, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT);
@@ -80,8 +80,8 @@ SMALLINT setStatusRegister(int, uchar *, SMALLINT, SMALLINT, SMALLINT);
 
 // The "time conversion" functions
 void getPCTime(timedate *);
-void SecondsToDate(timedate *, ulong);
-ulong DateToSeconds(timedate *);
+void SecondsToDate(timedate *, uint);
+uint DateToSeconds(timedate *);
 
 // Utility functions
-ulong uchar_to_bin(uchar *, int);
+uint uchar_to_bin(uchar *, int);

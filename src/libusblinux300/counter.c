@@ -52,7 +52,7 @@ int main(int argc, char **argv)
    int NumDevices=0;
    int i;
    int CounterPage;
-   ulong Count;
+   uint Count;
    int portnum=0;
 
    //------------------------------------------------------

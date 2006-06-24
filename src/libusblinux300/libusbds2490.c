@@ -58,7 +58,7 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
 {
    SMALLINT present,vpp,ret;
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
 
    // reset the DS2490
    DS2490Reset(hDevice);
@@ -194,9 +194,9 @@ SMALLINT DS2490HaltPulse(usb_dev_handle *hDevice)
    STATUS_PACKET status;
    uchar nResultRegisters;
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    SMALLINT ret;
-   long limit;
+   int limit;
 
    
    // set a time limit
@@ -364,7 +364,7 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
 SMALLINT DS2490Reset(usb_dev_handle *hDevice)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // setup for reset
@@ -403,7 +403,7 @@ SMALLINT DS2490Read(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
 {
 
     // Synchronous read:
-	ulong	nBytes = *pnBytes;
+	uint	nBytes = *pnBytes;
 
     // read
     nBytes = usb_bulk_read(hDevice,         // handle
@@ -435,7 +435,7 @@ SMALLINT DS2490Write(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
 {
    // Synchronous write:
    // assume enough room for write
-   ulong	nBytes = *pnBytes;
+   uint	nBytes = *pnBytes;
 
    // write
    nBytes = usb_bulk_write(hDevice,         // handle

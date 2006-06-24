@@ -518,7 +518,7 @@ int SetupWet(int portnum, WeatherStruct *wet, int nor)
 int ReadWet(int portnum, WeatherStruct *wet, float *temp, int *dir, double *revol)
 {
    int ret = TRUE;
-   unsigned long start_count=0, end_count=0, start_time, end_time;
+   unsigned int start_count=0, end_count=0, start_time, end_time;
    float current_temp;
 
    // read the current counter

@@ -140,10 +140,10 @@ int EnterString(char *msg, char *buf, int min, int max)
 }
 
 //----------------------------------------------------------------------
-// Enter a decimal string and convert it to an unsigned long
+// Enter a decimal string and convert it to an unsigned int
 // Prompt again if not within min/max inclusive.
 //
-int EnterNum(char *msg, int numchars, long *value, long min, long max)
+int EnterNum(char *msg, int numchars, int *value, int min, int max)
 {
    short tmp,cnt,isneg=FALSE;
    char ch;
@@ -228,10 +228,10 @@ int EnterNum(char *msg, int numchars, long *value, long min, long max)
 }
 
 //----------------------------------------------------------------------
-// Enter a hex string and convert it to an unsigned long
+// Enter a hex string and convert it to an unsigned int
 // (1-8) characters
 //
-int EnterHex(char *msg, int numchars, ulong *value)
+int EnterHex(char *msg, int numchars, uint *value)
 {
    int tmp,cnt;
    int ch;

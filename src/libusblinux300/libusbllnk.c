@@ -57,7 +57,7 @@ extern SMALLINT USBVpp[MAX_PORTNUM];
 SMALLINT owTouchReset(int portnum)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    SMALLINT present,vpp;
    SMALLINT ret = 0;
 
@@ -129,7 +129,7 @@ SMALLINT owTouchReset(int portnum)
 SMALLINT owTouchBit(int portnum, SMALLINT sendbit)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -192,7 +192,7 @@ SMALLINT owTouchBit(int portnum, SMALLINT sendbit)
 SMALLINT owTouchByte(int portnum, SMALLINT sendbyte)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -286,7 +286,7 @@ SMALLINT owReadByte(int portnum)
 SMALLINT owSpeed(int portnum, SMALLINT new_speed)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // set to change the speed
@@ -337,7 +337,7 @@ SMALLINT owSpeed(int portnum, SMALLINT new_speed)
 SMALLINT owLevel(int portnum, SMALLINT new_level)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // Turn off infinite strong pullup?
@@ -428,7 +428,7 @@ SMALLINT owLevel(int portnum, SMALLINT new_level)
 SMALLINT owProgramPulse(int portnum)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // check if Vpp available
@@ -483,11 +483,11 @@ void msDelay(int len)
 // Get the current millisecond tick count.  Does not have to represent
 // an actual time, it just needs to be an incrementing timer.
 //
-long msGettick(void)
+int msGettick(void)
 {
    struct timezone tmzone;
    struct timeval  tmval;
-   long ms;
+   int ms;
 
    gettimeofday(&tmval,&tmzone);
    ms = (tmval.tv_sec & 0xFFFF) * 1000 + tmval.tv_usec / 1000;
@@ -510,7 +510,7 @@ long msGettick(void)
 SMALLINT owTouchBytePower(int portnum, SMALLINT sendbyte)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -633,7 +633,7 @@ SMALLINT owReadBytePower(int portnum)
 SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;

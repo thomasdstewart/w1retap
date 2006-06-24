@@ -56,11 +56,11 @@ SMALLINT getControlRegisterBit(int, uchar *, int, SMALLINT *);
 SMALLINT getStatusRegisterBit(int, uchar *, int, SMALLINT *);
 
 // The "setters"
-SMALLINT setRTC(int, uchar *, ulong, SMALLINT);
+SMALLINT setRTC(int, uchar *, uint, SMALLINT);
 SMALLINT setRTCFromPC(int, uchar *, SMALLINT);
 SMALLINT setOscillator(int, uchar *, SMALLINT);
-SMALLINT setRTCA(int, uchar *, ulong, SMALLINT);
-SMALLINT setRTCAFromPCOffset(int, uchar *, ulong, SMALLINT);
+SMALLINT setRTCA(int, uchar *, uint, SMALLINT);
+SMALLINT setRTCAFromPCOffset(int, uchar *, uint, SMALLINT);
 SMALLINT setRTCAEnable(int, uchar *, SMALLINT);
 SMALLINT setWriteProtectionAndExpiration(int, uchar *, SMALLINT, SMALLINT);
 SMALLINT setControlRegister(int, uchar *, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT, SMALLINT);
@@ -68,11 +68,11 @@ SMALLINT setStatusRegister(int, uchar *, SMALLINT, SMALLINT, SMALLINT);
 
 // The "time conversion" functions
 void getPCTime(timedate *);
-void SecondsToDate(timedate *, ulong);
-ulong DateToSeconds(timedate *);
+void SecondsToDate(timedate *, uint);
+uint DateToSeconds(timedate *);
 
 // Utility functions
-ulong uchar_to_bin(uchar *, int);
+uint uchar_to_bin(uchar *, int);
 
 //----------------------------------------------------------------------
 // Retrieves the local time from the 1-Wire Real-Time Clock (RTC)
@@ -102,7 +102,7 @@ ulong uchar_to_bin(uchar *, int);
 SMALLINT getRTC(int portnum, uchar * SNum, timedate * td)
 {
    uchar timebuffer[4];
-   ulong timelong = 0;
+   uint timeint = 0;
 
    // read 4 bytes from 1-Wire clock device (memory bank 2) 
    // starting at address 0x03.
@@ -110,8 +110,8 @@ SMALLINT getRTC(int portnum, uchar * SNum, timedate * td)
    {
 	   return FALSE;
    }
-   timelong = uchar_to_bin(&timebuffer[0],4);
-   SecondsToDate(td,timelong);
+   timeint = uchar_to_bin(&timebuffer[0],4);
+   SecondsToDate(td,timeint);
    return TRUE;
 }
 
@@ -143,7 +143,7 @@ SMALLINT getRTC(int portnum, uchar * SNum, timedate * td)
 SMALLINT getRTCA(int portnum, uchar * SNum, timedate * td)
 {
    uchar timebuffer[4];
-   ulong timelong = 0;
+   uint timeint = 0;
 
    // read 4 bytes for alarm trigger from 1-Wire clock device (memory bank 2) 
    // starting at address 0x11.
@@ -151,8 +151,8 @@ SMALLINT getRTCA(int portnum, uchar * SNum, timedate * td)
    {
 	   return FALSE;
    }
-   timelong = uchar_to_bin(&timebuffer[0],4);
-   SecondsToDate(td,timelong);
+   timeint = uchar_to_bin(&timebuffer[0],4);
+   SecondsToDate(td,timeint);
    return TRUE;
 }
 
@@ -264,7 +264,7 @@ SMALLINT getStatusRegisterBit(int portnum, uchar * SNum, int statusbit, SMALLINT
 //            1-Wire network.
 //  SNum      The 1-Wire address of the device to communicate.
 //  settime   The number of seconds since Jan. 1, 1970 as an unsigned 
-//            long integer.
+//            int integer.
 //  OscEnable Sets the Oscillator enable bit of the control register.  A 
 //            TRUE will turn the oscillator one and a FALSE will turn 
 //            the oscillator off.
@@ -272,7 +272,7 @@ SMALLINT getStatusRegisterBit(int portnum, uchar * SNum, int statusbit, SMALLINT
 // Returns:  TRUE  if the write worked.
 //           FALSE if there was an error in writing to the part.
 //
-SMALLINT setRTC(int portnum, uchar * SNum, ulong settime, SMALLINT OscEnable)
+SMALLINT setRTC(int portnum, uchar * SNum, uint settime, SMALLINT OscEnable)
 {
    uchar timebuffer[4];
 
@@ -313,15 +313,15 @@ SMALLINT setRTC(int portnum, uchar * SNum, ulong settime, SMALLINT OscEnable)
 //
 SMALLINT setRTCFromPC(int portnum, uchar * SNum, SMALLINT OscEnable)
 {
-   ulong timelong = 0;
+   uint timeint = 0;
    timedate td;
 
    // get seconds since Jan 1, 1970
    getPCTime(&td); // first, get timedate
-   timelong = DateToSeconds(&td); // convert timedate to seconds since Jan 1, 1970
+   timeint = DateToSeconds(&td); // convert timedate to seconds since Jan 1, 1970
    // write 4 bytes to 1-Wire clock device (memory bank 2) 
    // starting at address 0x03.
-   if (setRTC(portnum, SNum, timelong, OscEnable) != TRUE)
+   if (setRTC(portnum, SNum, timeint, OscEnable) != TRUE)
    {
 	   return FALSE;
    }
@@ -363,14 +363,14 @@ SMALLINT setOscillator(int portnum, uchar * SNum, SMALLINT OscEnable)
 //                 1-Wire network.
 //  SNum           The 1-Wire address of the device to communicate.
 //  settime        The number of seconds since Jan. 1, 1970 as an 
-//                 unsigned long integer.
+//                 unsigned int integer.
 //  AlarmEnable    Enables/Disables the Real-Time clock alarm.  TRUE will 
 //                 enable the alarm and FALSE will disable the alarm. 
 //
 // Returns:        TRUE  if the write worked.
 //                 FALSE if there was an error in writing to the part.
 //
-SMALLINT setRTCA(int portnum, uchar * SNum, ulong setalarm, SMALLINT AlarmEnable)
+SMALLINT setRTCA(int portnum, uchar * SNum, uint setalarm, SMALLINT AlarmEnable)
 {
    uchar timebuffer[4];
 
@@ -411,17 +411,17 @@ SMALLINT setRTCA(int portnum, uchar * SNum, ulong setalarm, SMALLINT AlarmEnable
 // Returns:        TRUE  if the write worked.
 //                 FALSE if there was an error in writing to the part.
 //
-SMALLINT setRTCAFromPCOffset(int portnum, uchar * SNum, ulong PCOffset, SMALLINT AlarmEnable)
+SMALLINT setRTCAFromPCOffset(int portnum, uchar * SNum, uint PCOffset, SMALLINT AlarmEnable)
 {
-   ulong timelong = 0;
+   uint timeint = 0;
    timedate td;
 
    // get seconds since Jan 1, 1970
    getPCTime(&td); // first, get timedate
-   timelong = DateToSeconds(&td); // convert timedate to seconds since Jan 1, 1970
+   timeint = DateToSeconds(&td); // convert timedate to seconds since Jan 1, 1970
    // write 4 bytes to 1-Wire clock device (memory bank 2) 
    // starting at address 0x11.
-   if (setRTCA(portnum, SNum, (timelong + PCOffset), AlarmEnable) != TRUE)
+   if (setRTCA(portnum, SNum, (timeint + PCOffset), AlarmEnable) != TRUE)
    {
 	   return FALSE;
    }
@@ -472,7 +472,7 @@ SMALLINT setRTCAEnable(int portnum, uchar * SNum, SMALLINT AlarmEnable)
 //  RTCProtect Sets the write-protect bit for the real-time clock 
 //             and alarms located in the control register.  If set 
 //             to TRUE, the part's Real-Time Clock and Alarm registers 
-//             can no longer be written, including the WPR bit.  If 
+//             can no inter be written, including the WPR bit.  If 
 //             set to FALSE (if possible), the part will not be write-
 //             protected.
 //  RTCAExpire Sets the expiration bit (RO) of the control register.
@@ -823,11 +823,11 @@ SMALLINT setControlRegister(int portnum, uchar * SNum, SMALLINT dsel, SMALLINT s
 //
 void getPCTime(timedate * td)
 {
-   time_t tlong = 0; // number of seconds since Jan. 1, 1970
+   time_t tint = 0; // number of seconds since Jan. 1, 1970
    struct tm *tstruct;  // structure containing time info
 
-   tlong = time(NULL); // get seconds since Jan. 1, 1970
-   tstruct = localtime(&tlong); // transform seconds to struct containing date/time info.
+   tint = time(NULL); // get seconds since Jan. 1, 1970
+   tstruct = localtime(&tint); // transform seconds to struct containing date/time info.
 
    // Populate timedate structure
    td->day = tstruct->tm_mday;
@@ -839,7 +839,7 @@ void getPCTime(timedate * td)
 }
 
 //----------------------------------------------------------------------
-// Take a 4-byte long uchar array (consisting of 
+// Take a 4-byte int uchar array (consisting of 
 // the number of seconds elapsed since Jan. 1 1970) 
 // and convert it into a timedate structure:
 //
@@ -862,10 +862,10 @@ void getPCTime(timedate * td)
 //
 static int dm[] = { 0,0,31,59,90,120,151,181,212,243,273,304,334,365 };
 
-void SecondsToDate(timedate *td, ulong x)
+void SecondsToDate(timedate *td, uint x)
 {
    short tmp,i,j;
-   ulong y;
+   uint y;
    
    // check to make sure date is not over 2070 (sanity check)
    if (x > 0xBBF81E00L)
@@ -875,7 +875,7 @@ void SecondsToDate(timedate *td, ulong x)
    x = y/60;  td->minute = (ushort)(y-60*x);
    y = x/24;  td->hour   = (ushort)(x-24*y);
    x = 4*(y+731);  td->year = (ushort)(x/1461);
-   i = (int)((x-1461*(ulong)(td->year))/4);  td->month = 13;
+   i = (int)((x-1461*(uint)(td->year))/4);  td->month = 13;
    
    do
    {
@@ -912,11 +912,11 @@ void SecondsToDate(timedate *td, ulong x)
 //  * td     timedate struct containing time/date to convert to seconds.
 //
 // Returns:  
-//  ulong    the time/date as the number of seconds elapsed since Jan. 1, 1970.
+//  uint    the time/date as the number of seconds elapsed since Jan. 1, 1970.
 //
-ulong DateToSeconds(timedate *td)
+uint DateToSeconds(timedate *td)
 {
-   ulong Sv,Bv,Xv;
+   uint Sv,Bv,Xv;
 
    // convert the date/time values.
    if (td->year >= 2000) 
@@ -931,13 +931,13 @@ ulong DateToSeconds(timedate *td)
 
    Xv = 365 * (Sv-2) + (Sv-1)/4 + dm[td->month] + td->day + Bv - 1;
 
-   Xv = 86400 * Xv + (ulong)(td->second) + 60*((ulong)(td->minute) + 60*(ulong)(td->hour));
+   Xv = 86400 * Xv + (uint)(td->second) + 60*((uint)(td->minute) + 60*(uint)(td->hour));
 
    return Xv;
 }
 
 //----------------------------------------------------------------------
-// Converts a binary uchar buffer into a ulong return integer
+// Converts a binary uchar buffer into a uint return integer
 // number. 'length' indicates the length of the uchar buffer.
 //
 // Parameters:
@@ -945,12 +945,12 @@ ulong DateToSeconds(timedate *td)
 //  length    the length of the input buffer.
 //
 // Returns:  
-//  ulong     the ulong integer result.
+//  uint     the uint integer result.
 //
-ulong uchar_to_bin(uchar  *buffer, int length)
+uint uchar_to_bin(uchar  *buffer, int length)
 {
    int i;
-   ulong l = 0;
+   uint l = 0;
 
    for (i = (length-1); i >= 0; i--)
         l = (l << 8) | (int)(buffer[i]);
