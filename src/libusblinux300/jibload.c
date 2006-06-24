@@ -48,7 +48,7 @@ void LoadJiB(int portnum, uchar *dev, char *filename,
              int MasterEraseFirst, int ClearLoadPINMode);
 int ProcessCommandLine(int p_ArgC, char **p_lpArgV,
                        uchar *MasterEraseFirst, uchar *ClearLoadPINMode);
-ulong GetFileToLoad(char *p_FileName, uchar *p_FileBuffer, ulong p_Len);
+uint GetFileToLoad(char *p_FileName, uchar *p_FileBuffer, uint p_Len);
 
 
 //--------------------------------------------------------------------------
@@ -151,10 +151,10 @@ int ProcessCommandLine(int p_ArgC, char **p_lpArgV,
 //--------------------------------------------------------------------------
 // Read the file into the supplied buffer.
 //
-ulong GetFileToLoad(char *p_FileName, uchar *p_FileBuffer, ulong p_Len)
+uint GetFileToLoad(char *p_FileName, uchar *p_FileBuffer, uint p_Len)
 {
   FILE  *l_InFile;
-  ulong l_BytesRead = 0,
+  uint l_BytesRead = 0,
         l_ReadSize = 0;
 
   if(!(l_InFile = fopen(p_FileName,"r+b")))
@@ -186,7 +186,7 @@ void LoadJiB(int portnum, uchar *dev, char *filename,
    uchar          l_FileName[260],
                   l_FileBuff[4096];
    AID            l_CurrentAID;
-   ulong          filelen;
+   uint          filelen;
 
    // select the device and put in overdrive
    printf("Device: ");

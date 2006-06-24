@@ -184,9 +184,9 @@ FILE * w1_file_open(char *logfile)
                 *md = 'a';
                 *pmd = '\0';
             }
-            lfp = fopen(logfile, md);
-            if(*pmd) *pmd = ':';
         }
+	lfp = fopen(logfile, md);
+	if(pmd) *pmd = ':';
     }
     return lfp;
 }

@@ -48,12 +48,12 @@
 extern void owClearError(void);
 
 // local functions
-void     ComputeSHAVM(uchar* MT, long* hash);
-long     NLF2 (long B, long C, long D, int n);
+void     ComputeSHAVM(uchar* MT, int* hash);
+int     NLF2 (int B, int C, int D, int n);
 int      getNumber (int min, int max);
 
 //constants used in SHA computation
-static const long KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
+static const int KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
 
 /*
          TM_Init - Prompt for two expiration time limits.
@@ -91,18 +91,18 @@ int main(int argc, char** argv)
    int    portnum = 0;       // the port on which to communicate to 1-Wire devices
    int    num = 0;           // number of 1-Wire Clock devices
    timedate td;              // timedate struct
-   ulong  RTCAOffset = 180;  // Real-Time Clock Alarm offset from PC time in seconds (entered by user)
-   ulong  SoftOffset = 120;  // "Soft" clock offset used to calculate expiry time to be placed in RAM of the part.
-   ulong RTCTime = 0;        // set RTC with this time in seconds.
-   ulong RTCATime = 0;       // set RTCA with this time in seconds.
-   ulong SoftTime = 0;       // set "Soft" time with this value.
+   uint  RTCAOffset = 180;  // Real-Time Clock Alarm offset from PC time in seconds (entered by user)
+   uint  SoftOffset = 120;  // "Soft" clock offset used to calculate expiry time to be placed in RAM of the part.
+   uint RTCTime = 0;        // set RTC with this time in seconds.
+   uint RTCATime = 0;       // set RTCA with this time in seconds.
+   uint SoftTime = 0;       // set "Soft" time with this value.
    uchar SoftTimeArray[5];   // holds the soft time in an array of uchar
    uchar secret[51];         // holds the secret input by the user.
    int secretlength;         // secret length in number of bytes.
    uchar usertext[51];       // holds the usertext input by the user.
    int usertextlength;       // user text length in number of bytes
    uchar inputforsha[64];    // ROM + UserText + SOFTTIME + Secret
-   long  longMAC[5];         // MAC resulting from SHA1 hash with
+   int  intMAC[5];         // MAC resulting from SHA1 hash with
    uchar MAC[20];            // MAC resulting from SHA1 hash of inputforsha array
    uchar filedata[76];       // file data
    int filedatalength = 76;  // length of file data
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 
    uchar TimeSN[MAXDEVICES][8]; // array to hold the serial numbers for the devices found
    SMALLINT RTCAlarmTriggerBit = 0;
-   ulong secondsfromdate =0;
+   uint secondsfromdate =0;
 
    // Make sure we can talk to the part when it is alarming.
    // The following variable should always be set when
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
    memset(&usertext[0], 0x00, 51);
    memset(&SoftTimeArray[0], 0x00, 5);
    memset(&inputforsha[0], 0x00, 64);
-   memset(&longMAC[0], 0x00, 20);
+   memset(&intMAC[0], 0x00, 20);
    memset(&filedata[0], 0x00, 76);
 
    puts("\nStarting 'Timed Trial' setup Application for 1-Wire Clocks\n");
@@ -249,10 +249,10 @@ int main(int argc, char** argv)
    memcpy(&inputforsha[(usertextlength + 13)], &secret, secretlength);
 
    // Create the SHA1 MAC from the inputforsha array
-   ComputeSHAVM(&inputforsha[0], &longMAC[0]);
+   ComputeSHAVM(&inputforsha[0], &intMAC[0]);
 
    // Convert SHA1 results to a 20-byte array
-   memcpy(&MAC[0], &longMAC[0], 20);
+   memcpy(&MAC[0], &intMAC[0], 20);
 
    // Write UserText + SOFTTIME + MAC in a file called EXP.000
    // Name the file and extension in FileEntry struct.
@@ -321,7 +321,7 @@ int main(int argc, char** argv)
 
 //----------------------------------------------------------------------
 // computes a SHA given the 64 byte MT digest buffer.  The resulting 5
-// long values are stored in the given long array, hash.
+// int values are stored in the given int array, hash.
 //
 // Note: This algorithm before's the SHA-1 algorithm as specified in the
 // datasheet for the DS1961S, where the last step (which only involves
@@ -334,12 +334,12 @@ int main(int argc, char** argv)
 // Returns:
 //             - see hash variable above
 //
-void ComputeSHAVM(uchar* MT, long* hash)
+void ComputeSHAVM(uchar* MT, int* hash)
 {
-   unsigned long MTword[80];
+   unsigned int MTword[80];
    int i;
-   long ShftTmp;
-   long Temp;
+   int ShftTmp;
+   int Temp;
 
    for(i=0;i<16;i++)
    {
@@ -376,7 +376,7 @@ void ComputeSHAVM(uchar* MT, long* hash)
 //----------------------------------------------------------------------
 // calculation used for the SHA MAC
 //
-long NLF2 (long B, long C, long D, int n)
+int NLF2 (int B, int C, int D, int n)
 {
    if(n<20)
       return ((B&C)|((~B)&D));

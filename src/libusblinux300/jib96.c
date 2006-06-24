@@ -1220,14 +1220,14 @@ LPRESPONSEAPDU DeleteAppletByAID(int portnum, LPAID p_lpAID)
 //  
 LPRESPONSEAPDU LoadApplet(int portnum, 
                           uchar* p_lpAppletBuffer, 
-                          ulong  p_AppletLen,
+                          uint  p_AppletLen,
                           LPAID  p_lpAID)
 {
   uchar *l_lpData, *l_lpOffset;
   COMMANDAPDU     l_CommandAPDU;
   LPRESPONSEAPDU  l_lpResponseAPDU;
-  ulong           l_BufferSize  = p_AppletLen+sizeof(AID)+sizeof(JIBMASTERPIN);
-  ulong           l_PacketSize;
+  uint           l_BufferSize  = p_AppletLen+sizeof(AID)+sizeof(JIBMASTERPIN);
+  uint           l_PacketSize;
 
   // make sure AID length fits
   if(p_lpAID->Len > MAX_AID_SIZE)

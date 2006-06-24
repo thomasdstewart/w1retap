@@ -121,7 +121,7 @@ typedef struct
 typedef struct
 {
    uchar     ROM[8];        // rom of device page is from
-   ulong     Tstamp;        // time stamp when page void
+   uint     Tstamp;        // time stamp when page void
    uchar     Fptr;          // forward pointer to next entry in chain
    uchar     Bptr;          // back pointer to previous entry in chain
    uchar     Hptr;          // hash pointer to hash position

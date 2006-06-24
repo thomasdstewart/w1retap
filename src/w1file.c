@@ -149,6 +149,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
             }
         }
     }
+    fflush(lfp);
 }
 
 

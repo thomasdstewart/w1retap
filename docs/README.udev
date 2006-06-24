@@ -1,12 +1,13 @@
 ######################## IMPORTANT #########################
 
-On recent versions of Linux (e.g. Ubuntu 6.06 "Dapper"), the permissions on
-USB devices are set by the udev process. In order to allow non-root users to
-read the device, it is necessary to set permissions by adding a rules file
-to those under /etc/udev/rules.d/, associating the device with a group, and
-adding the w1retap user to that group.
+On recent versions of Linux (e.g. Ubuntu 6.06 "Dapper", 2006/05 Gentoo
+~x86 etc), the permissions on USB devices are set by the udev
+process. In order to allow non-root users to read the device, it is
+necessary to set permissions by adding a rules file to those under
+/etc/udev/rules.d/, associating the device with a group, and adding
+the w1retap user to that group.
 
-In this case, the group is 'w1retap' and the user is 'jrh'.
+In this example, the group is 'w1retap' and the user is 'jrh'.
 
 As root:
 
@@ -16,10 +17,14 @@ As root:
 # udev rules file for w1retap
 SUBSYSTEM!="usb_device", GOTO="w1retap_rules_end"
 # DS2940
-SYSFS{idVendor}=="04fa", SYSFS{idProduct}=="2490", GROUP="w1retap",
-MODE="0664"
+SYSFS{idVendor}=="04fa", SYSFS{idProduct}=="2490", GROUP="w1retap", MODE="0664"
 LABEL="w1retap_rules_end"
 ################################################################
+
+Note that files in /etc/udev/rules.d/ are run in alphanumeric order,
+so on Gentoo, where the default 50-udev.rules will set the permission
+to 0644, then the ??-w1retap.rules must have a greater number, e.g. 
+65-w1retap.rules.
 
 2. Create the w1retap group
 
@@ -37,7 +42,7 @@ It is also necesary to ensure the ds9490 module is not loaded.
 
 # rmmod ds9490
 
-in /etc/modprobe.d/blacklist
+in /etc/modprobe.d/blacklist (or wherever your distro does blacklists)
 
 ------------------------------8<----------------
 # for w1retap
@@ -49,3 +54,185 @@ then
 # /sbin/depmod -a
 
 Now plugging the adaptor should not cause the module to load.
+
+If it still does not work, verify:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+0. You have added the udev rule; run 'udevstart' to ensure it has been
+   noticed.
+1. You have blacklisted the ds9490r module. 
+2. You have run /sbin/depmod -a
+3. You have added the group w1retap
+4. The user is a member of the group (run the 'id' command to verify).
+5. Unplug the device
+6. Plug it, see if tstfnd (or dstest works).
+
+udev debugging
+~~~~~~~~~~~~~~
+
+You can use the 'udevtest' tool to see how the device is handled. The
+udev invocation depends on the distribution:
+
+on Dapper:
+$ udevtest
+main: Usage: udevtest <devpath> <subsystem>
+
+Gentoo (~86, 2006/06)
+$ udevtest
+main: Usage: udevtest <devpath>
+
+The devpath is from the sysfs (/sys) directory. The easist way is:
+(note your result will be different)
+
+a) With the device unplugged:
+$ ls /sys/class/usb_device/
+usbdev1.1  usbdev2.1  usbdev3.1  usbdev4.1  usbdev5.1  usbdev5.2
+usbdev5.7
+
+b) Plug in the device:
+$ ls /sys/class/usb_device/
+usbdev1.1  usbdev3.1  usbdev5.1  usbdev5.7
+usbdev2.1  usbdev4.1  usbdev5.2  usbdev5.8
+
+So the DS2490 is 'usbdev5.8'
+
+Then run udevtest, e.g. (in this case, a few attempts later against
+usbdev5.10 for the DS2490)
+
+(gentoo)
+udevtest  /class/usb_device/usbdev5.10
+main: looking at device '/class/usb_device/usbdev5.10' from subsystem 'usb_device'
+run_program: '/bin/sh -c 'K=usbdev5.10; K=${K#usbdev}; printf bus/usb/%03i/%03i ${K%%.*} ${K#*.}''
+run_program: '/bin/sh' (stdout) 'bus/usb/005/010'
+run_program: '/bin/sh' returned with status 0
+udev_rules_get_name: rule applied, 'usbdev5.10' becomes 'bus/usb/005/010'
+udev_device_event: device '/class/usb_device/usbdev5.10' already known, remove possible symlinks
+udev_node_add: creating device node '/dev/bus/usb/005/010', major = '189', minor = '521', mode = '0664', uid = '0', gid = '1009'
+
+This is OK, the default 50-udev.rule sets the name (and mode 0644,
+which means we cannot write to the device), the 65-w1retap.rule sets
+the group 1009 (w1retap in this case), and mode 0664, which means
+group w1retap can read and write the device.
+
+(Dapper)
+(from ls -rtl /sys/class/usb_device/, I determine that the last
+plugged USB device, the DS2490, is usbdev3.23)
+
+ $ udevtest /sys/class/usb_device/usbdev3.23/ usb_device
+main: looking at device '/class/usb_device/usbdev3.23/' from subsystem 'usb_device'
+main: opened class_dev->name='usbdev3.23'
+run_program: 'usb_device_name --export usbdev3.23'
+run_program: '/lib/udev/usb_device_name' (stdout) 'USB_BUS=003'
+run_program: '/lib/udev/usb_device_name' (stdout) 'USB_DEV=023'
+run_program: '/lib/udev/usb_device_name' returned with status 0
+udev_rules_get_name: rule applied, 'usbdev3.23' becomes 'bus/usb/003/023'
+run_program: 'check_ptp_camera' 'usb_device'
+run_program: '/lib/udev/check_ptp_camera' (stderr) 'grep: '
+run_program: '/lib/udev/check_ptp_camera' (stderr) '/sys//*/bInterfaceClass'
+run_program: '/lib/udev/check_ptp_camera' (stderr) ': No such file or directory'run_program: '/lib/udev/check_ptp_camera' (stderr) ''
+run_program: '/lib/udev/check_ptp_camera' returned with status 2
+create_node: creating device node '/dev/bus/usb/003/023', major = '189', minor = '278', mode = '0664', uid = '0', gid = '1003'
+
+Again, the device has the correct mode and gid (1003 in this machine).
+
+dstest
+~~~~~~
+
+The 'C' program below, build with 
+
+$ gcc -Wall -O2 -o dstest dstest.c -l usb
+
+will test out the interface. Run as ./dstest, e.g.
+
+$ ./dstest
+OK -- got interface
+$
+
+If you don't see "OK -- got interface", then you haven't set up the
+permission and / or removal of the ds9490r module correctly.
+
+//-----------------------------------------8<----------------------------
+#include <stdio.h>  
+#include <usb.h>  
+#include <string.h>  
+#include <unistd.h>  
+ 
+#define VENDOR_ID   0x04fa
+#define PRODUCT_ID  0x2490  
+ 
+struct usb_dev_handle *usb_handle;  
+
+void err_quit(char *msg)
+{
+    puts(msg);
+    exit(1);
+}
+static struct usb_device *find_device(void)  
+{  
+    struct usb_bus *usb_bus;  
+    struct usb_device *dev;  
+    
+    usb_init();  
+    usb_find_busses();  
+    usb_find_devices();  
+    
+    usb_busses = usb_get_busses();  
+    
+    for (usb_bus = usb_busses; usb_bus; usb_bus = usb_bus->next) {  
+        for (dev = usb_bus->devices; dev; dev = dev->next) {  
+            if ((dev->descriptor.idVendor == VENDOR_ID) &&  
+                (dev->descriptor.idProduct == PRODUCT_ID))  
+                return dev;  
+        }  
+    }  
+    err_quit("Device not found");  
+    return NULL;
+}  
+
+void init_handle(struct usb_device *usb_dev)  
+{  
+    int status = 0;  
+    char name[64];
+    
+    usb_handle = usb_open(usb_dev);  
+    if (usb_handle == NULL)
+    {
+        err_quit ("Cannot open device");
+    }
+    status = usb_get_driver_np(usb_handle, 0, name, sizeof(name));  
+    if (status == 0)
+    {  
+        printf("Device claimed by %s\n", name);  
+        status = usb_detach_kernel_driver_np(usb_handle, 0);  
+        if (status != 0)
+        {  
+            puts("Unable to detach kernel driver");
+            printf("%s\n", usb_strerror());
+        }
+    }
+    
+    status = usb_set_configuration(usb_handle, usb_dev->config->bConfigurationValue);  
+    if (status != 0)
+    {
+        printf("%s\n", usb_strerror());
+        err_quit("Cannot set configuration");  
+    }
+    status = usb_claim_interface(usb_handle, 0);  
+    if (status != 0)
+    {
+        puts("Unable to claim inteface, do you have permission?");
+        printf("%s\n", usb_strerror());
+        err_quit("Cannot set permission");  
+    }
+    puts ("OK -- got interface");
+}  
+
+int main(int argc, char **argv)  
+{  
+    struct usb_device *usb_dev;  
+    usb_dev = find_device();  
+    init_handle(usb_dev);  
+    usb_close(usb_handle);  
+    return 0;
+}  
+//-----------------------------------------8<----------------------------

@@ -48,7 +48,7 @@
    typedef unsigned char  uchar;
    #ifdef WIN32
       typedef unsigned short ushort;
-      typedef unsigned long  ulong;
+      typedef unsigned int  uint;
    #endif
 #endif
 
@@ -66,12 +66,12 @@ typedef struct
 
    ushort start_delay;           // minutes before mission starts
 
-   ulong mission_start_time;     // date/time when mission started
-   ulong current_time;           // current real-time clock value
-   ulong download_time;          // download stations time of reading
+   uint mission_start_time;     // date/time when mission started
+   uint current_time;           // current real-time clock value
+   uint download_time;          // download stations time of reading
 
-   ulong mission_samples;        // number of samples in this mission
-   ulong samples_total;          // total number of samples taken by device
+   uint mission_samples;        // number of samples in this mission
+   uint samples_total;          // total number of samples taken by device
     
    uchar high_threshold;         // raw temp of high threshold
    uchar low_threshold;          // raw temp of low threshold
@@ -97,11 +97,11 @@ typedef struct
 typedef struct 
 {
    int num_low;               // number of low events
-   ulong low_start_time[12];  // start time of event 0 to 12
-   ulong low_end_time[12];    // end time of event 0 to 12 
+   uint low_start_time[12];  // start time of event 0 to 12
+   uint low_end_time[12];    // end time of event 0 to 12 
    int num_high;              // number of high events
-   ulong high_start_time[12]; // start time of event 0 to 12
-   ulong high_end_time[12];   // end time of event 0 to 12
+   uint high_start_time[12]; // start time of event 0 to 12
+   uint high_end_time[12];   // end time of event 0 to 12
 
    uchar  alarm_raw[96];     // raw data for alarm events
 
@@ -112,7 +112,7 @@ typedef struct
 {
    int   num_log;             // number of logs
    float temp[2048];          // temperature log in (C) 
-   ulong start_time;          // start time of log
+   uint start_time;          // start time of log
    int   interval;            // interval in seconds between logs
 
    uchar log_raw[2048];       // raw data for log
@@ -201,8 +201,8 @@ int ReadThermoStatus(int,uchar *,ThermoStateType *,FILE *);
 int MissionThermo(int,uchar *,ThermoStateType *,FILE *);
 static int RunThermoScript(int,ThermoStateType *,ThermoScript script[],FILE *fp);
 void MissionStatusToString(MissionStatus *,int,char *);
-void  SecondsToDate(timedate *, ulong);
-ulong DateToSeconds(timedate *);
+void  SecondsToDate(timedate *, uint);
+uint DateToSeconds(timedate *);
 uchar BCDToBin(uchar);
 void  InterpretStatus(MissionStatus *);
 void  FormatMission(MissionStatus *);

@@ -55,12 +55,12 @@
 #define NO_FILES   3
 
 // local functions
-void     ComputeSHAVM(uchar* MT, long* hash);  // function to compute sha-1
-long     NLF2 (long B, long C, long D, int n); // used by above function to compute sha-1
+void     ComputeSHAVM(uchar* MT, int* hash);  // function to compute sha-1
+int     NLF2 (int B, int C, int D, int n); // used by above function to compute sha-1
 int      getNumber (int min, int max);         // help with user input
 
 //constants used in SHA computation to create the new MAC
-static const long KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
+static const int KTN[4] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
 
 int main(int argc, char** argv)
 {
@@ -69,16 +69,16 @@ int main(int argc, char** argv)
    int        portnum = 0;             // port number where 1-Wire net is located
    int        num = 0;                 // number of 1-Wire Clock devices found on 1-Wire Net
    timedate   td;                      // timedate struct
-   ulong      RTCTime = 0;             // variable to hold the RTC time in seconds.
-   ulong      RTCATime = 0;            // variable to hold the RTCA time in seconds.
-   ulong      SoftTime = 0;            // get "Soft" time with this value.
+   uint      RTCTime = 0;             // variable to hold the RTC time in seconds.
+   uint      RTCATime = 0;            // variable to hold the RTCA time in seconds.
+   uint      SoftTime = 0;            // get "Soft" time with this value.
    uchar      SoftTimeArray[5];        // holds the soft time in an array of uchar
    uchar      secret[51];              // holds the secret input by the user.
    int        secretlength;            // secret length in number of bytes.
    uchar      usertext[51];            // holds the usertext retrieved from 1-Wire file.
    int        usertextlength;          // user text length in number of bytes
    uchar      inputforsha[64];         // ROM + UserText + SOFTTIME + Secret
-   long       longMAC[5];              // MAC resulting from SHA1 hash as 5 ulong integers
+   int       intMAC[5];              // MAC resulting from SHA1 hash as 5 uint integers
    uchar      MAC[20];                 // MAC resulting from SHA1 hash of inputforsha array as a byte array
    uchar      newMAC[20];              // MAC constructed from ROM + UserText + SOFTTIME + Secret
    uchar      filedata[76];            // file data
@@ -88,8 +88,8 @@ int main(int argc, char** argv)
    FileEntry  fe;                      // 1-Wire file info used to create a 1-Wire file
    SMALLINT   errordetect = NO_ERROR;  // flag when an error occurrs in communicating to 1-Wire device
    uchar      TimeSN[MAXDEVICES][8];   // the serial numbers (1-Wire Net Addresses) for the devices
-   ulong      delayTime = 0;           // delay between main loop iterations.
-   ulong      noDeviceDelayTime = 1000;// delay between no-device loop iterations.
+   uint      delayTime = 0;           // delay between main loop iterations.
+   uint      noDeviceDelayTime = 1000;// delay between no-device loop iterations.
 
    // Make sure we can talk to the part when it is alarming.
    // The following variable should always be set when
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
    memset(&SoftTimeArray[0], 0x00, 5);
    memset(&inputforsha[0], 0x00, 64);
-   memset(&longMAC[0], 0x00, 20);
+   memset(&intMAC[0], 0x00, 20);
    memset(&MAC[0], 0x00, 20);
    memset(&newMAC[0], 0x00, 20);
    memset(&filedata[0], 0x00, 76);
@@ -244,10 +244,10 @@ int main(int argc, char** argv)
       memcpy(&inputforsha[(usertextlength + 13)], &secret, secretlength);
 
       // Create the SHA1 MAC from the inputforsha array
-      ComputeSHAVM(&inputforsha[0], &longMAC[0]);
+      ComputeSHAVM(&inputforsha[0], &intMAC[0]);
 
-      // Make new MAC as a byte array from the longMAC long integer array
-      memcpy(&newMAC[0], &longMAC[0], 20);
+      // Make new MAC as a byte array from the intMAC int integer array
+      memcpy(&newMAC[0], &intMAC[0], 20);
 
       // Compare old MAC from clock to new MAC against the entered secret
       comparisonerror = FALSE;
@@ -291,7 +291,7 @@ int main(int argc, char** argv)
 
 //----------------------------------------------------------------------
 // computes a SHA given the 64 byte MT digest buffer.  The resulting 5
-// long values are stored in the given long array, hash.
+// int values are stored in the given int array, hash.
 //
 // Note: This algorithm before's the SHA-1 algorithm as specified in the
 // datasheet for the DS1961S, where the last step (which only involves
@@ -304,12 +304,12 @@ int main(int argc, char** argv)
 // Returns:
 //             - see hash variable above
 //
-void ComputeSHAVM(uchar* MT, long* hash)
+void ComputeSHAVM(uchar* MT, int* hash)
 {
-   unsigned long MTword[80];
+   unsigned int MTword[80];
    int i;
-   long ShftTmp;
-   long Temp;
+   int ShftTmp;
+   int Temp;
 
    for(i=0;i<16;i++)
    {
@@ -346,7 +346,7 @@ void ComputeSHAVM(uchar* MT, long* hash)
 //----------------------------------------------------------------------
 // calculation used for the SHA MAC
 //
-long NLF2 (long B, long C, long D, int n)
+int NLF2 (int B, int C, int D, int n)
 {
    if(n<20)
       return ((B&C)|((~B)&D));

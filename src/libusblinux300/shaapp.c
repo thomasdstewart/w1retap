@@ -43,7 +43,7 @@ enum { MD_FIND_ROVING=0, MD_READ_AUTH, MD_MONEY_VERF, MD_MONEY_CHANGE,
 int ParseData(char *,int,uchar *,int);
 
 // globals
-long time_stamp;
+int time_stamp;
 // verbose output mode
 int VERBOSE=0;
 

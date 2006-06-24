@@ -305,8 +305,8 @@ int CopyScratchSHAEE(int portnum, ushort address, uchar *secret, uchar *sn, ucha
    int i;
    uchar scratch[8],es,test;
    unsigned MT[64];
-   long A,B,C,D,E;
-   long Temp;
+   int A,B,C,D,E;
+   int Temp;
 
    for(i=0;i<4;i++)
       MT[i] = secret[i];
@@ -451,8 +451,8 @@ int NextSecret(int portnum, ushort address, uchar *secret)
 {
    int i;
    unsigned MT[64];
-   long A,B,C,D,E;
-   long Temp;
+   int A,B,C,D,E;
+   int Temp;
    uchar memory[32],scratch[8],es;
    ushort tmpadd;
    uchar send_block[32];
@@ -580,8 +580,8 @@ int ReadAuthPageSHAEE(int portnum, ushort address, uchar *secret, uchar *SerNum,
    short send_cnt=0;
    uchar send_block[80];
    int i;
-   long A,B,C,D,E;
-   long Temp;
+   int A,B,C,D,E;
+   int Temp;
    unsigned MT[64];
    uchar memory[32],scratch[8],es;
    ushort tmpadd;
@@ -833,12 +833,12 @@ int SelectSHAEE(int portnum)
 // constant values).
 //
 //
-void ComputeSHAEE(unsigned int *MT,long *A,long *B, long *C, long *D,long *E)
+void ComputeSHAEE(unsigned int *MT,int *A,int *B, int *C, int *D,int *E)
 {
-   unsigned long MTword[80];
+   unsigned int MTword[80];
    int i;
-   long ShftTmp;
-   long Temp;
+   int ShftTmp;
+   int Temp;
 
    for(i=0;i<16;i++)
       MTword[i] = (MT[i*4] << 24) | (MT[i*4+1] << 16) |
@@ -870,7 +870,7 @@ void ComputeSHAEE(unsigned int *MT,long *A,long *B, long *C, long *D,long *E)
 }
 
 // calculation used for the MAC
-long KTN (int n)
+int KTN (int n)
 {
    if(n<20)
       return 0x5a827999;
@@ -883,7 +883,7 @@ long KTN (int n)
 }
 
 // calculation used for the MAC
-long NLF (long B, long C, long D, int n)
+int NLF (int B, int C, int D, int n)
 {
    if(n<20)
       return ((B&C)|((~B)&D));

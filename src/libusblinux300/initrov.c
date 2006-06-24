@@ -42,7 +42,7 @@ extern void output_status(int,char *);
 extern int EnterString(char *,char *,int,int);
 extern int ToHex(char);
 extern int GetSeviceProviderSettings(int,char *,uchar *,int,uchar *);
-extern int GetRovingSettings(uchar *, ulong *);
+extern int GetRovingSettings(uchar *, uint *);
 extern int WriteFileSHA(uchar *,uchar *,int,uchar *,TransState *);
 extern void ExitProg(char *,int);
 extern int CreateAuthSecret(uchar *, TransState *);
@@ -57,7 +57,7 @@ extern int getkeystroke(void);
 extern int key_abort(void);
 
 // local function
-int CreateRovingSHA(uchar *,uchar *,ulong,char *,TransState *);
+int CreateRovingSHA(uchar *,uchar *,uint,char *,TransState *);
 
 // verbose output mode
 int VERBOSE=0;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
    char msg[300];
    uchar auth_secret[85],dmmy[85];
    int cnt,exit_code,i;
-   ulong money;
+   uint money;
    uchar rov_information[128];
    TransState ts;
 
@@ -216,11 +216,11 @@ int main(int argc, char **argv)
 //--------------------------------------------------------------------------
 // Find and create a roving sha iButtons
 //
-int CreateRovingSHA(uchar *auth_secret, uchar *rov_information, ulong money,
+int CreateRovingSHA(uchar *auth_secret, uchar *rov_information, uint money,
                     char *msg, TransState *ts)
 {
    int rt=EXIT_SUCCESS,cnt=0,i;
-   ulong ul;
+   uint ul;
    uchar page_map[5];
    eCertificate ec;
 
