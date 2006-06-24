@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(w1retap,0.0.10)
+AC_INIT(w1retap,0.0.11)
 PACKAGE=w1retap
-VERSION=0.0.10
+VERSION=0.0.11
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AM_CONFIG_HEADER(config.h)

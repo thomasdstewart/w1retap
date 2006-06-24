@@ -37,14 +37,14 @@
 extern int ReadUDP_SHA(int,ushort,uchar *,int *);
 extern int WritePage(int, uchar *, int, TransState *);
 extern int EnterString(char *, char *, int, int);
-extern int EnterNum(char *, int, long *, long, long);
+extern int EnterNum(char *, int, int *, int, int);
 extern int ToHex(char ch);
 
 // local function prototypes
 int PrintHeader(char *);
 void output_status(int, char *);
 int GetSeviceProviderSettings(int, char *, uchar *, int, uchar *);
-int GetRovingSettings(uchar *, ulong *);
+int GetRovingSettings(uchar *, uint *);
 
 // globals
 extern int VERBOSE;
@@ -174,7 +174,7 @@ int GetSeviceProviderSettings(int get_sp, char *sp_name, uchar *auth_secret, int
 //----------------------------------------------------------------------
 // Get the settings for the Service Provider
 //
-int GetRovingSettings(uchar *rov_information, ulong *money)
+int GetRovingSettings(uchar *rov_information, uint *money)
 {
    char temp[255];
    int i,len;
@@ -203,7 +203,7 @@ int GetRovingSettings(uchar *rov_information, ulong *money)
    }
 
    // money (1.02) change to dollars
-   if (!EnterNum("\nEnter the starting money balance (in US dollars)\n", 5, (long*)money, 0, 99999))
+   if (!EnterNum("\nEnter the starting money balance (in US dollars)\n", 5, (int*)money, 0, 99999))
       return FALSE;
    else
    {

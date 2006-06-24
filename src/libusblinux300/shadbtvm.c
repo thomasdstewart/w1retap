@@ -808,7 +808,7 @@ SMALLINT CreateDataSignatureVM(SHACopr* copr, uchar* secret, uchar* data,
                                SMALLINT readSignature)
 {
    SMALLINT i,j,offset;
-   long hash[5], temp;
+   int hash[5], temp;
    uchar digestBuff[64];
 
    //Set up the 64 byte buffer for computing the digest.
@@ -995,7 +995,7 @@ SMALLINT GetCoprVM(SHACopr* copr, FileEntry* fe)
    FILE* fp;
    uchar *signSecret,*authSecret;
    int signlen, authlen, len, index;
-   long lvalue = 1;
+   int lvalue = 1;
    char test[2] = { 'y', 0 };
    uchar buffer[255], i=0;
 
@@ -1075,7 +1075,7 @@ SMALLINT GetCoprVM(SHACopr* copr, FileEntry* fe)
 static int GetSecretVM(char* name, uchar** secret)
 {
    uchar inputBuffer[255];
-   long lvalue=1, length;
+   int lvalue=1, length;
 
    printf("How would you like to enter the %s?\n", name);
    EnterNum("\n   1) Hex\n   2) Text\n", 1, &lvalue, 1, 2);

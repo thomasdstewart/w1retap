@@ -30,7 +30,7 @@
 //
 
 // exportable functions defined in cnt1d.c
-SMALLINT ReadCounter(int,uchar *,int,ulong *);
+SMALLINT ReadCounter(int,uchar *,int,uint *);
 
 // family codes of devices
 #define COUNT_FAMILY       0x1D

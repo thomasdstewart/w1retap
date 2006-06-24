@@ -62,7 +62,7 @@ extern struct usb_dev_handle *usb_dev_handle_list[MAX_PORTNUM];
 SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len)
 {
    SETUP_PACKET setup;
-   ulong nOutput = 0;
+   uint nOutput = 0;
    STATUS_PACKET status;
    SMALLINT	command_issued = FALSE;
    ushort	bytes_index=0;

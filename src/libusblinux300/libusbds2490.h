@@ -85,7 +85,7 @@ typedef struct _USB_DEVICE_DESCRIPTOR {
 // Device Information is put here
 typedef struct _USB_DEVICE_INFO
 {
-	ulong	DriverVersion;
+	uint	DriverVersion;
 	USB_DEVICE_DESCRIPTOR	Descriptor;
 	uchar	Unit;
 } USB_DEVICE_INFO, *PUSB_DEVICE_INFO;	

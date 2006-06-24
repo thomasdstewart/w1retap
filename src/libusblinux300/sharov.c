@@ -4,7 +4,7 @@
 extern SMALLINT owFirst(int,SMALLINT,SMALLINT);
 extern SMALLINT owAcquire(int,char *);
 extern void owRelease(int);
-extern long msGettick();
+extern int msGettick();
 
 static int GetSecret(char* name, uchar** secret);
 
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
    uchar *authSecret;
    int authlen;
    char test[2] = {'y',0};
-   long balance;
+   int balance;
 
    copr.portnum = 0;
    user.portnum = 0;
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 static int GetSecret(char* name, uchar** secret)
 {
    uchar inputBuffer[255];
-   long lvalue=1, length;
+   int lvalue=1, length;
 
    printf("How would you like to enter the %s?\n", name);
    EnterNum("\n   1) Hex\n   2) Text\n", 1, &lvalue, 1, 2);

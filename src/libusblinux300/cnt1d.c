@@ -47,7 +47,7 @@
 //                   in contact
 //
 SMALLINT ReadCounter(int portnum, uchar SerialNum[8], int CounterPage,
-                     ulong *Count)
+                     unsigned int *Count)
 {
    uchar rt=FALSE;
    uchar send_block[30];

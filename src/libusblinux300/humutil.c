@@ -550,7 +550,7 @@ SMALLINT startMission(int portnum, uchar *SNum, startMissionData set,
                       configLog *config)
 {
    int i;
-   time_t tlong;
+   time_t tint;
    struct tm *tstruct;
    uchar buffer[10];
    uchar state[96];
@@ -672,10 +672,10 @@ SMALLINT startMission(int portnum, uchar *SNum, startMissionData set,
 
    if(set.timeSync)
    {
-      time(&tlong);
-      tlong++;
+      time(&tint);
+      tint++;
 
-      tstruct = localtime(&tlong);
+      tstruct = localtime(&tint);
 
       setTime(RTC_TIME&0x3F, tstruct->tm_hour, tstruct->tm_min, tstruct->tm_sec,
               FALSE, &state[0]);

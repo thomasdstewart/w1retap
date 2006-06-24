@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 //
 int InputMissionType(ThermoStateType *ThermoState, int ConvertToF)
 {
-   long num;
+   int num;
    float temp;
 
    // prompt to erase current mission

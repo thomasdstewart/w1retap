@@ -235,8 +235,8 @@ extern SMALLINT BindSecretToiButton33(int portnum, SMALLINT pagenum,
                                       SMALLINT resume);
 // General Util
 extern void ReformatSecretFor1961S(uchar* auth_secret, int secret_length);
-extern void ComputeSHAVM(uchar* MT, long* hash);
-extern void HashToMAC(long* hash, uchar* MAC);
+extern void ComputeSHAVM(uchar* MT, int* hash);
+extern void HashToMAC(int* hash, uchar* MAC);
 // ********************************************************************** //
 
 // ********************************************************************** //

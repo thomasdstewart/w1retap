@@ -113,7 +113,7 @@ void TestJiB(int portnum, uchar *dev)
                    l_AppletNum,
                    l_CurrentOffset = 0,
                    l_CurrentLength = 0;
-   ulong           l_FreeRam       = 0;
+   uint           l_FreeRam       = 0;
    LPRESPONSEAPDU  l_lpResponseAPDU;
 
    // select the device and put in overdrive
@@ -163,9 +163,9 @@ void TestJiB(int portnum, uchar *dev)
    else
    {
       printf("Real Time Clock (1 of 2): 0x%08lX\n",
-           ((ulong)l_lpResponseAPDU->Data[3]<<24)+
-           ((ulong)l_lpResponseAPDU->Data[2]<<16)+
-           ((ulong)l_lpResponseAPDU->Data[1]<<8)+
+           ((uint)l_lpResponseAPDU->Data[3]<<24)+
+           ((uint)l_lpResponseAPDU->Data[2]<<16)+
+           ((uint)l_lpResponseAPDU->Data[1]<<8)+
            l_lpResponseAPDU->Data[0]);
    }
 
@@ -184,7 +184,7 @@ void TestJiB(int portnum, uchar *dev)
       l_FreeRam = ((ushort)l_lpResponseAPDU->Data[1]<<8)+l_lpResponseAPDU->Data[0];
 
       if(l_lpResponseAPDU->Len > 2)
-         l_FreeRam += ((ulong)l_lpResponseAPDU->Data[2]<<16);
+         l_FreeRam += ((uint)l_lpResponseAPDU->Data[2]<<16);
 
       printf("                Free RAM: %d bytes\n", l_FreeRam);
    }
@@ -313,9 +313,9 @@ void TestJiB(int portnum, uchar *dev)
    else
    {
       printf("Real Time Clock (2 of 2): 0x%08lX\n",
-           ((ulong)l_lpResponseAPDU->Data[3]<<24)+
-           ((ulong)l_lpResponseAPDU->Data[2]<<16)+
-           ((ulong)l_lpResponseAPDU->Data[1]<<8)+
+           ((uint)l_lpResponseAPDU->Data[3]<<24)+
+           ((uint)l_lpResponseAPDU->Data[2]<<16)+
+           ((uint)l_lpResponseAPDU->Data[1]<<8)+
            l_lpResponseAPDU->Data[0]);
    }
 

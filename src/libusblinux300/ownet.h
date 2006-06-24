@@ -81,7 +81,6 @@
    #define FILE int
    #define exit(c) return
    typedef unsigned int ushort;
-   typedef unsigned long ulong;
    #define SMALLINT uchar
 #endif
 
@@ -132,13 +131,11 @@
    #define OW_UCHAR
    typedef unsigned char  uchar;
    #ifdef __CYGWIN__ //&& GCC
-      typedef unsigned long  ulong;
       //ushort already defined in CygWin, in sys/types.h
       #include <sys/types.h>
    #else
       #if defined(_WIN32)     || defined(WIN32) || defined(__MC68K__) || defined(_WIN32_WCE) || defined(_DOS)  || defined(_WINDOWS)
          typedef unsigned short ushort;
-         typedef unsigned long  ulong;
       #endif
    #endif
    #ifdef __sun__
@@ -151,6 +148,9 @@
       typedef unsigned int ushort;
    #endif
 #endif
+
+
+typedef unsigned int uint;
 
 // general defines
 #define WRITE_FUNCTION 1
@@ -392,12 +392,12 @@ SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr, SMALLINT writ
 
 // link functions
 void      msDelay(int len);
-long      msGettick(void);
+int      msGettick(void);
 
 // ioutil.c functions prototypes
 int  EnterString(char *msg, char *buf, int min, int max);
-int  EnterNum(char *msg, int numchars, long *value, long min, long max);
-int  EnterHex(char *msg, int numchars, ulong *value);
+int  EnterNum(char *msg, int numchars, int *value, int min, int max);
+int  EnterHex(char *msg, int numchars, uint *value);
 int  ToHex(char ch);
 int  getkeystroke(void);
 int  key_abort(void);

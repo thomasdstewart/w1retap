@@ -253,7 +253,7 @@ int ReadAtoDResults(int portnum, int try_overdrive, uchar *SerialNum,
                          float *prslt, uchar *ctrl)
 {
    uchar i, send_cnt=0;
-   ulong templong;
+   unsigned int templong;
    uchar rt=FALSE;
    uchar send_block[30];
    ushort lastcrc16;
