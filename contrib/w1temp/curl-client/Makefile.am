@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 libexec_PROGRAMS = w1temp
-INCLUDES = $(GNOME_APPLETS_CFLAGS) $(CURL_FLAGS) -DGNOME_DISABLE_DEPRECATED
+INCLUDES = $(GNOME_APPLETS_CFLAGS) $(CURL_FLAGS) -DGNOME_DISABLE_DEPRECATED -Wall
 
 w1temp_SOURCES = w1temp.c
 w1temp_LDADD =  $(GNOME_APPLETS_LIBS) $(CURL_LIBS) -lexpat

@@ -167,11 +167,11 @@ int main(int argc, char** argv)
                PrintSerialNum(user.devAN);
                printf("\noldBalance: $%.2f\n",((double)oldBalance/100));
                printf("newBalance: $%.2f\n",((double)newBalance/100));
-               printf(" find time: %ld ms\n",b-a);
-               printf(" auth time: %ld ms\n",c-b);
-               printf(" verf time: %ld ms\n",d-c);
-               printf(" exec time: %ld ms\n",e-d);
-               printf("total time: %ld ms\n",e-a);
+               printf(" find time: %d ms\n",b-a);
+               printf(" auth time: %d ms\n",c-b);
+               printf(" verf time: %d ms\n",d-c);
+               printf(" exec time: %d ms\n",e-d);
+               printf("total time: %d ms\n",e-a);
                puts("\n--------------------------------\n");
             }
             else

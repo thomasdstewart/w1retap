@@ -79,8 +79,8 @@ int main(int argc, char **argv)
    printf("The device on the main branch\n");
    for(j=0; j<NumDevices; j++)
    {
-      printf("%d", j+1);
-      for(i=7; i>=0; i--)
+      printf("%d: ", j+1);
+      for(i=0; i<8; i++)
          printf("%02X", BranchSN[j][i]);
       printf("\n");
    }
@@ -91,8 +91,8 @@ int main(int argc, char **argv)
    printf("The device on the Auxiliary branch\n");
    for(j=0; j<NumDevices; j++)
    {
-      printf("%d", j+1);
-      for(i=7; i>=0; i--)
+      printf("%d: ", j+1);
+      for(i=0; i<8; i++)
          printf("%02X", BranchSN[j][i]);
       printf("\n");
    }
@@ -121,10 +121,13 @@ int main(int argc, char **argv)
    {
       printf("Status read write worked and the results are below\n");
       charnum = SwitchStateToString1F((short) a[1], out);
-      printf("%s", out);
+      printf("res: %s", out);
    }
    else
       printf("Status read write didn't work");
+
+   SetSwitch1F(portnum, SwitchSN[0], DIRECT_MAIN_ON, 0, a, TRUE);
+//   SetSwitch1F(portnum, SwitchSN[0], AUXILARY_ON, 2, a, TRUE);
 
    owRelease(portnum);
    printf("Closing port %s.\n", argv[1]);

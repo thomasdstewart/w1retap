@@ -62,7 +62,7 @@ SMALLINT writeScratchPadSHA(int portnum, int str_add, uchar *writeBuf, int len)
    uchar  raw_buf[37];
    int sendlen = 0;
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // select the device
    if (!owAccess(portnum))

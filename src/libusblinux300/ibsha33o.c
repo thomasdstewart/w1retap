@@ -55,7 +55,7 @@ int ReadScratchSHAEE(int portnum, ushort *address, uchar *es, uchar *data)
    short send_cnt=0;
    uchar send_block[50];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // access the device
    if (SelectSHAEE(portnum) == 1)

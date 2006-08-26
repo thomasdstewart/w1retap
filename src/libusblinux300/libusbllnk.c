@@ -33,11 +33,9 @@
 
 #include "ownet.h"
 #include "libusbds2490.h"
+#include <time.h>
 #include <sys/time.h>
 
-// globals
-// flag for DS1994/DS2404 support
-SMALLINT FAMILY_CODE_04_ALARM_TOUCHRESET_COMPLIANCE = TRUE; 
 
 // DS2490 state info
 extern SMALLINT USBSpeed[MAX_PORTNUM]; 
@@ -54,10 +52,9 @@ extern SMALLINT USBVpp[MAX_PORTNUM];
 // Returns: TRUE(1):  presense pulse(s) detected, device(s) reset
 //          FALSE(0): no presense pulses detected
 //
-SMALLINT owTouchReset(int portnum)
+SMALLINT owTouchReset_(int portnum)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    SMALLINT present,vpp;
    SMALLINT ret = 0;
 
@@ -126,10 +123,9 @@ SMALLINT owTouchReset(int portnum)
 // Returns: 0:   0 bit read from sendbit
 //          1:   1 bit read from sendbit
 //
-SMALLINT owTouchBit(int portnum, SMALLINT sendbit)
+SMALLINT owTouchBit_(int portnum, SMALLINT sendbit)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -189,10 +185,9 @@ SMALLINT owTouchBit(int portnum, SMALLINT sendbit)
 // Returns:  TRUE: bytes written and echo was the same
 //           FALSE: echo was not the same
 //
-SMALLINT owTouchByte(int portnum, SMALLINT sendbyte)
+SMALLINT owTouchByte_(int portnum, SMALLINT sendbyte)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -252,7 +247,7 @@ SMALLINT owTouchByte(int portnum, SMALLINT sendbyte)
 // Returns:  TRUE: bytes written and echo was the same
 //           FALSE: echo was not the same
 //
-SMALLINT owWriteByte(int portnum, SMALLINT sendbyte)
+SMALLINT owWriteByte_(int portnum, SMALLINT sendbyte)
 {
    return (owTouchByte(portnum,sendbyte) == sendbyte) ? TRUE : FALSE;
 }
@@ -267,7 +262,7 @@ SMALLINT owWriteByte(int portnum, SMALLINT sendbyte)
 // Returns:  TRUE:  8 bytes read from 1-Wire Net
 //           FALSE: the 8 bytes were not read
 //
-SMALLINT owReadByte(int portnum)
+SMALLINT owReadByte_(int portnum)
 {
    return owTouchByte(portnum,0xFF);
 }
@@ -283,10 +278,9 @@ SMALLINT owReadByte(int portnum)
 //
 // Returns:  current 1-Wire Net speed
 //
-SMALLINT owSpeed(int portnum, SMALLINT new_speed)
+SMALLINT owSpeed_(int portnum, SMALLINT new_speed)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // set to change the speed
@@ -334,10 +328,9 @@ SMALLINT owSpeed(int portnum, SMALLINT new_speed)
 //
 // Returns:  current 1-Wire Net level
 //
-SMALLINT owLevel(int portnum, SMALLINT new_level)
+SMALLINT owLevel_(int portnum, SMALLINT new_level)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // Turn off infinite strong pullup?
@@ -425,10 +418,9 @@ SMALLINT owLevel(int portnum, SMALLINT new_level)
 // Returns:  TRUE  successful
 //           FALSE program voltage not available
 //
-SMALLINT owProgramPulse(int portnum)
+SMALLINT owProgramPulse_(int portnum)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // check if Vpp available
@@ -470,7 +462,7 @@ SMALLINT owProgramPulse(int portnum)
 //  Description:
 //     Delay for at least 'len' ms
 //
-void msDelay(int len)
+void msDelay_(int len)
 {
    struct timespec s;              // Set aside memory space on the stack
 
@@ -483,7 +475,7 @@ void msDelay(int len)
 // Get the current millisecond tick count.  Does not have to represent
 // an actual time, it just needs to be an incrementing timer.
 //
-int msGettick(void)
+int msGettick_(void)
 {
    struct timezone tmzone;
    struct timeval  tmval;
@@ -510,7 +502,6 @@ int msGettick(void)
 SMALLINT owTouchBytePower(int portnum, SMALLINT sendbyte)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -597,7 +588,7 @@ SMALLINT owTouchBytePower(int portnum, SMALLINT sendbyte)
 // Returns:  TRUE: bytes written and echo was the same
 //           FALSE: echo was not the same 
 //
-SMALLINT owWriteBytePower(int portnum, SMALLINT sendbyte)
+SMALLINT owWriteBytePower_(int portnum, SMALLINT sendbyte)
 {
    return (owTouchBytePower(portnum,sendbyte) == sendbyte);
 }
@@ -611,9 +602,9 @@ SMALLINT owWriteBytePower(int portnum, SMALLINT sendbyte)
 //
 // Returns:  byte read
 //
-SMALLINT owReadBytePower(int portnum)
+SMALLINT owReadBytePower_(int portnum)
 {
-   return owTouchBytePower(portnum,0xFF);
+    return owTouchBytePower(portnum,0xFF);
 }
 
 //--------------------------------------------------------------------------
@@ -630,10 +621,9 @@ SMALLINT owReadBytePower(int portnum)
 // Returns:  TRUE: bit written and response correct, strong pullup now on
 //           FALSE: response incorrect
 //
-SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse)
+SMALLINT owReadBitPower_(int portnum, SMALLINT applyPowerResponse)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    ushort nBytes;   
    uchar buf[2];
    SMALLINT ret = 0;
@@ -724,7 +714,7 @@ SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse)
 //
 // Returns:  TRUE  because all userial adapters have over drive. 
 //
-SMALLINT owHasPowerDelivery(int portnum)
+SMALLINT owHasPowerDelivery_(int portnum)
 {
    return TRUE;
 }
@@ -737,7 +727,7 @@ SMALLINT owHasPowerDelivery(int portnum)
 //
 // Returns:  TRUE  because all userial adapters have over drive. 
 //
-SMALLINT owHasOverDrive(int portnum)
+SMALLINT owHasOverDrive_(int portnum)
 {
    return TRUE;
 }
@@ -752,7 +742,7 @@ SMALLINT owHasOverDrive(int portnum)
 // Returns:  TRUE  program volatage available
 //           FALSE program voltage not available  
 //
-SMALLINT owHasProgramPulse(int portnum)
+SMALLINT owHasProgramPulse_(int portnum)
 {
    owTouchReset(portnum);
    return USBVpp[portnum];

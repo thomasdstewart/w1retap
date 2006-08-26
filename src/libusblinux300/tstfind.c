@@ -91,8 +91,11 @@ int main(int argc, char **argv)
 
          // print the Serial Number of the device just found
          owSerialNum(portnum,&SNum[0],TRUE);
-         PrintSerialNum(&SNum[0]);
-         printf("\n");
+//         PrintSerialNum(&SNum[0]);
+	  int ii;
+	  for(ii=0; ii<8; ii++)
+		  printf("%02X", SNum[ii]);
+	  printf("\n");
 
          // find the next device
          rslt = owNext(portnum, TRUE, FALSE);

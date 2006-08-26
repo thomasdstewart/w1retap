@@ -111,7 +111,7 @@ int main(int argc, char **argv)
             {
                if (ReadCounter(portnum, FamilySN[i], CounterPage, &Count))
                {
-                   printf(" %10ld  ", Count);
+                   printf(" %10d  ", Count);
                }
                else
                   printf("\nError reading counter, verify device present:%d\n",

@@ -30,19 +30,14 @@
 //
 
 #include "jib96.h"
+#include "ownet.h"
 
 #define MAXDEVICES 10
 
-// external functions
-extern SMALLINT  owAcquire(int,char *);
-extern void      owRelease(int);
-extern SMALLINT  FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
-extern void      PrintSerialNum(uchar*);
-extern SMALLINT  owOverdriveAccess(int);
-extern void      owSerialNum(int,uchar *,SMALLINT);
 
 // local functions
 static void TestJiB(int portnum, uchar *dev);
+extern SMALLINT  FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
 
 // global serial numbers
 uchar FamilySN[MAXDEVICES][8];
@@ -162,7 +157,7 @@ void TestJiB(int portnum, uchar *dev)
    }
    else
    {
-      printf("Real Time Clock (1 of 2): 0x%08lX\n",
+      printf("Real Time Clock (1 of 2): 0x%08X\n",
            ((uint)l_lpResponseAPDU->Data[3]<<24)+
            ((uint)l_lpResponseAPDU->Data[2]<<16)+
            ((uint)l_lpResponseAPDU->Data[1]<<8)+
@@ -312,7 +307,7 @@ void TestJiB(int portnum, uchar *dev)
    }
    else
    {
-      printf("Real Time Clock (2 of 2): 0x%08lX\n",
+      printf("Real Time Clock (2 of 2): 0x%08X\n",
            ((uint)l_lpResponseAPDU->Data[3]<<24)+
            ((uint)l_lpResponseAPDU->Data[2]<<16)+
            ((uint)l_lpResponseAPDU->Data[1]<<8)+

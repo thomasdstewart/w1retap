@@ -198,7 +198,7 @@ SMALLINT ConvertPS(int portnum,uchar *MT, int key, int len)
    uchar  psxor[4];
    uchar  oldName[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
    uchar  data[64];
-   ushort crc;
+   ushort crc = 0;
    int     NumDevices;
    uchar   AllSN[MAXDEVICES][8];
    uchar   tempMT[64];

@@ -76,7 +76,7 @@ SMALLINT writeScratchPadEx77(int portnum, uchar *SNum, int str_add, uchar *write
    int send_len = 0;
    int i,checkcrc = FALSE;
    uchar raw_buf[85];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    if(SNum[0] != 0x37)
    {
@@ -190,7 +190,7 @@ SMALLINT readScratchPadCRC77(int portnum, uchar *SNum, uchar *buff, int len, uch
 {
    int i,num_crc,addr,send_len=0,addr_offset;
    uchar raw_buf[110];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // reset
    if(!owTouchReset(portnum))
@@ -538,7 +538,7 @@ SMALLINT readPagePacketScratchEx77(SMALLINT bank, int portnum, uchar *SNum, int 
    uchar raw_buf[PAGE_LENGTH_SCRATCH_EX];
    uchar extra[4];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // check if read exceeds memory
    if(page != 0)
@@ -639,7 +639,7 @@ SMALLINT readPagePacketExtraScratchEx77(SMALLINT bank, int portnum, uchar *SNum,
 {
    uchar raw_buf[PAGE_LENGTH_SCRATCH_EX];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // check if read exceeds memory
    if(page != 0)
@@ -731,7 +731,7 @@ SMALLINT writePagePacketScratchEx77(SMALLINT bank, int portnum, uchar *SNum, int
 {
    uchar raw_buf[64];
    int i;
-   ushort crc;
+   ushort crc = 0;
 
    // check if read exceeds memory
    if(page != 0)

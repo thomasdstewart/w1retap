@@ -37,7 +37,7 @@ void w1_init(w1_devlist_t *w1, char *params)
     SQLRETURN ret; 
     SQLSMALLINT columns; 
     const char *sql =
-        "select device,type,abbrv1,name1,units1,abbrv2,name2,units2 from w1sensors";
+        "select * from w1sensors";
     SQLLEN rows = 0;
     w1_device_t * devs = NULL;
     int n = 0;
@@ -79,36 +79,10 @@ void w1_init(w1_devlist_t *w1, char *params)
                     {
                         sv = strdup(buf);
                     }
-                    
-                    switch (i)
-                    {
-                        case 0:
-                            devs[n].serial = sv;
-                            break;
-                        case 1:
-                            devs[n].devtype = sv;
-                            break;
-                        case 2:
-                            devs[n].s[0].abbrv = sv;
-                            break;
-                        case 3:
-                            devs[n].s[0].name = sv;
-                            break;
-                        case 4:
-                            devs[n].s[0].units = sv;
-                            break;
-                        case 5:
-                            devs[n].s[1].abbrv = sv;
-                            break;
-                        case 6:
-                            devs[n].s[1].name = sv;
-                            break;
-                        case 7:
-                            devs[n].s[1].units = sv;
-                            break;
-                    }
+                    w1_set_device_data_index (devs+n, i, sv);
                 }
             }
+            w1_enumdevs(devs+n);
             n++;
         }
         w1->numdev = n;
@@ -121,12 +95,11 @@ void w1_init(w1_devlist_t *w1, char *params)
         SQLRowCount(stmt, &rows);
         while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
         {
-            int  i;
             SQLLEN indicator;
             char buf[512];
             char *s;
             short flags = 0;
-            float roc,rmin,rmax;
+            float roc=0,rmin=0,rmax=0;
             
             ret = SQLGetData(stmt, 1, SQL_C_CHAR, buf, sizeof(buf),
                              &indicator);
@@ -219,7 +192,7 @@ void w1_logger (w1_devlist_t *w1, char *params)
         SQLDriverConnect(dbc, NULL, (unsigned char *)params, SQL_NTS,
                          NULL, 0, NULL, SQL_DRIVER_COMPLETE);
         SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-        SQLPrepare (stmt, (unsigned char *)"insert into readings values (?,?,?)", SQL_NTS);
+        SQLPrepare (stmt, (unsigned char *)"insert into readings(date,name,value)  values (?,?,?)", SQL_NTS);
     }
 
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
@@ -231,14 +204,41 @@ void w1_logger (w1_devlist_t *w1, char *params)
             {
                 if(devs->s[j].valid)
                 {
-                   SQLLEN psz;
-                   int res;
-                   psz = sizeof(int);
-                   res = SQLBindParameter(stmt, 1, SQL_PARAM_INPUT,
-                                          SQL_C_LONG,
-                                          SQL_INTEGER,
-                                          0, 0,
-                                          &w1->logtime, sizeof(int), &psz);
+                    SQLLEN psz;
+                    SQL_TIMESTAMP_STRUCT sqlts;
+                    SQLSMALLINT ValueType;
+                    SQLSMALLINT ParameterType;
+                    SQLPOINTER ParameterValuePtr;
+                    int res;
+                    
+                    if(w1->timestamp)
+                    {
+                        struct tm *tm = localtime(&w1->logtime);
+                        sqlts.year = tm->tm_year + 1900;
+                        sqlts.month = tm->tm_mon + 1;
+                        sqlts.day = tm->tm_mday;
+                        sqlts.hour = tm->tm_hour;
+                        sqlts.minute = tm->tm_min;
+                        sqlts.second = tm->tm_sec;
+                        sqlts.fraction = 0;
+                        ValueType= SQL_C_TIMESTAMP;
+                        ParameterType = SQL_TIMESTAMP;
+                        ParameterValuePtr = &sqlts;
+                        psz = sizeof(sqlts);                       
+                    }
+                    else
+                    {
+                        ValueType= SQL_C_LONG;
+                        ParameterType = SQL_INTEGER;
+                        ParameterValuePtr = &w1->logtime;
+                        psz = sizeof(&w1->logtime);
+                    }
+        
+                    res = SQLBindParameter(stmt, 1, SQL_PARAM_INPUT,
+                                           ValueType,
+                                           ParameterType,
+                                           0, 0,
+                                           ParameterValuePtr, psz, &psz);
                     psz = strlen(devs->s[j].abbrv);
                     res = SQLBindParameter(stmt, 2, SQL_PARAM_INPUT,
                                            SQL_C_CHAR,
@@ -250,8 +250,8 @@ void w1_logger (w1_devlist_t *w1, char *params)
                                            SQL_C_FLOAT,
                                            SQL_REAL,
                                            0, 0,
-                                           &devs->s[j].value, sizeof(float),
-                                           &psz);
+                                           &devs->s[j].value, psz, &psz);
+                    
                     res = SQLExecute(stmt);
                 }
             }

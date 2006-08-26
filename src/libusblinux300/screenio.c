@@ -41,8 +41,6 @@
 // defines
 #define MAXLINE 16
 
-// External functions
-extern void msDelay(int);
 
 // local function prototypes
 void output_status(int, char *);

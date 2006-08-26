@@ -36,19 +36,6 @@
 #include "mbscrcrc.h"
 #include "mbsha.h"
 
-// External functions
-extern SMALLINT owBlock(int,int,uchar *,int);
-extern SMALLINT owReadByte(int);
-extern SMALLINT owWriteByte(int,int);
-extern void     output_status(int, char *);
-extern void     msDelay(int);
-extern void     owSerialNum(int,uchar *,int);
-extern SMALLINT owAccess(int);
-extern SMALLINT owWriteByte(int,int);
-extern void     setcrc16(int,ushort);
-extern ushort   docrc16(int,ushort);
-extern SMALLINT owWriteBytePower(int,int);
-extern SMALLINT owLevel(int,int);
 
 // General command defines
 #define READ_MEMORY_COMMAND      0xF0
@@ -439,7 +426,7 @@ SMALLINT readPagePacketScratch(SMALLINT bank, int portnum, uchar *SNum, int page
 {
    uchar raw_buf[PAGE_LENGTH_SCR];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // read the scratchpad, discard extra information
    if(!readScratch(bank,portnum,SNum,0,rd_cont,raw_buf,PAGE_LENGTH_SCR))
@@ -504,7 +491,7 @@ SMALLINT readPagePacketExtraScratch(SMALLINT bank, int portnum, uchar *SNum,
 {
    uchar raw_buf[PAGE_LENGTH_SCR];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // read the scratchpad, discard extra information
    switch(SNum[0])
@@ -574,7 +561,7 @@ SMALLINT writePagePacketScratch(SMALLINT bank, int portnum, uchar *SNum, int pag
 {
    uchar raw_buf[64];
    int i;
-   ushort crc;
+   ushort crc = 0;
 
    // make sure length does not exceed max
    if ((len > (PAGE_LENGTH_SCR - 3)) || (len <= 0))

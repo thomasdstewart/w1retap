@@ -1639,7 +1639,7 @@ int getNumber (int min, int max)
 int getString(char *write_buff)
 {
    char ch;
-   int  cnt = 0, temp_cnt = 0;
+   int  cnt = 0;
    int  done = FALSE;
 
    do

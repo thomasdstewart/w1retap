@@ -57,7 +57,7 @@ SMALLINT writeScratchPadEE(int portnum,int str_add, uchar *writeBuf, int len)
    uchar raw_buf[PAGE_LENGTH_SCRATCH_EE+5];
    int send_len = 0;
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // select the device
    if (!owAccess(portnum))

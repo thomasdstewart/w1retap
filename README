@@ -1,20 +1,33 @@
 w1retap - One wire sensor logging.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 w1retap is a system for logging data from a 1-wire weather sensors to
 either a relational database or files (or combination thereof). 
 
-The initial release supports any number of the following sensors from
-AAG Electrónica (AAG) <http://www.aagelectronica.com/>, based on
-Dallas Semiconductors <http://www.dalsemi.com/> devices.
+w1retap spports any (reasonable) number of following sensors from AAG
+Electrónica (AAG) <http://www.aagelectronica.com/>, based on Dallas
+Semiconductors <http://www.dalsemi.com/> devices.
 
-TAI8520 (DS1820 / DS18S20) Temperature sensors;
-TAI8540B (DS2438) Humidity Sensor
-TAI8570 Pressure Sensor
-TAI8575 Rain Gauge
+* TAI8520 (DS1820 / DS18S20) Temperature sensors;
+* TAI8540B (DS2438) Humidity Sensor;
+* TAI8570 Pressure Sensor;
+* TAI8575 Rain Gauge.
+
+A number of other sensors, typically "hobby/build your own", are
+supported:
+
+* SHT11 based humidity sensor
+  <http://home.hetnet.nl/~thomas_7/1Wire/1-WireIOPort.html>
+* MPX4115A based pressure sensor ('fronted' by DS2438)
+  <http://home.comcast.net/~andrew.g.miller/barometer/>
 
 I do not own a TAI8515 Weather Station / Anemometer, so this is not
 supported, but as it is supported by the libusblinux300 SDK, adding
-support is "trivial".
+support should be "trivial".
+
+w1retap is designed to run on the Linux operating system and assumes
+that the interface between the computer and the 1-wire system is
+either a DS2490 USB adaptor or a DS2480 RS232 serial adaptor.
 
 The logging is performed by one or more "plugin" modules, these
 currently include:
@@ -27,12 +40,6 @@ currently include:
 	Text file
 	CSV file
 	XML file
-
-w1retap is designed to run on the Linux operating system and assumes
-that the interface between the computer and the 1-wire system is a
-DS2490 USB adaptor. As the software is based on the Dallas Semi/Maxim
-public domain 1-wire USB SDK, adapting for other interfaces
-(e.g.serial) should be trivial.
 
 Unless otherwise indicated, the system is released under the GNU Public
 Licence.

@@ -50,7 +50,6 @@ int main(int argc, char** argv)
    SHACopr copr;
    SHAUser user;
    int   len, data_type;
-   FileEntry fe = {"COPR",0};
    uchar authSecret[47];
    int authlen = 21;
    uchar signSecret[11] = {(uchar)'s',(uchar)'i',(uchar)'g',(uchar)'n',
@@ -58,7 +57,6 @@ int main(int argc, char** argv)
                            (uchar)'r',(uchar)'e',(uchar)'t'};
    int signlen = 11;
    uchar data[7];
-   char test[2] = {'y',0};
 
    copr.portnum = 0;
    user.portnum = 0;

@@ -160,46 +160,12 @@ enum { ST_SETUP=0, ST_READ_STATUS, ST_READ_ALARM, ST_READ_HIST,
 enum { STATUS_STEP_COMPLETE, STATUS_COMPLETE, STATUS_INPROGRESS,
        STATUS_ERROR_HALT, STATUS_ERROR_TRANSIENT };
 
-// download steps
-static ThermoScript Download[] = 
-    {{ ST_READ_STATUS,  "Setup to read the mission status"},
-     { ST_READ_PAGES,   "Read the status page"},
-     { ST_READ_ALARM,   "Setup to read alarm pages"},
-     { ST_READ_PAGES,   "Read the alarm pages"},
-     { ST_READ_HIST,    "Setup to read histogram pages"},
-     { ST_READ_PAGES,   "Read the histogram pages"},
-     { ST_READ_LOG,     "Setup to read log pages"},
-     { ST_READ_PAGES,   "Read the log pages"},
-     { ST_FINISH,       "Finished"}}; 
-
-// read status only steps
-static ThermoScript GetStatus[] = 
-    {{ ST_READ_STATUS,  "Setup to read the mission status"},
-     { ST_READ_PAGES,   "Read the status page"},
-     { ST_FINISH,       "Finished"}}; 
-
-// mission steps (assume already did StatusThermo)
-static ThermoScript Mission[] = 
-    {{ ST_CLEAR_SETUP,  "Setup clear memory"},
-     { ST_WRITE_MEM,    "Write clear memory bit"},
-     { ST_CLEAR_MEM,    "Clear the memory"},
-     { ST_READ_STATUS,  "Setup to read the mission status"},
-     { ST_READ_PAGES,   "Read the status page"},
-     { ST_CLEAR_VERIFY, "Verify memory is clear"},
-     { ST_WRITE_TIME,   "Setup to write the real time clock"},
-     { ST_WRITE_MEM,    "Write the real time clock"},
-     { ST_WRITE_CONTROL,"Setup to write the control"},
-     { ST_WRITE_MEM,    "Write the control"},
-     { ST_WRITE_RATE,   "Setup to write the sample rate to start mission"},
-     { ST_WRITE_MEM,    "Write the sample rate"},
-     { ST_READ_STATUS,  "Read the new mission status"},
-     { ST_FINISH,       "Finished"}};
 
 // Local Function Prototypes 
 int DownloadThermo(int,uchar *,ThermoStateType *,FILE *);
 int ReadThermoStatus(int,uchar *,ThermoStateType *,FILE *);
 int MissionThermo(int,uchar *,ThermoStateType *,FILE *);
-static int RunThermoScript(int,ThermoStateType *,ThermoScript script[],FILE *fp);
+int RunThermoScript(int,ThermoStateType *,ThermoScript script[],FILE *fp);
 void MissionStatusToString(MissionStatus *,int,char *);
 void  SecondsToDate(timedate *, uint);
 uint DateToSeconds(timedate *);

@@ -100,7 +100,6 @@ SMALLINT readEEPsw77(SMALLINT bank, int portnum, uchar *SNum, int str_add,
    SMALLINT i, j, send_len=0, finished;
    uchar  raw_buf[15];
    uchar  temp[64];
-   ushort lastcrc16 = 0;
    int pgs, extra, add;
 
    for(i=0;i<len;i++)
@@ -752,7 +751,7 @@ SMALLINT readPagePacketEE77(SMALLINT bank, int portnum, uchar *SNum, int page,
                             SMALLINT rd_cont, uchar *buff, int *len)
 {
    uchar raw_buf[PAGE_LENGTH];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // read the page
@@ -858,7 +857,7 @@ SMALLINT writePagePacketEE77(SMALLINT bank, int portnum, uchar *SNum, int page,
 {
    uchar raw_buf[PAGE_LENGTH];
    int i;
-   ushort crc;
+   ushort crc = 0;
 
    // make sure length does not exceed max
    if(SNum[0] == 0x37)

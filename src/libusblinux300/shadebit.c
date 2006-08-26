@@ -482,7 +482,7 @@ SMALLINT VerifyData(SHACopr* copr, SHAUser* user)
 {
    uchar scratchpad[32];
    DebitFile acctFile;
-   ushort lastcrc16, i;
+   ushort lastcrc16 = 0, i;
 
    // Check the CRC of the file
    setcrc16(user->portnum, user->accountPageNumber);

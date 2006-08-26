@@ -148,7 +148,7 @@ SMALLINT readScratchPadCRC(int portnum, uchar *buff, int len, uchar *extra)
 {
    int i,num_crc,addr;
    uchar raw_buf[38];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // select the device
    if(!owAccess(portnum))

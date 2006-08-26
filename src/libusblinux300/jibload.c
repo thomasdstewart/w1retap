@@ -31,17 +31,14 @@
 //
 
 #include "jib96.h"
+#include "ownet.h"
 #include <string.h>
 
 #define MAXDEVICES 10
 
 // external functions
-extern SMALLINT  owAcquire(int,char *);
-extern void      owRelease(int);
 extern SMALLINT  FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
 extern void      PrintSerialNum(uchar*);
-extern SMALLINT  owOverdriveAccess(int);
-extern void      owSerialNum(int,uchar *,SMALLINT);
 
 // local prototypes
 void LoadJiB(int portnum, uchar *dev, char *filename,
@@ -56,7 +53,6 @@ uint GetFileToLoad(char *p_FileName, uchar *p_FileBuffer, uint p_Len);
 //
 int main(int argc, char *argv[])
 {
-   char   l_DoTest    = 0;
    uchar  MasterEraseFirst  = FALSE;
    uchar  ClearLoadPINMode    = FALSE;
    int    i, portnum=0,NumDevices;
@@ -180,8 +176,6 @@ uint GetFileToLoad(char *p_FileName, uchar *p_FileBuffer, uint p_Len)
 void LoadJiB(int portnum, uchar *dev, char *filename,
              int MasterEraseFirst, int ClearLoadPINMode)
 {
-   int            l_FailureCount = 0,
-                  l_TestCount    = 0;
    LPRESPONSEAPDU l_lpResponseAPDU;
    uchar          l_FileName[260],
                   l_FileBuff[4096];
@@ -239,7 +233,7 @@ void LoadJiB(int portnum, uchar *dev, char *filename,
 
       if(l_lpResponseAPDU->SW != ERR_ISO_NORMAL_00)
       {
-         strncpy(l_FileName, filename, l_CurrentAID.Len);
+         strncpy((char *)l_FileName, filename, l_CurrentAID.Len);
          l_FileName[l_CurrentAID.Len] = 0;
          printf("\nLoad of %s Failed with SW = 0x%04hX\n",l_FileName,l_lpResponseAPDU->SW);
       }

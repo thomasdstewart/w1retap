@@ -56,6 +56,41 @@ static int WriteMemory(int,uchar *, int, int);
 // global state information
 static int current_speed[MAX_PORTNUM];
 
+// download steps
+static ThermoScript Download[] = 
+    {{ ST_READ_STATUS,  "Setup to read the mission status"},
+     { ST_READ_PAGES,   "Read the status page"},
+     { ST_READ_ALARM,   "Setup to read alarm pages"},
+     { ST_READ_PAGES,   "Read the alarm pages"},
+     { ST_READ_HIST,    "Setup to read histogram pages"},
+     { ST_READ_PAGES,   "Read the histogram pages"},
+     { ST_READ_LOG,     "Setup to read log pages"},
+     { ST_READ_PAGES,   "Read the log pages"},
+     { ST_FINISH,       "Finished"}}; 
+
+// read status only steps
+static ThermoScript GetStatus[] = 
+    {{ ST_READ_STATUS,  "Setup to read the mission status"},
+     { ST_READ_PAGES,   "Read the status page"},
+     { ST_FINISH,       "Finished"}}; 
+
+// mission steps (assume already did StatusThermo)
+static ThermoScript Mission[] = 
+    {{ ST_CLEAR_SETUP,  "Setup clear memory"},
+     { ST_WRITE_MEM,    "Write clear memory bit"},
+     { ST_CLEAR_MEM,    "Clear the memory"},
+     { ST_READ_STATUS,  "Setup to read the mission status"},
+     { ST_READ_PAGES,   "Read the status page"},
+     { ST_CLEAR_VERIFY, "Verify memory is clear"},
+     { ST_WRITE_TIME,   "Setup to write the real time clock"},
+     { ST_WRITE_MEM,    "Write the real time clock"},
+     { ST_WRITE_CONTROL,"Setup to write the control"},
+     { ST_WRITE_MEM,    "Write the control"},
+     { ST_WRITE_RATE,   "Setup to write the sample rate to start mission"},
+     { ST_WRITE_MEM,    "Write the sample rate"},
+     { ST_READ_STATUS,  "Read the new mission status"},
+     { ST_FINISH,       "Finished"}};
+
 
 //--------------------------------------------------------------------------
 // The 'DownloadThermo' downloads the specified Thermochron in 'SerialNum'
@@ -930,10 +965,10 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
    cnt += sprintf(&str[cnt],"Mission Start delay: %d minute(s)\n",mstatus->start_delay);
    
    // mission samples
-   cnt += sprintf(&str[cnt],"Mission Samples: %ld\n",mstatus->mission_samples);
+   cnt += sprintf(&str[cnt],"Mission Samples: %d\n",mstatus->mission_samples);
 
    // device total samples
-   cnt += sprintf(&str[cnt],"Device total samples: %ld\n",mstatus->samples_total);
+   cnt += sprintf(&str[cnt],"Device total samples: %d\n",mstatus->samples_total);
 
    // temperature display mode
    cnt += sprintf(&str[cnt],"Temp displayed in: ");  

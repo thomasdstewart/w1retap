@@ -41,7 +41,7 @@
 //----------------------------------------------------------------------
 //  This is the Main routine for debit
 //
-int main(short argc, char **argv)
+int main(int argc, char **argv)
 {
    char msg[200];
    int portnum = 0;

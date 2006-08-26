@@ -59,10 +59,9 @@ extern struct usb_dev_handle *usb_dev_handle_list[MAX_PORTNUM];
 //
 //  The maximum tran_length is (160)
 //
-SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len)
+SMALLINT owBlock_(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    STATUS_PACKET status;
    SMALLINT	command_issued = FALSE;
    ushort	bytes_index=0;
@@ -217,7 +216,7 @@ SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_
 //          -1    error, device not connected or program pulse voltage
 //                not available
 //
-SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr, SMALLINT write_cmd,
+SMALLINT owProgramByte_(int portnum, SMALLINT write_byte, int addr, SMALLINT write_cmd,
                        SMALLINT crc_type, SMALLINT do_access)
 {
    ushort lastcrc16;

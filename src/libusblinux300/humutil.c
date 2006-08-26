@@ -735,7 +735,7 @@ SMALLINT loadMissionResults(int portnum, uchar *SNum, configLog config)
    uchar upper, lower;
    double val,valsq,error,humCal,tempVal;
    int timeOffset;
-   int month,day,year;
+   int month,day,year =0;
    int hour,min,sec;
    int tempone,temptwo,tempthr;
    int pm = 0, i;

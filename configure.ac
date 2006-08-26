@@ -1,17 +1,17 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-
-AC_INIT(w1retap,0.0.11)
 PACKAGE=w1retap
-VERSION=0.0.11
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+VERSION=1.0.1
 
+AC_INIT(w1retap,1.0.1,jh+w1retap@daria.co.uk,w1retap)
 AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE([dist-bzip2])
 
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
+AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
 AC_ARG_WITH(mysql, AC_HELP_STRING([--without-applet], [Don't build the applet]))
@@ -133,8 +133,14 @@ AC_SUBST(GLIB_LIBS)
 AC_MSG_RESULT(perhaps)
 
 if test "$with_applet" != "no" ; then
- USE_APPLET=w1temp
- AC_CONFIG_SUBDIRS(contrib/w1temp)
+ GTK_REQUIRED=2.2.0
+ LIBPANEL_REQUIRED=2.6.0
+ PKG_CHECK_MODULES(GNOME_APPLETS, gtk+-2.0 >= $GTK_REQUIRED
+libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,USE_APPLET="w1temp",USE_APPLET="")
+ if test -n "$USE_APPLET" ; then
+  USE_APPLET=w1temp
+  AC_CONFIG_SUBDIRS(contrib/w1temp)
+ fi
 fi
 
 AC_SUBST(USE_APPLET)	

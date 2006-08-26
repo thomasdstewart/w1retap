@@ -435,7 +435,7 @@ SMALLINT VerifyData(SHACopr* copr, SHAUser* user)
 {
    uchar scratchpad[32];
    DebitFile acctFile;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    uchar i;
 
    // Check the CRC of the file
@@ -997,7 +997,7 @@ SMALLINT GetCoprVM(SHACopr* copr, FileEntry* fe)
    int signlen, authlen, len, index;
    int lvalue = 1;
    char test[2] = { 'y', 0 };
-   uchar buffer[255], i=0;
+   uchar buffer[255];
 
 
    printf("How would you like to initialize the VM?");
@@ -1090,7 +1090,7 @@ static int GetSecretVM(char* name, uchar** secret)
    memset(*secret, 0x00, length);
    memcpy(*secret, inputBuffer, lvalue);
 
-   printf("length=%ld\n",length);
+   printf("length=%d\n",length);
    PrintHex(*secret, length);
    printf("\n");
 

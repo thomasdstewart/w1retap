@@ -65,7 +65,7 @@ int main(int argc, char **argv)
    uchar passw[8];
    char msg[256];
    SMALLINT done = FALSE;
-   startMissionData settings;
+   startMissionData settings = {0};
    configLog config;
    double val,valsq,error;
 

@@ -30,8 +30,11 @@
 #include "ownet.h"
 #include "temp10.h"
 #include "atod26.h"
+#include "atod20.h"
 #include "cnt1d.h"
 #include "pressure.h"
+#include "sht11.h"
+#include "swt1f.h"
 
 #include "w1retap.h"
 
@@ -43,6 +46,23 @@ enum W1_sigflag
     W1_SHOWCF = (4)
 };
     
+
+static float wind_conversion_table[16][4] = { {0.06, 4.64, 4.64, 4.64},
+					      {0.06, 0.06, 4.60, 4.60},
+					      {4.64, 0.06, 4.64, 4.64},
+					      {4.62, 0.06, 0.06, 4.60},
+					      {4.64, 4.64, 0.06, 4.64},
+					      {4.60, 4.60, 0.06, 0.06},
+					      {4.64, 4.64, 4.64, 0.06},
+					      {2.36, 4.62, 4.60, 0.06},
+					      {2.38, 4.66, 4.66, 4.66},
+					      {3.20, 3.20, 4.66, 4.64},
+					      {4.66, 2.38, 4.66, 4.66},
+					      {4.66, 3.18, 3.20, 4.64},
+					      {4.66, 4.66, 2.38, 4.66},
+					      {4.66, 4.66, 3.18, 3.18},
+					      {4.66, 4.66, 4.66, 2.38},
+					      {0.06, 4.62, 4.62, 2.34} };
 
 static volatile enum W1_sigflag sigme;
    
@@ -112,16 +132,30 @@ void w1_replog(w1_devlist_t *w1, const char *fmt,...)
     va_end (va);
 }
 
-static int  w1_check_device(int portnum, u_char serno[8])
+static int  w1_check_device(int portnum, w1_device_t *w)
 {
     u_char thisdev[8];
     int found = 0;
-        
-    owFamilySearchSetup(portnum,serno[0]);
+    uchar a[3];
+
+    if(w->c)
+    {
+        switch(w->c->branch)
+        {
+            case 0:
+                SetSwitch1F(portnum, w->c->id, DIRECT_MAIN_ON, 2, a, TRUE);
+                break;
+            case 1:
+                SetSwitch1F(portnum, w->c->id, AUXILARY_ON, 2, a, TRUE);
+                break;
+        }
+    }
+    
+    owFamilySearchSetup(portnum,w->serno[0]);
     while (owNext(portnum,TRUE, FALSE))
     {
         owSerialNum(portnum, thisdev, TRUE);
-        if(0 == memcmp(thisdev, serno, sizeof(thisdev)))
+        if(0 == memcmp(thisdev, w->serno, sizeof(thisdev)))
         {
             found = 1;
             break;
@@ -196,7 +230,7 @@ static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, w->serno))
+    if(w1_check_device(w1->portnum, w))
     {
         if (ReadTemperature(w1->portnum, w->serno, &w->s[0].value))
         {
@@ -211,7 +245,7 @@ static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
     return (w->s[0].valid);
 }
 
-static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
+static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
 {
     unsigned int cnt;
     int nv = 0;
@@ -221,7 +255,7 @@ static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, w->serno))
+    if(w1_check_device(w1->portnum, w))
     {
         if(w->s[0].abbrv)
         {
@@ -248,6 +282,135 @@ static int w1_read_rainfall(w1_devlist_t *w1, w1_device_t *w)
     return nv;
 }
 
+static float pressure_at_msl(float pres, float temp, int altitude)
+{
+#define __CONST_G (9.80665)
+#define __CONST_R (287.04)
+    float kt = temp +  273.15;
+    float x = (__CONST_G * altitude / (__CONST_R * kt));
+    pres *= exp(x);
+    return pres;
+}
+
+#define SLOPE (35.949367089)
+#define OFFSET (751.075949363)
+
+static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
+{
+    float vdd =0 ,vad =0;
+    int nv = 0;
+
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    if(w1_check_device(w1->portnum, w))
+    {
+        vdd = ReadAtoD(w1->portnum,TRUE, w->serno);    
+        vad = ReadAtoD(w1->portnum,FALSE,w->serno);
+        if (vad > 0.0)
+        {
+            float pres;
+            float temp = Get_Temperature(w1->portnum,w->serno);
+            double slope,offset;
+
+            if(w->params && w->params->num == 2)
+            {
+                slope = w->params->values[0];
+                offset = w->params->values[1];
+            }
+            else
+            {
+                slope = SLOPE;
+                offset = OFFSET;
+            }
+            pres = slope * vad + offset;
+            if(w1->verbose)
+                fprintf(stderr,"slope %f, offset %f\n", slope, offset);
+            if (w1->altitude)
+            {
+                pres = pressure_at_msl(pres, temp, w1->altitude);
+            }
+            if(w->s[0].name)
+            {
+                w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
+                    ? pres : temp;
+                nv += w1_validate(w1, &w->s[0]);
+            }
+            else
+            {
+                w->s[0].valid = 0;
+            }
+            
+            if(w->s[1].name)
+            {
+                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
+                    ? temp : pres;
+                nv += w1_validate(w1, &w->s[1]);
+            }
+            else
+            {
+                w->s[1].valid = 0;
+            }
+        }
+    }
+    else
+    {
+        w->s[0].valid = w->s[1].valid = 0;
+    }
+    return nv;
+}
+
+static int w1_read_sht11 (w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+    float temp, rh;
+    
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    if(w1_check_device(w1->portnum,w))
+    {
+        if(ReadSHT11(w1->portnum, w->serno, &temp, &rh))
+        {
+            if(w->s[0].name)
+            {
+                w->s[0].value = (strcasestr(w->s[0].name, "Humidity"))
+                    ? rh : temp;
+                nv += w1_validate(w1, &w->s[0]);
+            }
+            else
+            {
+                w->s[0].valid = 0;
+            }
+            
+            if(w->s[1].name)
+            {
+                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
+                    ? temp : rh;
+                nv += w1_validate(w1, &w->s[1]);
+            }
+            else
+            {
+                w->s[1].valid = 0;
+            }
+        }
+        else
+        {
+            w->init = 0;
+        }
+    }
+    else
+    {
+        w->s[0].valid = w->s[1].valid = 0;
+    }
+    
+    return nv;
+}
+
 static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
 {
     float humid=0,temp=0;
@@ -261,7 +424,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, w->serno))
+    if(w1_check_device(w1->portnum,w))
     {
         vdd = vddx = ReadAtoD(w1->portnum,TRUE, w->serno);
         vad = ReadAtoD(w1->portnum, FALSE, w->serno);
@@ -325,7 +488,7 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
     
-    if(w1_check_device(w1->portnum, w->serno))
+    if(w1_check_device(w1->portnum, w))
     {
         if(w->init == 1)
         {
@@ -338,6 +501,10 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
         {
             if(ReadPressureValues (w1->portnum, &temp, &pres) )
             {
+                if (w1->altitude)
+                {
+                    pres = pressure_at_msl(pres, temp, w1->altitude);
+                }
                 if(w->s[0].name)
                 {
                     w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
@@ -375,6 +542,105 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
     return nv;
 }
 
+static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
+{
+  w1_windvane_private_t *private = NULL;
+  int i, nv = 0;
+  char message[80];
+  float analogue[4];
+  
+  if(w->init == 0){
+    w1_make_serial(w->serial, w->serno);
+    if(w->private == NULL)
+      w->private = malloc(sizeof(w1_windvane_private_t));
+    w->init = 1;
+  }
+  
+  private = (w1_windvane_private_t *)w->private;
+  
+  if(w1_check_device(w1->portnum, w) && (private != NULL)){
+    if(w->init == 1){
+      if(SetupAtoDControl(w1->portnum, w->serno, private->control, message) &&
+	 WriteAtoD(w1->portnum, FALSE, w->serno, private->control, 0x08, 0x11))
+	w->init = 2;
+    }
+      
+    if(w->init == 2){
+      if(DoAtoDConversion(w1->portnum, FALSE, w->serno) &&
+	 ReadAtoDResults(w1->portnum, FALSE, w->serno, analogue, private->control)){
+	for(i=0; i<16; i++){
+	  if( ((analogue[0] <= wind_conversion_table[i][0]+0.25) &&
+	       (analogue[0] >= wind_conversion_table[i][0]-0.25)) &&
+	      ((analogue[1] <= wind_conversion_table[i][1]+0.25) &&
+	       (analogue[1] >= wind_conversion_table[i][1]-0.25)) &&
+	      ((analogue[2] <= wind_conversion_table[i][2]+0.25) &&
+	       (analogue[2] >= wind_conversion_table[i][2]-0.25)) &&
+	      ((analogue[3] <= wind_conversion_table[i][3]+0.25) &&
+	       (analogue[3] >= wind_conversion_table[i][3]-0.25)) ){
+            w->s[0].value = i;
+            nv += w1_validate(w1, &w->s[0]);
+	    break;
+	  }
+	}
+      }
+    }
+    else{
+      w->s[0].valid = w->s[1].valid = 0;
+    }
+  }
+      
+  return nv;
+}
+
+static void w1_couplers(w1_devlist_t *w1)
+{
+    w1_device_t *w;
+    int n,j;
+    int nc = 0;
+    w1_couplist_t clist[MAXCPL];
+    for(w = w1->devs, n = 0; n < w1->numdev; n++, w++)
+    {
+        if (w->stype == W1_COUPLER && nc < MAXCPL)
+        {
+            char tmp[32], *p1,*p2;
+            for(j = 0; j < 2; j++)
+            {
+                if(w->s[j].abbrv && w->s[j].name)
+                {
+                    p1 = strcpy(tmp, w->s[j].name);
+                    for(; (p2 = strtok(p1,", |"));p1=NULL)
+                    {
+                        if(*p2)
+                        {
+                            w1_make_serial(w->serial, clist[nc].couplerid);
+                            strcpy(clist[nc].devid,p2);
+                            clist[nc].branch = j;                    
+                            nc++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    int nx;
+    
+    for(nx = 0; nx < nc; nx++)
+    {
+        for(w = w1->devs, n = 0; n < w1->numdev; n++, w++)
+        {
+            if (w->stype != W1_COUPLER && w->c == NULL &&
+                strcmp(w->serial, clist[nx].devid) == 0)
+            {
+                w->c  = calloc(1, sizeof( w1_coupler_t));
+                w->c->branch = clist[nx].branch;
+                memcpy(w->c->id, clist[nx].couplerid, 8);
+                break;
+            }
+        }
+    }
+}
+
 static void do_init(w1_devlist_t *w1)
 {
     int n;
@@ -386,7 +652,7 @@ static void do_init(w1_devlist_t *w1)
         if(w1->dlls[n].type == 'c' && done_i == 0)
         {
             if((g_module_symbol (w1->dlls[n].handle,
-                                 "w1_init", (gpointer *)&func)))
+                                 "w1_init", (void *)&func)))
             {
                 (func)(w1, w1->dlls[n].param);
                 done_i = 1;
@@ -424,6 +690,7 @@ static void do_init(w1_devlist_t *w1)
         perror("Init fails");
         exit(1);
     }
+    w1_couplers(w1);
 }
 
 void dll_parse(w1_devlist_t *w1, int typ, char *params)
@@ -490,6 +757,16 @@ static void cleanup(int n, void * w)
     w1->rcfile = NULL;
 }
 
+static void w1_show_id(uchar *id, char *res)
+{
+    int i;
+    for(i=0; i<8; i++)
+    {
+        sprintf((res+i*2), "%02X", id[i]);
+    }
+}
+
+
 static void w1_show(w1_devlist_t *w1, int forced)
 {
     if(w1->verbose || forced)
@@ -508,11 +785,30 @@ static void w1_show(w1_devlist_t *w1, int forced)
             fprintf(stderr, "%s %s\n",
                     w1->devs[i].serial, w1->devs[i].devtype);
 
+            if(w1->devs[i].c)
+            {
+                char myid[20];
+                char *branch = (w1->devs[i].c->branch) ? "aux" : "main";
+                w1_show_id(w1->devs[i].c->id, myid);
+                fprintf(stderr, "\tMicrolan: %s, %s\n", myid, branch);
+            }
+
+            if(w1->devs[i].params)
+            {
+                int j;
+                fputs("\tParameters:", stderr);
+                for(j =0 ; j < w1->devs[i].params->num; j++)
+                {
+                    fprintf(stderr, " %f", w1->devs[i].params->values[j]);
+                }
+                fputc('\n', stderr);
+            }
+            
             for(j = 0; j < 2; j++)
             {
                 if(w1->devs[i].s[j].abbrv)
                 {
-                    fprintf(stderr, "\t1: %s %s %s",
+                    fprintf(stderr, "\t%d: %s %s %s",j+1,
                             w1->devs[i].s[j].abbrv, w1->devs[i].s[j].name,
                             (w1->devs[i].s[j].units) ?
                             (w1->devs[i].s[j].units) : "");
@@ -547,6 +843,11 @@ static void w1_show(w1_devlist_t *w1, int forced)
                     g_module_name(w1->dlls[i].handle),
                     (w1->dlls[i].param) ? w1->dlls[i].param : "");
         }
+
+        if(w1->altitude)
+        {
+            fprintf(stderr,"Normalising pressure for %dm\n",w1->altitude);
+        }
     }
 }
 
@@ -575,10 +876,22 @@ static int w1_read_all_sensors(w1_devlist_t *w1)
                     nv += w1_read_pressure(w1, d);
                     break;
                     
-                case W1_RAIN:
-                    nv += w1_read_rainfall(w1, d);
+                case W1_COUNTER:
+                    nv += w1_read_counter(w1, d);
                     break;
                     
+                case W1_BRAY:
+                    nv += w1_read_bray(w1, d);
+                    break;
+
+                case W1_SHT11:
+                    nv += w1_read_sht11(w1, d);
+                    break;
+                    
+                case W1_WINDVANE:
+                    nv += w1_read_windvane(w1, d);
+                    break;
+
                 case W1_INVALID:
                 default:
                     break;
@@ -699,7 +1012,7 @@ int main(int argc, char **argv)
     {
         if(w1->iface == NULL)
             w1->iface = strdup("DS2490-1");
-
+        
         if((w1->portnum = owAcquireEx(w1->iface)) < 0)
         {
             OWERROR_DUMP(stdout);
@@ -713,6 +1026,7 @@ int main(int argc, char **argv)
     
     on_exit(cleanup, w1);
     w1_show(w1, 0);
+    
     if(w1->daemonise)
         daemon(0,0);
     
@@ -796,9 +1110,9 @@ int main(int argc, char **argv)
                             if(fp)
                             {
                                 fprintf(fp,
-                                        "Start : %d %09d\n"
-                                        "Expect: %d %09d\n"
-                                        "Actual: %d %09d\n",
+                                        "Start : %ld %09ld\n"
+                                        "Expect: %ld %09ld\n"
+                                        "Actual: %ld %09ld\n",
                                         then.tv_sec, then.tv_nsec,
                                         nnow.tv_sec, nnow.tv_nsec,
                                         now.tv_sec, now.tv_usec * 1000);

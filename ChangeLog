@@ -1,3 +1,68 @@
+1.0.1	2006-08-26
+	Fix documentation errors (no code changes)
+
+1.0	2006-08-22
+	
+	New functionality, so let's bump the version a bit. This is version
+	1.0.
+
+	Pgsql readings table is field order independent (patch contributed
+	by William R Sowerbutts <http://sowerbutts.com>). Also applied to
+	other databases.
+
+	Altitude (for pressure normalisation) may be set in
+	.config/w1retap/rc; if set, pressure will be normalised.
+	e.g.
+	 altitude = 19
+
+	If you want to store 'raw' local pressure and do the conversion
+	else where, then don't define the altitude key in the rc file.
+
+       Timestamps may _optionally_ be stored as SQL TIMESTAMPs if the key
+
+	timestamp = 1
+
+	is set in .config/w1retap/rc. You must create appropriate table
+	definition, example schemas and conversion code provided.
+	
+	Support for new devices
+	* DS2409 Coupler (1)
+	* DS2480B Serial interface (1)
+	* SHT11 based humidity sensor
+	 <http://home.hetnet.nl/~thomas_7/1Wire/1-WireIOPort.html> (1)
+	* MPX4115A based pressure sensor ('fronted' by DS2438)
+	 <http://home.comcast.net/~andrew.g.miller/barometer/> (1)
+ 	* TAI8515 Weather Vane (the other devices in the TAI8515,
+          a DS2423 counter and DS18S20 temperature sensor are already
+	  supported). The new code accesses the DS2405, so there is also
+	  now support for the DS2450, although this is not obvious to the
+	  end user. If you have another DS2450 application, let me
+	  know. The code for the TAI8515 was contributed by Will
+	  Sowerbutts.
+	
+	Sensor naming has been rationalised. Please read the manual for
+	details. The old names are deprecated and may not be recognised in
+	some future release
+
+	The 'w1find' utility will walk the 1-wire network and report all
+	devices. DS2409 Microlan couplers are supported, to a single depth
+	(i.e. recursive coupler searching is not supported), but you may
+	have multipe couplers on the network; in theory, will work with
+	the 'Hobbyboards' multiple 2409 device.
+
+	Detection of gnome-applets dependencies improved.
+
+	A dist-bz2 target is provided.
+
+	docs/fix* and docs/mksens*.sql scripts _if desired_ (e.g. for
+	pressure normalisation, timestamps vice epoch times, sensor
+	names).
+
+	Updated manual (about time too).
+	
+	(1) Thanks to Mihail Peltekov <http://zlatograd.com> for providing
+	ssh access to zlatograd.com to test these devices.
+
 0.0.11  2006-06-04
 	Should now be 64 bit clean (at least for my sensors)
 	Cleaned up file logging
