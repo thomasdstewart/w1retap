@@ -58,7 +58,6 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
 {
    SMALLINT present,vpp,ret;
    SETUP_PACKET setup;
-   uint nOutput = 0;
 
    // reset the DS2490
    DS2490Reset(hDevice);
@@ -194,7 +193,6 @@ SMALLINT DS2490HaltPulse(usb_dev_handle *hDevice)
    STATUS_PACKET status;
    uchar nResultRegisters;
    SETUP_PACKET setup;
-   uint nOutput = 0;
    SMALLINT ret;
    int limit;
 
@@ -364,7 +362,6 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
 SMALLINT DS2490Reset(usb_dev_handle *hDevice)
 {
    SETUP_PACKET setup;
-   uint nOutput = 0;
    SMALLINT ret = 0;
 
    // setup for reset

@@ -55,7 +55,7 @@ int VERBOSE=0;
 // FIPS-180 SHA routine is omitted (which only involves the addition of
 // constant values).
 //
-int main(short argc, char **argv)
+int main(int argc, char **argv)
 {
    char msg[200];
    int portnum = 0;
@@ -542,7 +542,7 @@ int main(short argc, char **argv)
 int ParseData(char *inbuf, int insize, uchar *outbuf, int maxsize)
 {
    int ps, outlen=0, gotmnib=0;
-   uchar mnib;
+   uchar mnib = 0;
 
    // loop until end of data
    for (ps = 0; ps < insize; ps++)

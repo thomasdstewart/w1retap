@@ -45,7 +45,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(icondir)" \
@@ -198,7 +198,7 @@ sharedstatedir = ${prefix}/com
 sysconfdir = ${prefix}/etc
 target_alias = 
 INCLUDES = $(GNOME_APPLETS_CFLAGS) -DGNOME_DISABLE_DEPRECATED \
-	$(XMLRPC_CFLAGS)
+	$(XMLRPC_CFLAGS) -Wall
 
 w1temp_SOURCES = w1temp.c w1rpc.c
 w1temp_LDADD = $(GNOME_APPLETS_LIBS) $(XMLRPC_LIBS)

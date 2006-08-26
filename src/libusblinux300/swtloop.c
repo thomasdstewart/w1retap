@@ -236,5 +236,4 @@ int getNumber (int min, int max)
    while(!done);
 
    return value;
-
 }

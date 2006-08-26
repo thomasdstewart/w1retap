@@ -45,7 +45,7 @@ static PGconn * w1_opendb(char *params)
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
-    char *sql = "select device,type,abbrv1,name1,units1,abbrv2,name2,units2 from w1sensors";
+    char *sql = "select * from w1sensors";
     PGconn *idb;
     PGresult *res;
     int n = 0;
@@ -62,37 +62,15 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         for (n = 0; n < nn; n++)        
         {
             int j;
-            for(j = 0; j < 8; j++)
+            int nfields;
+            nfields = PQnfields(res);
+
+            for(j = 0; j < nfields; j++)
             {
+                char *fnam = PQfname(res, j);
                 char *s = PQgetvalue(res, n, j);
                 char *sv = (s && *s) ? strdup(s) : NULL;
-                switch (j)
-                {
-                    case 0:
-                        devs[n].serial = sv;
-                        break;
-                    case 1:
-                        devs[n].devtype = sv;
-                        break;
-                    case 2:
-                        devs[n].s[0].abbrv = sv;
-                        break;
-                    case 3:
-                        devs[n].s[0].name = sv;
-                        break;
-                    case 4:
-                        devs[n].s[0].units = sv;
-                        break;
-                    case 5:
-                        devs[n].s[1].abbrv = sv;
-                        break;
-                    case 6:
-                        devs[n].s[1].name = sv;
-                        break;
-                    case 7:
-                        devs[n].s[1].units = sv;
-                        break;
-                }
+                w1_set_device_data(devs+n, fnam, sv);
             }
             w1_enumdevs(devs+n);
         }
@@ -104,13 +82,12 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     res = PQexec(idb, "select name,value,rmin,rmax from ratelimit");
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
-        float roc,rmin,rmax;
+        float roc=0,rmin=0,rmax=0;
         int nn = PQntuples(res);
 
         for (n = 0; n < nn; n++)        
         {
             char *s, *sv;
-            int i;
             short flags = 0;
             s = PQgetvalue(res, n, 0);
             if(s && *s)
@@ -171,7 +148,7 @@ static void db_syslog(char *p)
         if ((q = strdup(p)))
         {
             qa = 1;
-            if(qq = strchr(q,'\n'))
+            if((qq = strchr(q,'\n')))
             {
                 *qq = 0;
             }
@@ -249,11 +226,18 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 
 #if PGV == 7
 #warning "Pg Version 7"
-        res = PQexec(db, "prepare insrt(integer,text,real) as "
-               "insert into readings values ($1,$2,$3)");
+        char *stmtstr;
+        stmtstr = (w1->timestamp) ?
+            "prepare insrt(timestamp with time zone,text,real) as "
+            "insert into readings (date,name,value) values ($1,$2,$3)"
+            :
+            "prepare insrt(integer,text,real) as "
+            "insert into readings (date,name,value) values ($1,$2,$3)"
+            ;
+        res = PQexec(db, stmtstr);
 #elif PGV == 8
         res = PQprepare(db, stmt,
-                        "insert into readings values ($1,$2,$3)", 0, NULL);
+                        "insert into readings (date,name,value) values ($1,$2,$3)", 0, NULL);
 #else
 #error "Bad PG version"        
 #endif
@@ -271,11 +255,20 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
             {
                 if(devs->s[j].valid)
                 {
-                    char tval[16];
+                    char tval[64];
                     char *rval;
                     const char * pvals[3];
-                    
-                    snprintf(tval, sizeof(tval), "%ld", w1->logtime);
+                    if(w1->timestamp)
+                    {
+                        struct tm *tm;
+                        tm = localtime(&w1->logtime);
+                        strftime(tval, sizeof(tval), "%F %T%z", tm);
+                    }
+                    else
+                    {
+                        snprintf(tval, sizeof(tval), "%ld", w1->logtime);
+                    }
+
                     asprintf(&rval, "%g", devs->s[j].value);
                     pvals[0] = tval;
                     pvals[1] = devs->s[j].abbrv;
@@ -293,8 +286,6 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 
 void w1_report(w1_devlist_t *w1, char *dbnam)
 {
-    int i;
-    w1_device_t *devs;
     PGresult *res;
 
     if(w1->lastmsg)
@@ -310,7 +301,7 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
                    "insert into replog values ($1,$2)");
 #elif PGV == 8
             res = PQprepare(db, stml,
-                            "insert into replog values ($1,$2)", 0, NULL);
+                            "insert into replog(date,message) values ($1,$2)", 0, NULL);
 #else
 #error "Bad PG version"        
 #endif

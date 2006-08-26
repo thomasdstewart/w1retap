@@ -119,7 +119,7 @@ SMALLINT ReadScratchpadSHA18(int portnum, int* address, uchar* es,
    short send_cnt=0;
    uchar send_block[40];
    SMALLINT i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    if(!resume)
    {
@@ -709,7 +709,7 @@ SMALLINT CopySecretSHA18(int portnum, SMALLINT secretnum)
    SMALLINT length = 32 - secret_offset;
    SMALLINT send_cnt = 0, i;
    uchar send_block[37];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    //Since other functions must be called before this one
    //that are communicating with the button, resume is assumed.

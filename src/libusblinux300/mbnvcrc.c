@@ -188,7 +188,7 @@ SMALLINT readPagePacketExtraNVCRC(SMALLINT bank, int portnum, uchar *SNum,
 {
    uchar raw_buf[PAGE_LENGTH_NVCRC];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // read entire page with read page CRC
    if(!readCRC(bank,portnum,SNum,page,rd_cont,raw_buf,
@@ -350,7 +350,7 @@ SMALLINT readCRC(SMALLINT bank, int portnum, uchar *SNum, int page, SMALLINT rd_
  */
 SMALLINT readPossible(SMALLINT bank, uchar *SNum)
 {
-   SMALLINT possible;
+   SMALLINT possible=FALSE;
    
    switch(SNum[0])
    {
@@ -384,7 +384,7 @@ SMALLINT readPossible(SMALLINT bank, uchar *SNum)
  */
 SMALLINT numVerifyBytes(SMALLINT bank, uchar *SNum)
 {
-   SMALLINT verify;
+   SMALLINT verify = 0;
 
    switch(SNum[0])
    {

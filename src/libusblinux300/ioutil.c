@@ -155,7 +155,7 @@ int EnterNum(char *msg, int numchars, int *value, int min, int max)
    // loop while not in correct range
    do
    {
-      printf("%s (%ld): ",msg,*value);
+      printf("%s (%d): ",msg,*value);
 
       // loop for each character read
       cnt = 0;

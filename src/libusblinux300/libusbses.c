@@ -38,6 +38,7 @@
 #include "ownet.h"
 #include "libusbds2490.h"
 #include <string.h>
+#include <ctype.h>
 
 // local functions
 static void DS2490Discover(void);
@@ -62,7 +63,7 @@ static SMALLINT usbhnd_init = 0;
 //
 // Returns: TRUE - success, USB port opened
 //
-SMALLINT owAcquire(int portnum, char *port_zstr)
+SMALLINT owAcquire_(int portnum, char *port_zstr)
 {
 	int retportnum = 0;
 	retportnum = owAcquireEx(port_zstr);
@@ -82,7 +83,7 @@ SMALLINT owAcquire(int portnum, char *port_zstr)
 //
 // Returns: port number or -1 if not successful in setting up the port.
 //
-int owAcquireEx(char *port_zstr)
+int owAcquireEx_(char *port_zstr)
 {
     int portnum = 0, portstringlength = 0, i = 0, ret = 0;
 	int portnumfromstring; //character escape sequence
@@ -231,7 +232,7 @@ int owAcquireEx(char *port_zstr)
 // 'portnum'    - number 0 to MAX_PORTNUM-1.  This number is provided to
 //                indicate the symbolic port number.
 //
-void owRelease(int portnum)
+void owRelease_(int portnum)
 {
 	usb_release_interface(usb_dev_handle_list[portnum], 0);
 	usb_close(usb_dev_handle_list[portnum]);

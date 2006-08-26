@@ -3,13 +3,18 @@ ftp://ftp.dalsemi.com/pub/auto_id/public/libusblinux300.tar.gz,
 modified by Jonathan Hudson <jh+w1retap@daria.co.uk> for w1retap:
 
 * Temperature module supports DS18B20
-* Compiles with gcc 4.0 (ugly still)
+* Compiles with gcc 4.0
+* 64 bit clean
 * Added pressure.c for AAG TAI8570 pressure module
+* Added MPX4115A and SHT11 based sensors
+* Shared library choice of USB or RS232
 * Added autoconf/automake for the bits w1retap uses
 
 use:
 
-make -f makefile.orig linux
+make -f makefile.shrlib
+
+to build all the Dalsemi stuff.
 
 As part of w1retap, this is covered by the GPL, as the generous Dallas licence
 allows; my changes are dual licenced under the GPL for w1retap, and the Dallas

@@ -28,7 +28,8 @@
 #include <stdarg.h>
 #include <gmodule.h>
 
-enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_RAIN};
+enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
+              W1_SHT11, W1_COUPLER, W1_WINDVANE };
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
 #define W1_ROC (1 << 0)
@@ -38,7 +39,7 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define ALLOCDEV 8
 #define TBUF_SZ 32
 #define MAXDLL 16
-
+#define MAXCPL 32
 
 typedef struct w1_devlist w1_devlist_t;
 
@@ -67,20 +68,49 @@ typedef struct
 
 typedef struct
 {
+    short branch;
+    unsigned char id[8];
+} w1_coupler_t;
+
+typedef struct
+{
+    int num;
+    double values[];
+} w1_params_t;
+
+typedef struct
+{
     char *serial;
     char *devtype;
     short init;
     enum W1_type stype;
     w1_sensor_t s[2];
     unsigned char serno[8];
+    w1_coupler_t *c;
+    w1_params_t *params;
+    void *private;
 } w1_device_t;
+
+typedef struct
+{
+    unsigned char control[16];
+} w1_windvane_private_t;
+
+typedef struct 
+{
+    unsigned char couplerid[8];
+    char devid[32];
+    int branch;
+} w1_couplist_t;
+
 
 struct w1_devlist
 {
     int numdev;
     int ndll;
     int delay;
-    int portnum;    
+    int portnum;
+    int altitude;
     char *iface;
     char *rcfile;
     char *repfile;
@@ -92,6 +122,7 @@ struct w1_devlist
     short doread;
     w1_device_t *devs;
     char *lastmsg;
+    short timestamp;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);
@@ -104,5 +135,7 @@ extern void read_config(w1_devlist_t *);
 extern FILE * w1_file_open(char *);
 extern w1_sensor_t * w1_find_sensor(w1_devlist_t *, const char *);
 extern void w1_replog(w1_devlist_t *, const char *,...);
+extern void w1_set_device_data(w1_device_t *, const char *, char *);
+extern void w1_set_device_data_index(w1_device_t *, int, char *);
 #endif
 

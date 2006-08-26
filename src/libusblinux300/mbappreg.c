@@ -418,7 +418,7 @@ SMALLINT readPagePacketAppReg(SMALLINT bank, int portnum, uchar *SNum, int page,
                               SMALLINT rd_cont, uchar *buff, int *len)
 {
    uchar raw_buf[PAGE_LENGTH];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // read the entire page data
@@ -485,7 +485,7 @@ SMALLINT readPagePacketExtraAppReg(SMALLINT bank, int portnum, uchar *SNum,
 {
    uchar raw_buf[32];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // check if current bank is not scratchpad bank, or not page 0
    if(!hasExtraInfoAppReg(bank,SNum))
@@ -554,7 +554,7 @@ SMALLINT writePagePacketAppReg(SMALLINT bank, int portnum, uchar *SNum,
                                int page, uchar *buff, int len)
 {
    uchar raw_buf[PAGE_LENGTH];
-   ushort crc;
+   ushort crc = 0;
    int i;
 
    // make sure length does not exceed max

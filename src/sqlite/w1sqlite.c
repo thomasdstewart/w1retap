@@ -48,7 +48,8 @@ static sqlite3 * w1_opendb(char *dbname)
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
-    char *sql = "select device,type,abbrv1,name1,units1,abbrv2,name2,units2 from w1sensors";
+    char *sql = "select * from w1sensors";
+        //device,type,abbrv1,name1,units1,abbrv2,name2,units2
     sqlite3 *db;
     char *err;
     int n = 0, nr = 0, nc;
@@ -61,19 +62,16 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         {
             devs = malloc(sizeof(w1_device_t)*nr);
             memset(devs, 0, sizeof(w1_device_t)*nr);
-
-            int offset = 0;
+            int k;
             for(n = 0; n < nr; n++)
             {
-                offset += nc;
-                GETVALUE(0, devs[n].serial);
-                GETVALUE(1, devs[n].devtype);
-                GETVALUE(2, devs[n].s[0].abbrv);
-                GETVALUE(3, devs[n].s[0].name);
-                GETVALUE(4, devs[n].s[0].units);
-                GETVALUE(5, devs[n].s[1].abbrv);
-                GETVALUE(6, devs[n].s[1].name);
-                GETVALUE(7, devs[n].s[1].units);                
+                for(k = 0; k < nc; k++)
+                {
+                    char *fnam = rt[k];
+                    char *s = rt[(n+1)*nc + k];
+                    char *sv = (s && *s) ? strdup(s) : NULL;
+                    w1_set_device_data(devs+n, fnam, sv);                    
+                }
                 w1_enumdevs(devs+n);
             }
             sqlite3_free_table(rt);
@@ -94,7 +92,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     if(sqlite3_get_table (db, "select name,value,rmin,rmax from ratelimit",
                           &rt, &nr, &nc, &err) == SQLITE_OK)
     {
-        float roc,rmin,rmax;
+        float roc=0,rmin=0,rmax=0;
 
         if(nr > 0 && nc > 0)
         {
@@ -203,7 +201,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
     if(stmt == NULL)
     {
         const char *tl;
-        static char s[] = "insert into readings values (?,?,?)";    
+        static char s[] = "insert into readings(date,name,value) values (?,?,?)";    
 	sqlite3_prepare(db, s, sizeof(s)-1, &stmt, &tl);
     }
 
@@ -217,7 +215,18 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
             {
                 if(devs->s[j].valid)
                 {
-                    sqlite3_bind_int(stmt, 1, w1->logtime);
+                    if(w1->timestamp)
+                    {
+                        struct tm *tm;
+                        char tval[64];
+                        tm = localtime(&w1->logtime);
+                        strftime(tval, sizeof(tval), "%F %T%z", tm);
+                        sqlite3_bind_text(stmt, 1, tval, -1, SQLITE_STATIC);
+                    }
+                    else
+                    {
+                        sqlite3_bind_int(stmt, 1, w1->logtime);
+                    }
                     sqlite3_bind_text(stmt, 2, devs->s[j].abbrv, -1, SQLITE_STATIC);
                     sqlite3_bind_double(stmt, 3, (double)devs->s[j].value);
                     sqlite3_step(stmt);

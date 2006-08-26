@@ -495,7 +495,7 @@ SMALLINT readPagePacketNV(SMALLINT bank, int portnum, uchar *SNum, int page,
 {
 
    uchar raw_buf[PAGE_LENGTH_NV];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // read the  page
@@ -587,7 +587,7 @@ SMALLINT writePagePacketNV(SMALLINT bank, int portnum, uchar *SNum, int page,
 {
    uchar raw_buf[PAGE_LENGTH_NV];
    int i;
-   ushort crc;
+   ushort crc = 0;
 
    // make sure length does not exceed max
    if (len > getMaxPacketDataLengthNV(bank,SNum))

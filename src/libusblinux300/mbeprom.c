@@ -579,7 +579,7 @@ SMALLINT readPagePacketEPROM(SMALLINT bank, int portnum, uchar *SNum, int page,
 {
    uchar  raw_buf[PAGE_LENGTH_EPROM];
    uchar  extra[1];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // read entire page with read page CRC
@@ -644,7 +644,7 @@ SMALLINT readPagePacketExtraEPROM(SMALLINT bank, int portnum, uchar *SNum,
                                   int *len, uchar *extra)
 {
    uchar raw_buf[PAGE_LENGTH_EPROM];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // check if current bank is not scratchpad bank, or not page 0
@@ -707,7 +707,7 @@ SMALLINT writePagePacketEPROM(SMALLINT bank, int portnum, uchar *SNum, int page,
                               uchar *buff, int len)
 {
    uchar raw_buf[PAGE_LENGTH_EPROM];
-   int   crc, i;
+   int   crc = 0, i;
 
    // make sure length does not exceed max
    if (len > getMaxPacketDataLengthEPROM(bank,SNum))

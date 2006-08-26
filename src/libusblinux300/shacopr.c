@@ -32,11 +32,6 @@
 #include "ownet.h"
 #include "shaib.h"
 
-extern SMALLINT owFirst(int,SMALLINT,SMALLINT);
-extern SMALLINT owAcquire(int,char *);
-extern void owRelease(int);
-extern int msGettick();
-
 static void GetBytes(char* msg, uchar* buffer, int len, uchar defValue,
                      SMALLINT printHex);
 static int GetSecret(char* name, uchar** secret);
@@ -61,7 +56,6 @@ int main(int argc, char** argv)
    char test[2] = {'y',0};
 #ifdef COPRVM
    FILE* fp;
-   int randomNum, i;
    unsigned int len;
 #else
    FileEntry fe;
@@ -317,7 +311,7 @@ static int GetSecret(char* name, uchar** secret)
    memset(*secret, 0x00, length);
    memcpy(*secret, inputBuffer, lvalue);
 
-   printf("length=%ld\n",length);
+   printf("length=%d\n",length);
    PrintHex(*secret, length);
    printf("\n");
 

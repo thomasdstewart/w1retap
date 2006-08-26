@@ -50,7 +50,7 @@
 int ReadTemperature(int portnum, uchar *SerialNum, float *Temp)
 {
    uchar rt=FALSE;
-   uchar send_block[30],lastcrc8;
+   uchar send_block[30],lastcrc8 = 0;
    int send_cnt, tsht, i, loop=0;
    float tmp,cr,cpc;
 
