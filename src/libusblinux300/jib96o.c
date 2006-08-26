@@ -44,15 +44,6 @@
 #define ME_RUNTIME      12
 #define SLEEP_PAD       6
 
-// external low-level 1-Wire functions
-extern SMALLINT owTouchBit(int,SMALLINT);
-extern SMALLINT owTouchByte(int,SMALLINT);
-extern SMALLINT owWriteByte(int,SMALLINT);
-extern SMALLINT owReadBitPower(int, SMALLINT);
-extern SMALLINT owAccess(int);
-extern SMALLINT owBlock(int,SMALLINT,uchar *,SMALLINT);
-extern void     msDelay(int);
-extern SMALLINT owLevel(int,SMALLINT);
 
 // exportable functions
 //ushort SendCiBMessage(int, uchar *, ushort, uchar);
@@ -798,12 +789,12 @@ ushort RecvCiBMessage(int portnum, uchar *mp, ushort *bufsize)
   uchar  OutUsed;        // Outbound FIFO bytes used
   uchar  owms;           // micro status
   uchar  cpst;           // Co-Processor status
-  uchar  seg;            // Current segment number
-  ushort hdrcrc;         // Crc from header
-  ushort hdrsum;         // Checksum from header
+  uchar  seg = 0;        // Current segment number
+  ushort hdrcrc = 0;     // Crc from header
+  ushort hdrsum = 0;     // Checksum from header
   ushort checksum;       // Running checksum of the message
-  ushort sum;            // Temporary checksum store
-  uchar  size;           // Size of current segment
+  ushort sum = 0;        // Temporary checksum store
+  uchar  size = 0;       // Size of current segment
   ushort msglen;         // Length of message received so far
   uchar  oldseg;         // Prior segment number for checking order
   uchar  Retry,
@@ -1405,8 +1396,6 @@ uchar CheckStreamCRC(uchar* data, int offset, ushort crc)
 //
 void TimeDelay(int portnum, uchar et)
 {
-   SMALLINT tempLevel = MODE_NORMAL;
-
    msDelay(et*250 + MinRun);
 
    if(PowerOn)

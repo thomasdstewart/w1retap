@@ -63,37 +63,11 @@ void w1_init(w1_devlist_t * w1, char *fname)
                     devs = realloc(devs, sizeof(w1_device_t)*alldev);
                     memset(devs+n, 0, sizeof(w1_device_t)*ALLOCDEV);
                 }
-
-                for(j =0, s = line; (p = strtok(s,"|:")); s=NULL, j++)
+                
+                for(j =0, s = line; (p = strsep(&s,"|:"));  j++)
                 {
-                    
-                    switch (j)
-                    {
-                        case 0:
-                            devs[n].serial = strdup(p);
-                            break;
-                        case 1:
-                            devs[n].devtype = strdup(p);
-                            break;
-                        case 2:
-                            devs[n].s[0].abbrv = strdup(p);
-                            break;
-                        case 3:
-                            devs[n].s[0].name = strdup(p);
-                            break;
-                        case 4:
-                            devs[n].s[0].units = strdup(p);
-                            break;
-                        case 5:
-                            devs[n].s[1].abbrv = strdup(p);
-                            break;
-                        case 6:
-                            devs[n].s[1].name = strdup(p);
-                            break;
-                        case 7:
-                            devs[n].s[1].units = strdup(p);
-                            break;
-                    }
+                    char *sv = (p && *p) ? strdup(p) : NULL;
+                    w1_set_device_data_index (devs+n, j, sv);
                 }
                 w1_enumdevs(devs+n);
                 n++;

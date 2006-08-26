@@ -91,8 +91,8 @@ int main(int argc, char** argv)
    int    portnum = 0;       // the port on which to communicate to 1-Wire devices
    int    num = 0;           // number of 1-Wire Clock devices
    timedate td;              // timedate struct
-   uint  RTCAOffset = 180;  // Real-Time Clock Alarm offset from PC time in seconds (entered by user)
-   uint  SoftOffset = 120;  // "Soft" clock offset used to calculate expiry time to be placed in RAM of the part.
+   int  RTCAOffset = 180;  // Real-Time Clock Alarm offset from PC time in seconds (entered by user)
+   int  SoftOffset = 120;  // "Soft" clock offset used to calculate expiry time to be placed in RAM of the part.
    uint RTCTime = 0;        // set RTC with this time in seconds.
    uint RTCATime = 0;       // set RTCA with this time in seconds.
    uint SoftTime = 0;       // set "Soft" time with this value.
@@ -112,8 +112,6 @@ int main(int argc, char** argv)
 
 
    uchar TimeSN[MAXDEVICES][8]; // array to hold the serial numbers for the devices found
-   SMALLINT RTCAlarmTriggerBit = 0;
-   uint secondsfromdate =0;
 
    // Make sure we can talk to the part when it is alarming.
    // The following variable should always be set when

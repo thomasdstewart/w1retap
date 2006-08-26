@@ -50,7 +50,7 @@ int SetupAtoD(int portnum, int vdd, uchar *SNum)
    uchar test;
    int send_cnt=0;
    int i;
-   ushort lastcrc8;
+   ushort lastcrc8 = 0;
    int busybyte; 
 
    owSerialNum(portnum,SNum,FALSE);
@@ -161,7 +161,7 @@ float ReadAtoD(int portnum, int vdd, uchar *SNum)
    int send_cnt=0;
    int i;
    int busybyte; 
-   ushort lastcrc8;
+   ushort lastcrc8 = 0;
    ushort volts;
    float ret= (float) -1.0;
    int done = TRUE;
@@ -257,7 +257,7 @@ double Get_Temperature(int portnum,uchar *SNum)
    uchar send_block[50];
    int send_cnt=0;
    int i;
-   ushort lastcrc8;
+   ushort lastcrc8 = 0;
 
    owSerialNum(portnum,SNum,FALSE);
 

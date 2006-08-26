@@ -57,7 +57,7 @@ SMALLINT ReadScratchpadSHA33(int portnum, int* address, uchar* es,
    short send_cnt=0;
    uchar send_block[16];
    SMALLINT i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    if(!resume)
    {
@@ -129,7 +129,7 @@ SMALLINT WriteScratchpadSHA33(int portnum, int address, uchar *data,
 {
    uchar send_block[15];
    short send_cnt=0,i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    if(!resume)
    {
@@ -300,7 +300,7 @@ int ReadAuthPageSHA33(int portnum, SMALLINT pagenum, uchar* data,
    short send_cnt=0;
    uchar send_block[55];
    SMALLINT i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int address = pagenum << 5;
 
    if(!resume)
@@ -584,7 +584,7 @@ SMALLINT RefreshScratchpad33(int portnum, int address, SMALLINT resume)
 {
    uchar send_block[15];
    int send_cnt = 0, i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    if(!resume)
    {

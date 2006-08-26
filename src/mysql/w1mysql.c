@@ -29,7 +29,7 @@
 #include "w1retap.h"
 
 // If you know how to make this stmt/prepare work, the fix this
-// to a suitable version.
+// to a suitable version (and fix timestamp stuff too).
 
 #define MINVERS 99999
 
@@ -41,7 +41,7 @@ static void my_params(char *params,
 
     *host = *dbname = *user = *pass = NULL;
 
-    for(s0 = mp; (s1=strtok(s0, " ")); s0 = NULL)
+    for(s0 = mp; (s1=strsep(&s0, " "));)
     {
         char *t,*v;
         sscanf(s1,"%a[^=]=%as", &t, &v);
@@ -92,10 +92,11 @@ static MYSQL * w1_opendb(char *params)
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
-    char *sql = "select device,type,abbrv1,name1,units1,abbrv2,name2,units2 from w1sensors";
+    char *sql = "select * from w1sensors";
     MYSQL *conn;
     MYSQL_RES *res;
     MYSQL_ROW row;
+    MYSQL_FIELD *field;
     int n = 0;
 
     conn = w1_opendb(dbnam);
@@ -116,33 +117,9 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             {
                 char *s = row[j];
                 char *sv = (s && *s) ? strdup(s) : NULL;
-                switch (j)
-                {
-                    case 0:
-                        devs[n].serial = sv;
-                        break;
-                    case 1:
-                        devs[n].devtype = sv;
-                        break;
-                    case 2:
-                        devs[n].s[0].abbrv = sv;
-                        break;
-                    case 3:
-                        devs[n].s[0].name = sv;
-                        break;
-                    case 4:
-                        devs[n].s[0].units = sv;
-                        break;
-                    case 5:
-                        devs[n].s[1].abbrv = sv;
-                        break;
-                    case 6:
-                        devs[n].s[1].name = sv;
-                        break;
-                    case 7:
-                        devs[n].s[1].units = sv;
-                        break;
-                }
+                field = mysql_fetch_field_direct(res, j);
+                char *fnam = field->name;
+                w1_set_device_data(devs+n, fnam, sv);
             }
             w1_enumdevs(devs+n);
         }
@@ -156,11 +133,10 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             int nn = mysql_num_rows(res);
             for (n = 0; n < nn; n++)        
             {
-                int j;
                 row = mysql_fetch_row(res);
                 char *s = row[0];
                 short flags = 0;
-                float roc,rmin,rmax;
+                float roc=0,rmin=0,rmax=0;
 
                 if(s && *s)
                 {
@@ -302,9 +278,21 @@ void w1_logger(w1_devlist_t *w1, char *params)
                     
 #else
                     char *q;
+                    char tval[64];
+
+                    if(w1->timestamp)
+                    {
+                        struct tm *tm;
+                        tm = localtime(&w1->logtime);
+                        strftime(tval, sizeof(tval), "'%F %T%z'", tm);
+                    }
+                    else
+                    {
+                        snprintf(tval, sizeof(tval), "%ld", w1->logtime);
+                    }
                     asprintf(&q,
-                             "INSERT into readings VALUES(%ld,'%s',%g)",
-                             w1->logtime, devs->s[j].abbrv, devs->s[j].value);
+                             "INSERT into readings(date,name,value) VALUES(%s,'%s',%g)",
+                             tval, devs->s[j].abbrv, devs->s[j].value);
                     puts(q);
                     mysql_real_query(conn, q, strlen(q));
                     free(q);

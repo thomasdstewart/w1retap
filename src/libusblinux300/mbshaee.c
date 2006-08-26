@@ -452,7 +452,7 @@ SMALLINT readPagePacketSHAEE(SMALLINT bank, int portnum, uchar *SNum, int page,
                              SMALLINT rd_cont, uchar *buff, int *len)
 {
    uchar raw_buf[PAGE_LENGTH_SHAEE];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // read the  page
@@ -524,7 +524,7 @@ SMALLINT readPagePacketExtraSHAEE(SMALLINT bank, int portnum, uchar *SNum,
    uchar raw_buf[PAGE_LENGTH_SHAEE];
    int addr;
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    if(!hasExtraInfoSHAEE(bank,SNum))
    {
@@ -593,7 +593,7 @@ SMALLINT writePagePacketSHAEE(SMALLINT bank, int portnum, uchar *SNum, int page,
                               uchar *buff, int len)
 {
    uchar raw_buf[PAGE_LENGTH_SHAEE];
-   ushort crc;
+   ushort crc = 0;
    int i;
 
    // make sure length does not exceed max
@@ -1170,7 +1170,7 @@ SMALLINT canLockRedirectPageSHAEE(SMALLINT bank, uchar *SNum)
 SMALLINT writeSpad(int portnum, int addr, uchar *out_buf, int len)
 {
    uchar send_block[64];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i, cnt;
       
    cnt = 0;
@@ -1395,7 +1395,7 @@ SMALLINT readSpad(int portnum, ushort *addr, uchar *es, uchar *data)
    short send_cnt=0;
    uchar send_block[50];
    int i;
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
 
    // access the device
    if(owAccess(portnum))

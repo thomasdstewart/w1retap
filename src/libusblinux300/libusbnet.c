@@ -68,7 +68,7 @@ uchar SerialNum[MAX_PORTNUM][8];
 //                        Serial Number placed in the global SerialNum[portnum]
 //            FALSE (0): There are no devices on the 1-Wire Net.
 //
-SMALLINT owFirst(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
+SMALLINT owFirst_(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
 {
    // reset the search state
    LastDiscrepancy[portnum] = 0;
@@ -101,7 +101,7 @@ SMALLINT owFirst(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
 //                       last search was the last device or there
 //                       are no devices on the 1-Wire Net.
 //
-SMALLINT owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
+SMALLINT owNext_(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
 {
    SETUP_PACKET setup;
    short rt=FALSE,i,ResetSearch=FALSE;
@@ -110,7 +110,6 @@ SMALLINT owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
    ushort buf_len;
    uchar lastcrc8;
    ushort  nBytes = 8;
-   uint nOutput = 0;
    int limit;
    STATUS_PACKET status;
    uchar  nResult;
@@ -298,7 +297,7 @@ SMALLINT owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only)
 // 'do_read'       - flag to indicate reading (1) or setting (0) the current
 //                   serial number.
 //
-void owSerialNum(int portnum, uchar *serialnum_buf, SMALLINT do_read)
+void owSerialNum_(int portnum, uchar *serialnum_buf, SMALLINT do_read)
 {
    uchar i;
 
@@ -325,7 +324,7 @@ void owSerialNum(int portnum, uchar *serialnum_buf, SMALLINT do_read)
 // 'search_family' - family code type to set the search algorithm to find
 //                   next.
 //
-void owFamilySearchSetup(int portnum, SMALLINT search_family)
+void owFamilySearchSetup_(int portnum, SMALLINT search_family)
 {
    uchar i;
 
@@ -344,7 +343,7 @@ void owFamilySearchSetup(int portnum, SMALLINT search_family)
 // 'portnum'     - number 0 to MAX_PORTNUM-1.  This number is provided to
 //                 indicate the symbolic port number.
 //
-void owSkipFamily(int portnum)
+void owSkipFamily_(int portnum)
 {
    // set the Last discrepancy to last family discrepancy
    LastDiscrepancy[portnum] = LastFamilyDiscrepancy[portnum];
@@ -371,7 +370,7 @@ void owSkipFamily(int portnum)
 //            FALSE (0): reset does not indicate presence or echos 'writes'
 //                       are not correct.
 //
-SMALLINT owAccess(int portnum)
+SMALLINT owAccess_(int portnum)
 {
    uchar sendpacket[9];
    uchar i;
@@ -434,7 +433,7 @@ SMALLINT owAccess(int portnum)
 //                       == TRUE, the device may be on the
 //                       1-Wire Net but in a non-alarm state.
 //
-SMALLINT owVerify(int portnum, SMALLINT alarm_only)
+SMALLINT owVerify_(int portnum, SMALLINT alarm_only)
 {
    uchar i,sendlen=0,goodbits=0,cnt=0,s,tst;
    uchar sendpacket[50];
@@ -498,7 +497,7 @@ SMALLINT owVerify(int portnum, SMALLINT alarm_only)
 //  *Note: This function could be converted to send DS2480
 //         commands in one packet.
 //
-SMALLINT owOverdriveAccess(int portnum)
+SMALLINT owOverdriveAccess_(int portnum)
 {
    uchar sendpacket[8];
    uchar i, bad_echo = FALSE;

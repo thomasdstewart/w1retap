@@ -1,0 +1,166 @@
+
+CC = gcc
+CFLAGS = -O2 -Wall -c -DDO_MAIN=1 `pkg-config --cflags gmodule-2.0`
+LFLAGS = -O2 -s -Wall -DDO_MAIN=1 -rdynamic -o $@ `pkg-config --libs --cflags gmodule-2.0`
+
+USBSHROBJS = libusbllnk.lo libusbds2490.lo libusbnet.lo libusbses.lo libusbtran.lo
+
+SERSHROBJS = ds2480ut.lo linuxlnk.lo owllu.lo ownetu.lo owsesu.lo owtrnu.lo
+
+COMMONOBJS = owerr.lo ioutil.lo crcutil.lo acquire.lo 
+
+IOLIB = libw1common.so
+
+WEATHEROBJS = weather.o atod20.o cnt1d.o swt12.o temp10.o 
+
+MEMOBJS = mbappreg.o mbeprom.o mbnvcrc.o mbscrcrc.o mbscrex.o mbshaee.o \
+	mbee.o mbee77.o mbnv.o mbscr.o mbscree.o mbscrx77.o mbsha.o pw77.o \
+	rawmem.o 
+
+FILEOBJS = owfile.o owpgrw.o owprgm.o owcache.o $(MEMOBJS)
+
+SHAOBJS = sha18.o sha33.o shaib.o $(FILEOBJS)
+
+PROGS = atodtst counter coupler fish gethumd memutil mweather shaapp swtloop \
+	swtsngl temp thermodl thermoms tstfind debit debitvm humalog initcopr \
+	initcoprvm initrov initrovvm jibtest jibload jibmodpow \
+	ps_check ps_init sha_chck sha_init tm_check tm_init \
+	humids braybaro setds2409 w1find
+
+EXTLIBS = -ldl
+IOLIB = -L. -Wl,-rpath,/usr/local/lib -lw1common
+
+REQLIBS = libw1common.so libw1usb.so libw1serial.so
+all: $(REQLIBS) $(PROGS) 
+
+libw1usb.so: $(USBSHROBJS)
+	gcc -shared -Wl,-soname,$@.0 -o $@.0.0 $^   $(IOLIB) -lusb	     
+	ln -sf $@.0.0 $@.0
+	ln -sf $@.0 $@
+
+libw1serial.so: $(SERSHROBJS)
+	gcc -shared -Wl,-soname,$@.0 -o $@.0.0 $^   $(IOLIB)
+	ln -sf $@.0.0 $@.0
+	ln -sf $@.0 $@
+
+libw1common.so: $(COMMONOBJS)
+	gcc -shared -Wl,-soname,$@.0 -o $@.0.0 $^ 
+	ln -sf $@.0.0 $@.0
+	ln -sf $@.0 $@
+
+atodtst:  atodtst.c atod20.o findtype.o $(IODEVOBJS) libw1common.so
+	$(CC) $(LFLAGS) atodtst.c atod20.o findtype.o $(IOLIB) $(EXTLIBS)
+
+counter:  counter.c cnt1d.o findtype.o $(IODEVOBJS) libw1common.so
+	$(CC) $(LFLAGS) counter.c cnt1d.o findtype.o $(IOLIB) $(EXTLIBS)
+
+coupler: coupler.c swt1f.o findtype.o $(IODEVOBJS) libw1common.so
+	$(CC) $(LFLAGS) coupler.c swt1f.o findtype.o $(IOLIB) $(EXTLIBS)
+
+debit: shademo.c shadebit.o $(SHAOBJS) libw1common.so
+	$(CC) $(LFLAGS) shademo.c shadebit.o $(SHAOBJS) $(IOLIB) $(EXTLIBS)
+
+debitvm: shademo.c shadbtvm.o $(SHAOBJS) libw1common.so
+	$(CC) -DCOPRVM $(LFLAGS) shademo.c shadbtvm.o $(SHAOBJS) $(IOLIB) $(EXTLIBS)
+
+fish: fish.c $(FILEOBJS) libw1common.so
+	$(CC) $(LFLAGS) fish.c $(FILEOBJS) $(EXTLIBS) $(IOLIB) 
+
+gethumd: gethumd.c atod26.o screenio.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) gethumd.c atod26.o screenio.o findtype.o $(IOLIB) $(EXTLIBS)
+
+humalog: humalog.c findtype.o humutil.o mbee77.o mbscrx77.o pw77.o libw1common.so
+	$(CC) $(LFLAGS) -lm humalog.c findtype.o humutil.o mbee77.o mbscrx77.o pw77.o $(IOLIB) $(EXTLIBS)
+
+initcopr: shacopr.c shadebit.o $(SHAOBJS) libw1common.so
+	$(CC) $(LFLAGS) shacopr.c shadebit.o $(SHAOBJS)  $(IOLIB) $(EXTLIBS)
+
+initcoprvm: shacopr.c shadbtvm.o $(SHAOBJS) libw1common.so
+	$(CC) -DCOPRVM $(LFLAGS) shacopr.c shadbtvm.o $(SHAOBJS) $(IOLIB) $(EXTLIBS)
+
+initrov: sharov.c shadebit.o $(SHAOBJS) libw1common.so
+	$(CC) $(LFLAGS) sharov.c shadebit.o $(SHAOBJS) $(IOLIB) $(EXTLIBS)
+
+initrovvm: sharov.c shadbtvm.o $(SHAOBJS) libw1common.so
+	$(CC) -DCOPRVM $(LFLAGS) sharov.c shadbtvm.o $(SHAOBJS)$(IOLIB)  $(EXTLIBS)
+
+jibload: jibload.c jib96.o jib96o.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) jibload.c jib96.o jib96o.o findtype.o $(IOLIB) $(EXTLIBS)
+
+jibmodpow: jibmodpw.c jib96.o jib96o.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) jibmodpw.c jib96.o jib96o.o findtype.o $(IOLIB) $(EXTLIBS)
+
+jibtest: jibtest.c jib96.o jib96o.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) jibtest.c jib96.o jib96o.o findtype.o $(IOLIB) $(EXTLIBS)
+
+memutil: memutil.c $(FILEOBJS) libw1common.so
+	$(CC) $(LFLAGS) memutil.c $(FILEOBJS) $(EXTLIBS) $(IOLIB)
+
+mweather: mweather.c findtype.o $(WEATHEROBJS) libw1common.so
+	$(CC) $(LFLAGS) mweather.c findtype.o $(WEATHEROBJS) $(EXTLIBS) $(IOLIB)
+
+ps_check: ps_check.c ps02.o findtype.o  libw1common.so
+	$(CC) $(LFLAGS) ps_check.c ps02.o findtype.o $(IOLIB) $(EXTLIBS)
+
+ps_init: ps_init.c ps02.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) ps_init.c ps02.o findtype.o $(IOLIB) $(EXTLIBS)
+
+sha_chck: sha_chck.c shadbtvm.o $(SHAOBJS) libw1common.so
+	$(CC) $(LFLAGS) sha_chck.c shadbtvm.o $(SHAOBJS) $(IOLIB) $(EXTLIBS)
+
+sha_init: sha_init.c shadbtvm.o $(SHAOBJS) libw1common.so
+	$(CC) $(LFLAGS) sha_init.c shadbtvm.o $(SHAOBJS) $(IOLIB) $(EXTLIBS)
+
+shaapp: shaapp.c ibsha33o.o libw1common.so
+	$(CC) $(LFLAGS) shaapp.c ibsha33o.o $(IOLIB) $(EXTLIBS)
+
+swtloop: swtloop.c swt12.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) swtloop.c swt12.o findtype.o $(IOLIB) $(EXTLIBS)
+
+swtsngl: swtsngl.c swt05.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) swtsngl.c swt05.o findtype.o $(IOLIB) $(EXTLIBS)
+
+temp:  temp.c temp10.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) temp.c temp10.o findtype.o $(IOLIB) $(EXTLIBS)
+
+thermodl: thermodl.c thermo21.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) thermodl.c thermo21.o findtype.o $(IOLIB) $(EXTLIBS)
+
+thermoms: thermoms.c thermo21.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) thermoms.c thermo21.o findtype.o $(IOLIB) $(EXTLIBS)
+
+tm_check: tm_check.c time04.o findtype.o $(FILEOBJS) libw1common.so
+	$(CC) $(LFLAGS) tm_check.c time04.o findtype.o $(FILEOBJS) $(IOLIB) $(EXTLIBS)
+
+tm_init: tm_init.c time04.o findtype.o $(FILEOBJS) libw1common.so
+	$(CC) $(LFLAGS) tm_init.c time04.o findtype.o $(FILEOBJS) $(IOLIB) $(EXTLIBS)
+
+tstfind: tstfind.c libw1common.so
+	$(CC) $(LFLAGS) tstfind.c $(IOLIB) $(EXTLIBS)
+
+w1find: w1find.c swt1f.o findtype.o $(IODEVOBJS) libw1common.so
+	$(CC) $(LFLAGS) w1find.c swt1f.o findtype.o $(IOLIB) $(EXTLIBS)
+
+humids: humid.c sht11_humid.o libw1common.so
+	$(CC) $(LFLAGS) $< sht11_humid.o $(IOLIB) $(EXTLIBS)
+
+braybaro: braybaro.c atod26.o screenio.o findtype.o libw1common.so
+	$(CC) $(LFLAGS) $< atod26.o screenio.o findtype.o $(IOLIB) $(EXTLIBS) -lm
+
+setds2409: setds2409.c swt1f.o libw1common.so
+	$(CC)  $(LFLAGS) $<  swt1f.o  $(IOLIB) $(EXTLIBS)
+
+%.lo: %.c
+	$(CC) $(CFLAGS) -fPIC  $< -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	rm -f *.o $(PROGS) *.so *.so.* *.lo *.a
+
+install:
+	cp $(PROGS) /usr/local/bin/
+	cp -a *.so.* /usr/local/lib/
+
+

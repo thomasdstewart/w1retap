@@ -149,9 +149,9 @@
    #endif
 #endif
 
-
+#ifndef __USE_MISC
 typedef unsigned int uint;
-
+#endif
 // general defines
 #define WRITE_FUNCTION 1
 #define READ_FUNCTION  0
@@ -345,54 +345,56 @@ extern int owHasErrors(void);
 #define OWERROR_LIBUSB_SET_ALTINTERFACE_ERROR   121
 #define OWERROR_LIBUSB_NO_ADAPTER_FOUND         122
 
-// One Wire functions defined in ownetu.c
-SMALLINT  owFirst(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
-SMALLINT  owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
-void      owSerialNum(int portnum, uchar *serialnum_buf, SMALLINT do_read);
-void      owFamilySearchSetup(int portnum, SMALLINT search_family);
-void      owSkipFamily(int portnum);
-SMALLINT  owAccess(int portnum);
-SMALLINT  owVerify(int portnum, SMALLINT alarm_only);
-SMALLINT  owOverdriveAccess(int portnum);
+// libloader
+int      owAcquireEx(char *port_zstr);
+SMALLINT owAcquire(int portnum, char *port_zstr);
+extern SMALLINT FAMILY_CODE_04_ALARM_TOUCHRESET_COMPLIANCE;
 
+// One Wire functions defined in ownetu.c
+SMALLINT  (*owFirst)(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
+SMALLINT  (*owNext)(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
+void      (*owSerialNum)(int portnum, uchar *serialnum_buf, SMALLINT do_read);
+void      (*owFamilySearchSetup)(int portnum, SMALLINT search_family);
+void      (*owSkipFamily)(int portnum);
+SMALLINT  (*owAccess)(int portnum);
+SMALLINT  (*owVerify)(int portnum, SMALLINT alarm_only);
+SMALLINT  (*owOverdriveAccess)(int portnum);
 
 // external One Wire functions defined in owsesu.c
- SMALLINT owAcquire(int portnum, char *port_zstr);
- int      owAcquireEx(char *port_zstr);
- void     owRelease(int portnum);
+SMALLINT (*owAcquire__)(int portnum, char *port_zstr);
+int      (*owAcquireEx__)(char *port_zstr);
+void     (*owRelease)(int portnum);
 
 // external One Wire functions defined in findtype.c
 // SMALLINT FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
 
 // external One Wire functions from link layer owllu.c
-SMALLINT owTouchReset(int portnum);
-SMALLINT owTouchBit(int portnum, SMALLINT sendbit);
-SMALLINT owTouchByte(int portnum, SMALLINT sendbyte);
-SMALLINT owWriteByte(int portnum, SMALLINT sendbyte);
-SMALLINT owReadByte(int portnum);
-SMALLINT owSpeed(int portnum, SMALLINT new_speed);
-SMALLINT owLevel(int portnum, SMALLINT new_level);
-SMALLINT owProgramPulse(int portnum);
-SMALLINT owWriteBytePower(int portnum, SMALLINT sendbyte);
-SMALLINT owReadBytePower(int portnum);
-SMALLINT owHasPowerDelivery(int portnum);
-SMALLINT owHasProgramPulse(int portnum);
-SMALLINT owHasOverDrive(int portnum);
-SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse);
-// external One Wire global from owllu.c
-extern SMALLINT FAMILY_CODE_04_ALARM_TOUCHRESET_COMPLIANCE;
+SMALLINT (*owTouchReset)(int portnum);
+SMALLINT (*owTouchBit)(int portnum, SMALLINT sendbit);
+SMALLINT (*owTouchByte)(int portnum, SMALLINT sendbyte);
+SMALLINT (*owWriteByte)(int portnum, SMALLINT sendbyte);
+SMALLINT (*owReadByte)(int portnum);
+SMALLINT (*owSpeed)(int portnum, SMALLINT new_speed);
+SMALLINT (*owLevel)(int portnum, SMALLINT new_level);
+SMALLINT (*owProgramPulse)(int portnum);
+SMALLINT (*owWriteBytePower)(int portnum, SMALLINT sendbyte);
+SMALLINT (*owReadBytePower)(int portnum);
+SMALLINT (*owHasPowerDelivery)(int portnum);
+SMALLINT (*owHasProgramPulse)(int portnum);
+SMALLINT (*owHasOverDrive)(int portnum);
+SMALLINT (*owReadBitPower)(int portnum, SMALLINT applyPowerResponse);
 
 // external One Wire functions from transaction layer in owtrnu.c
-SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len);
+SMALLINT (*owBlock)(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len);
 SMALLINT owReadPacketStd(int portnum, SMALLINT do_access, int start_page, uchar *read_buf);
 SMALLINT owWritePacketStd(int portnum, int start_page, uchar *write_buf,
                           SMALLINT write_len, SMALLINT is_eprom, SMALLINT crc_type);
-SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr, SMALLINT write_cmd,
+SMALLINT (*owProgramByte)(int portnum, SMALLINT write_byte, int addr, SMALLINT write_cmd,
                        SMALLINT crc_type, SMALLINT do_access);
 
 // link functions
-void      msDelay(int len);
-int      msGettick(void);
+void     (*msDelay)(int len);
+int      (*msGettick)(void);
 
 // ioutil.c functions prototypes
 int  EnterString(char *msg, char *buf, int min, int max);

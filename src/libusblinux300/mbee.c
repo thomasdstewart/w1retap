@@ -371,7 +371,7 @@ SMALLINT readPagePacketEE(SMALLINT bank, int portnum, uchar *SNum, int page,
                           SMALLINT rd_cont, uchar *buff, int *len)
 {
    uchar raw_buf[PAGE_LENGTH];
-   ushort lastcrc16;
+   ushort lastcrc16 = 0;
    int i;
 
    // read the scratchpad, discard extra information
@@ -465,7 +465,7 @@ SMALLINT writePagePacketEE(SMALLINT bank, int portnum, uchar *SNum, int page,
 {
    uchar raw_buf[64];
    int i;
-   ushort crc;
+   ushort crc = 0;
 
    // make sure length does not exceed max
    if ((len > (PAGE_LENGTH - 3)) || (len <= 0))

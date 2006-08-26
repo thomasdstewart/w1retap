@@ -32,18 +32,15 @@
 #include "jib96.h"
 #include <string.h>
 #include <time.h>
+#include "ownet.h"
 
 #define MAXDEVICES 10
 #define LOAD_UNLOAD_TIME  500
 #define EXECUTE_TIME      1500
 
 // external functions
-extern SMALLINT  owAcquire(int,char *);
-extern void      owRelease(int);
 extern SMALLINT  FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
 extern void      PrintSerialNum(uchar*);
-extern SMALLINT  owOverdriveAccess(int);
-extern void      owSerialNum(int,uchar *,SMALLINT);
 extern int       key_abort(void);
 
 // local prototypes
@@ -170,7 +167,7 @@ uchar CycleTest(int portnum, uchar *dev)
          printf("Firmware: %s\n",l_RefBuffer);
       }
       else
-         printf("GetFirmwareVersionString Error: SW = %04.4X",l_lpResponseAPDU->SW);
+         printf("GetFirmwareVersionString Error: SW = %4.4X",l_lpResponseAPDU->SW);
    }
 
    printf("Loading Message\n");

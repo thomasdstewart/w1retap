@@ -757,7 +757,7 @@ int TrueDir(int portnum, WeatherStruct *wet)
 int ParseData(char *inbuf, int insize, uchar *outbuf, int maxsize)
 {
    int ps, outlen=0, gotmnib=0;
-   uchar mnib;
+   uchar mnib = 0;
 
    // loop until end of data
    for (ps = 0; ps < insize; ps++)
