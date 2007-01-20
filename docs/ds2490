@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+if [ "$ACTION" = "add" ] && [ -f "$DEVICE" ]
+then
+# rmmod ds9490r
+ chmod 666 "$DEVICE"
+fi

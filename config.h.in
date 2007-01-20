@@ -25,8 +25,14 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Define to 1 if you have the `mysqlclient' library (-lmysqlclient). */
+#undef HAVE_LIBMYSQLCLIENT
+
 /* Define to 1 if you have the `odbc' library (-lodbc). */
 #undef HAVE_LIBODBC
+
+/* Define to 1 if you have the `popt' library (-lpopt). */
+#undef HAVE_LIBPOPT
 
 /* Define to 1 if you have the `pq' library (-lpq). */
 #undef HAVE_LIBPQ
@@ -52,6 +58,9 @@
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
+
+/* Define to 1 if you have the <popt.h> header file. */
+#undef HAVE_POPT_H
 
 /* Define to 1 if your system has a GNU libc compatible `realloc' function,
    and to 0 otherwise. */
@@ -199,7 +208,7 @@
 /* Define to rpl_realloc if the replacement function should be used. */
 #undef realloc
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define to empty if the keyword `volatile' does not work. Warning: valid

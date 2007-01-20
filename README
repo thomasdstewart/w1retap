@@ -11,7 +11,11 @@ Semiconductors <http://www.dalsemi.com/> devices.
 * TAI8520 (DS1820 / DS18S20) Temperature sensors;
 * TAI8540B (DS2438) Humidity Sensor;
 * TAI8570 Pressure Sensor;
-* TAI8575 Rain Gauge.
+* TAI8575 Rain Gauge;
+* TAI8515 Weather Station (DS2423,DS18S20,DS2450);
+* DS2409 Microlan coupler;
+* DS2490 USB adaptor;
+* DS2480 Serial adaptor.
 
 A number of other sensors, typically "hobby/build your own", are
 supported:
@@ -20,10 +24,6 @@ supported:
   <http://home.hetnet.nl/~thomas_7/1Wire/1-WireIOPort.html>
 * MPX4115A based pressure sensor ('fronted' by DS2438)
   <http://home.comcast.net/~andrew.g.miller/barometer/>
-
-I do not own a TAI8515 Weather Station / Anemometer, so this is not
-supported, but as it is supported by the libusblinux300 SDK, adding
-support should be "trivial".
 
 w1retap is designed to run on the Linux operating system and assumes
 that the interface between the computer and the 1-wire system is
@@ -57,6 +57,6 @@ builder, a wunderground.com reporting script, RSS feeder, and a GNOME
 panel applet (actually two, using different transports).
 
 Please see the docs sub-directory for information on building,
-installing and running w1retap. In particular, README.udev
+installing and running w1retap. In particular, README.usb
 
 Jonathan Hudson, Netley Marsh, England.
