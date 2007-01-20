@@ -1,14 +1,14 @@
 CREATE TABLE ratelimit (
     name text,
-    value real,
-    rmax real,
-    rmin real
+    value double precision,
+    rmax double precision,
+    rmin double precision
 );
 
 CREATE TABLE readings (
     date integer,
     name text,
-    value real
+    value double precision
 );
 
 CREATE TABLE replog (
@@ -18,15 +18,15 @@ CREATE TABLE replog (
 
 CREATE TABLE station (
     name text,
-    stnlat real,
-    stnlong real,
+    stnlat double precision,
+    stnlong double precision,
     altitude real,
     location text,
     software text,
     url text,
     wu_user text,
     wu_pass text,
-    rfact real,
+    rfact double precision,
     cwop_user text,
     cwop_pass text
 );
