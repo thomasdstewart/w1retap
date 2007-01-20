@@ -53,15 +53,15 @@ void read_config(w1_devlist_t *w1)
         {
             char *l = NULL,*c = NULL,*r=NULL;
             
-            sscanf(buf,"log = %a[^\n]", &l) ||
-                sscanf(buf,"init = %a[^\n]", &c) ||
-                sscanf(buf,"rep = %a[^\n]", &r) ||                
-                sscanf(buf,"device = %a[^\n]", &w1->iface) ||
-                sscanf(buf,"delay = %d", &w1->delay) ||
-                sscanf(buf,"demonise = %hd", &w1->daemonise) ||
-                sscanf(buf,"altitude = %d", &w1->altitude) ||
-                sscanf(buf,"timestamp = %hd", &w1->timestamp) ||
-                sscanf(buf,"logtemp = %hd", &w1->logtmp);
+            (void)(sscanf(buf,"log = %a[^\n]", &l) ||
+                   sscanf(buf,"init = %a[^\n]", &c) ||
+                   sscanf(buf,"rep = %a[^\n]", &r) ||                
+                   sscanf(buf,"device = %a[^\n]", &w1->iface) ||
+                   sscanf(buf,"delay = %d", &w1->delay) ||
+                   sscanf(buf,"demonise = %d", &w1->daemonise) ||
+                   sscanf(buf,"altitude = %d", &w1->altitude) ||
+                   sscanf(buf,"timestamp = %d", &w1->timestamp) ||
+                   sscanf(buf,"logtemp = %d", &w1->logtmp));
 
             if(l)
             {

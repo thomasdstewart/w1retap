@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 PACKAGE=w1retap
-VERSION=1.0.1
+VERSION=1.0.2
 
-AC_INIT(w1retap,1.0.1,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.0.2,jh+w1retap@daria.co.uk,w1retap)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -14,7 +14,7 @@ AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
-AC_ARG_WITH(mysql, AC_HELP_STRING([--without-applet], [Don't build the applet]))
+AC_ARG_WITH(applet, AC_HELP_STRING([--without-applet], [Don't build the applet]))
 AC_ARG_WITH(mysql, AC_HELP_STRING([--without-mysql], [Don't build for MySQL]))
 AC_ARG_WITH(postgres, AC_HELP_STRING([--without-postgres], [Don't build for PostgreSQL]))
 AC_ARG_WITH(sqlite, AC_HELP_STRING([--without-sqlite], [Don't build for SQLite]))
@@ -31,7 +31,7 @@ AC_CHECK_LIB([m], [sin], [])
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h popt.h])
 
 AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_HEADERS(sql.h)
@@ -55,6 +55,7 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([alarm atexit gettimeofday memset sqrt stpcpy strcasecmp strchr strdup strncasecmp strpbrk strrchr strstr strtol])
+AC_CHECK_LIB(popt, poptGetContext)
 
 USE_SQLITE=
 USE_ODBC=
@@ -86,7 +87,20 @@ if test "$MYSQL_CONFIG" = "no" -o  "$with_mysql" = "no" ; then
 else
  MYSQL_CFLAGS="$(mysql_config --cflags)"
  MYSQL_LIBS="$(mysql_config --libs)"
- USE_MYSQL=mysql
+# Now test that we can actually build with MySQL
+ save_CPPFLAGS="$CPPFLAGS"
+ CPPFLAGS="$CPPFLAGS $MYSQL_CFLAGS"
+ AC_CHECK_HEADER(mysql.h)
+ if test "$ac_cv_header_mysql_h" = "yes" ;  then
+   save_LIBS="$LIBS"
+   LIBS="$LIBS $MYSQL_LIBS"
+   AC_CHECK_LIB([mysqlclient], [mysql_init])
+   if test "$ac_cv_lib_mysqlclient_mysql_init" = "yes" ; then
+    USE_MYSQL=mysql
+   fi
+   LIBS="$save_LIBS"
+ fi	
+ CPPFLAGS="$save_CPPFLAGS"
 fi
 
 AC_PATH_PROG(PG_CONFIG, pg_config, no)

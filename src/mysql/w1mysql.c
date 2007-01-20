@@ -267,13 +267,12 @@ void w1_logger(w1_devlist_t *w1, char *params)
 
                     if(mysql_stmt_bind_param(stmt, bind))
                     {
-                        puts("bad bind");
+                        fputs("bad bind\n", stderr);
                     }
                     
                     if(mysql_stmt_execute(stmt))
                     {
-                        puts("bad exec");
-                        fprintf(stderr, "\n %s", mysql_error(conn));
+                        fprintf(stderr, "execute:  %s\n", mysql_error(conn));
                     }
                     
 #else
@@ -293,7 +292,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
                     asprintf(&q,
                              "INSERT into readings(date,name,value) VALUES(%s,'%s',%g)",
                              tval, devs->s[j].abbrv, devs->s[j].value);
-                    puts(q);
+		    if(w1->verbose) puts(q);
                     mysql_real_query(conn, q, strlen(q));
                     free(q);
 #endif

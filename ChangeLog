@@ -1,3 +1,13 @@
+1.0.2   2007-01-20
+        Fixed a configure.ac typo and added some more MySQL checks.
+        Renamed docs/README.udev to docs/README.usb and added some notes for
+	older Linux systems still using hotplug.
+	Check SHT-11 CRCs
+	Changed to libpopt for argument parsing
+	Vastly improved handling of coupler devices, contributed
+	by William R Sowerbutts <http://sowerbutts.com>.
+	Default data size changed to double (vice real).
+
 1.0.1	2006-08-26
 	Fix documentation errors (no code changes)
 

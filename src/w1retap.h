@@ -32,6 +32,12 @@ enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
               W1_SHT11, W1_COUPLER, W1_WINDVANE };
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
+/* coupler states: see SetSwitch1F() in swt1f.c */
+#define COUPLER_UNDEFINED -1
+#define COUPLER_ALL_OFF   0 // All lines off
+#define COUPLER_MAIN_ON   4 // Smart-On Main
+#define COUPLER_AUX_ON    2 // Smart-On Aux
+
 #define W1_ROC (1 << 0)
 #define W1_RMIN (1 << 1)
 #define W1_RMAX (1 << 2)
@@ -39,9 +45,10 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define ALLOCDEV 8
 #define TBUF_SZ 32
 #define MAXDLL 16
-#define MAXCPL 32
+#define MAXCPL 64
 
 typedef struct w1_devlist w1_devlist_t;
+typedef struct w1_device w1_device_t;
 
 typedef struct
 {
@@ -56,21 +63,15 @@ typedef struct
     char *abbrv;
     char *name;
     char *units;
-    float value;
+    double value;
     short valid;
     short flags;
-    float rmin;
-    float rmax;
-    float roc;
-    float lval;
+    double rmin;
+    double rmax;
+    double roc;
+    double lval;
     time_t ltime;
 } w1_sensor_t;
-
-typedef struct
-{
-    short branch;
-    unsigned char id[8];
-} w1_coupler_t;
 
 typedef struct
 {
@@ -80,16 +81,27 @@ typedef struct
 
 typedef struct
 {
+    w1_device_t *coupler_device;
+    short branch;
+} w1_coupler_t;
+
+struct w1_device
+{
     char *serial;
     char *devtype;
     short init;
     enum W1_type stype;
     w1_sensor_t s[2];
     unsigned char serno[8];
-    w1_coupler_t *c;
+    w1_coupler_t *coupler;
     w1_params_t *params;
     void *private;
-} w1_device_t;
+};
+
+typedef struct
+{
+  int active_lines;
+} w1_coupler_private_t;
 
 typedef struct
 {
@@ -98,11 +110,10 @@ typedef struct
 
 typedef struct 
 {
-    unsigned char couplerid[8];
     char devid[32];
     int branch;
+    w1_device_t *coupler_device;
 } w1_couplist_t;
-
 
 struct w1_devlist
 {
@@ -116,13 +127,13 @@ struct w1_devlist
     char *repfile;
     time_t logtime;
     dlldef_t dlls[MAXDLL];
-    short verbose;
-    short daemonise;
-    short logtmp;
-    short doread;
+    int verbose;
+    int daemonise;
+    int logtmp;
+    int doread;
     w1_device_t *devs;
     char *lastmsg;
-    short timestamp;
+    int timestamp;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);

@@ -42,16 +42,24 @@ static PGconn * w1_opendb(char *params)
     return mydb;
 }
 
+#define VALTPQRY "SELECT format_type(a.atttypid, a.atttypmod)" \
+    " FROM pg_class c, pg_attribute a WHERE c.relname = 'readings'" \
+    " AND a.attname = 'value' AND a.attrelid = c.oid"
+#define SENSQRY "select * from w1sensors"
+#define RATEQRY "select name,value,rmin,rmax from ratelimit"
+
+static char * valtype;
+
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
-    char *sql = "select * from w1sensors";
+
     PGconn *idb;
     PGresult *res;
     int n = 0;
 
     idb = w1_opendb(dbnam);
-    res = PQexec(idb, sql);
+    res = PQexec(idb, SENSQRY);
 
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
@@ -78,8 +86,25 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     w1->numdev = n;
     w1->devs=devs;
     if(res) PQclear(res);
+
+    res = PQexec(idb,VALTPQRY);
+    if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
+    {
+        char *s;
+        s = PQgetvalue(res, 0, 0);
+        if(s && *s)
+        {
+            if(valtype)
+            {
+                free(valtype);
+            }
+            valtype = strdup(s);
+        }
+    }
+
+    if (res) PQclear(res);
     
-    res = PQexec(idb, "select name,value,rmin,rmax from ratelimit");
+    res = PQexec(idb, RATEQRY);
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         float roc=0,rmin=0,rmax=0;
@@ -95,21 +120,21 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
                 sv = PQgetvalue(res, n, 1);
                 if(sv && *sv)
                 {
-                    roc = strtof(sv, NULL);
+                    roc = strtod(sv, NULL);
                     flags |= W1_ROC;
                 }
 
                 sv = PQgetvalue(res, n, 2);
                 if(sv && *sv)
                 {
-                    rmin = strtof(sv, NULL);
+                    rmin = strtod(sv, NULL);
                     flags |= W1_RMIN;
                 }
 
                 sv = PQgetvalue(res, n, 3);
                 if(sv && *sv)
                 {
-                    rmax = strtof(sv, NULL);
+                    rmax = strtod(sv, NULL);
                     flags |= W1_RMAX;
                 }
                 if(flags)
@@ -225,15 +250,12 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         stmt = "insrt";
 
 #if PGV == 7
+#define STMTSTR "prepare insrt(%s,text,%s) as insert into readings (date,name,value) values ($1,$2,$3)"
+
 #warning "Pg Version 7"
-        char *stmtstr;
-        stmtstr = (w1->timestamp) ?
-            "prepare insrt(timestamp with time zone,text,real) as "
-            "insert into readings (date,name,value) values ($1,$2,$3)"
-            :
-            "prepare insrt(integer,text,real) as "
-            "insert into readings (date,name,value) values ($1,$2,$3)"
-            ;
+        char stmtstr[256];
+        char *tstr = (w1->timestamp) ? "timestamp with time zone" : "integer";
+        snprintf(stmtstr, sizeof(stmtsrr),STMTSTR,tstr,valtype);
         res = PQexec(db, stmtstr);
 #elif PGV == 8
         res = PQprepare(db, stmt,
@@ -269,7 +291,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
                         snprintf(tval, sizeof(tval), "%ld", w1->logtime);
                     }
 
-                    asprintf(&rval, "%g", devs->s[j].value);
+                    asprintf(&rval, "%f", devs->s[j].value);
                     pvals[0] = tval;
                     pvals[1] = devs->s[j].abbrv;
                     pvals[2] = rval;
@@ -337,11 +359,13 @@ int main(int argc, char **argv)
 
     w1=&w;
     w1_init(w1, auth);
+    /*
     w1->logtime = 0;
     w1->devs[0].s[0].valid = 1;
     w1->devs[0].init = 1;
     w1->devs[0].s[0].value = 22.22;
     w1_logger(w1, auth);    
-    return 0;
+*/
+     return 0;
 }
 #endif

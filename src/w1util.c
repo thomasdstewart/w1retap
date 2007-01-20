@@ -213,7 +213,7 @@ void w1_enumdevs(w1_device_t * w)
 void w1_freeup(w1_devlist_t * w1)
 {
     int i;
-    w1_device_t * devs = NULL;
+    w1_device_t * dev = NULL;
     void (*func)(void);
     
     for(i = 0; i < w1->ndll; i++)
@@ -228,18 +228,19 @@ void w1_freeup(w1_devlist_t * w1)
         }
     }
     
-    for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
+    for(dev=w1->devs, i = 0; i < w1->numdev; i++, dev++)
     {
-        if(devs->serial)free(devs->serial);
-        if(devs->devtype) free(devs->devtype);
-        if(devs->s[0].abbrv) free(devs->s[0].abbrv);
-        if(devs->s[0].name) free(devs->s[0].name);
-        if(devs->s[0].units) free(devs->s[0].units);        
-        if(devs->s[1].abbrv) free(devs->s[1].abbrv);
-        if(devs->s[1].name) free(devs->s[1].name);
-        if(devs->s[1].units) free(devs->s[1].units);
-        if(devs->c) free(devs->c);
-        if(devs->params) free(devs->params);        
+        if(dev->serial)free(dev->serial);
+        if(dev->devtype) free(dev->devtype);
+        if(dev->s[0].abbrv) free(dev->s[0].abbrv);
+        if(dev->s[0].name) free(dev->s[0].name);
+        if(dev->s[0].units) free(dev->s[0].units);        
+        if(dev->s[1].abbrv) free(dev->s[1].abbrv);
+        if(dev->s[1].name) free(dev->s[1].name);
+        if(dev->s[1].units) free(dev->s[1].units);
+        if(dev->coupler) free(dev->coupler);
+        if(dev->params) free(dev->params);
+	if(dev->private) free(dev->private);
     }
     free(w1->devs);
     w1->numdev = 0;

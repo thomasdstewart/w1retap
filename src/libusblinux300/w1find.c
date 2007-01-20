@@ -34,7 +34,7 @@ void showid(uchar *id)
 
 void search_coupler (int portnum, uchar *id)
 {
-    int j,k,res;
+    int j,k,res,line;
     uchar a[4];
     uchar snum[8];
 
@@ -42,25 +42,18 @@ void search_coupler (int portnum, uchar *id)
     for(j = 1; j < 3; j++)
     {
         k = 0;
-       if (j == 1)
-       {
-           SetSwitch1F(portnum, id, 4, 2, a, TRUE);
-       }
-       else
-       {
-           SetSwitch1F(portnum, id, 2, 2, a, TRUE);
-       }
-       
-       res = owFirst(portnum, FALSE, FALSE);
-       while (res)
-       {
-           k++;
-           printf("\t(%s.%d) ",(j==1) ? "Main" : " Aux" ,k);
-           owSerialNum(portnum,snum,TRUE);
-           showid(snum);
-           SetSwitch1F(portnum, id, j, 2, a, TRUE);           
-           res = owNext(portnum, FALSE, FALSE);
-       }
+        line = (j == 1) ? 4 : 2;
+	SetSwitch1F(portnum, id, line, 2, a, TRUE);        
+        res = owFirst(portnum, FALSE, FALSE);
+        while (res)
+        {
+            k++;
+            printf("\t(%s.%d) ",(j==1) ? "Main" : " Aux" ,k);
+            owSerialNum(portnum,snum,TRUE);
+            showid(snum);
+            SetSwitch1F(portnum, id, line, 2, a, TRUE);
+            res = owNext(portnum, FALSE, FALSE);
+        }
     }
 }
 
@@ -89,11 +82,12 @@ int main(int argc, char **argv)
    owSkipFamily(portnum);
 
    int j;
-   for(j = 0; j < nc; j++)
+   for(j = 0; j < nc; j++) /* for each coupler ... */
    {
        uchar a[3];
-       SetSwitch1F(portnum, cplr[j], 0, 2, a, TRUE);
+       SetSwitch1F(portnum, cplr[j], 0, 2, a, TRUE); /* turn off switch */
    }
+   
    cnt = 0;
    rslt = owFirst(portnum, TRUE, FALSE);
    while (rslt)

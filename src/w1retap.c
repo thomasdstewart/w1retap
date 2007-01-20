@@ -26,6 +26,8 @@
 #include <signal.h>
 #include <gmodule.h>
 #include <math.h>
+#include <popt.h>
+#include <assert.h>
 
 #include "ownet.h"
 #include "temp10.h"
@@ -132,38 +134,6 @@ void w1_replog(w1_devlist_t *w1, const char *fmt,...)
     va_end (va);
 }
 
-static int  w1_check_device(int portnum, w1_device_t *w)
-{
-    u_char thisdev[8];
-    int found = 0;
-    uchar a[3];
-
-    if(w->c)
-    {
-        switch(w->c->branch)
-        {
-            case 0:
-                SetSwitch1F(portnum, w->c->id, DIRECT_MAIN_ON, 2, a, TRUE);
-                break;
-            case 1:
-                SetSwitch1F(portnum, w->c->id, AUXILARY_ON, 2, a, TRUE);
-                break;
-        }
-    }
-    
-    owFamilySearchSetup(portnum,w->serno[0]);
-    while (owNext(portnum,TRUE, FALSE))
-    {
-        owSerialNum(portnum, thisdev, TRUE);
-        if(0 == memcmp(thisdev, w->serno, sizeof(thisdev)))
-        {
-            found = 1;
-            break;
-        }
-    }
-    return found;
-}
-
 
 static void w1_make_serial(char * asc, unsigned char *bin)
 {
@@ -173,6 +143,54 @@ static void w1_make_serial(char * asc, unsigned char *bin)
         bin[i] = ToHex(asc[j]) << 4; j++;
         bin[i] += ToHex(asc[j]); j++;
     }
+}
+
+static void w1_set_coupler(w1_devlist_t *w1, w1_device_t *w, int active_lines)
+{
+  uchar a[4];
+  w1_coupler_private_t *priv;
+
+  if((w->stype == W1_COUPLER) && w->private){
+    priv = (w1_coupler_private_t*)w->private;
+    if(priv->active_lines != active_lines){
+      SetSwitch1F(w1->portnum, w->serno, active_lines, 2, a, TRUE); /* Smart-On command requires 2 extra bytes */
+      priv->active_lines = active_lines;
+    }
+  }
+}
+
+static int w1_select_device(w1_devlist_t *w1, w1_device_t *w)
+{
+    u_char thisdev[8];
+    int found = 0, i;
+    w1_device_t *dev;
+
+    /* disconnect both branches of all couplers on the bus */
+    for(dev=w1->devs, i=0; i < w1->numdev; i++, dev++){
+      if(dev->stype == W1_COUPLER){
+	/* avoid turning off the branch we're about to select */
+	if(!(w->coupler && w->coupler->coupler_device == dev))
+	  w1_set_coupler(w1, dev, COUPLER_ALL_OFF);
+      }
+    }
+
+    /* turn on our branch. it is important to turn off the other
+       branches first, to ensure that only one branch is ever active
+       at any one time */
+    if(w->coupler)
+      w1_set_coupler(w1, w->coupler->coupler_device, w->coupler->branch);
+
+    /* confirm that the device is present on the bus */
+    owFamilySearchSetup(w1->portnum,w->serno[0]);
+    while (owNext(w1->portnum,TRUE, FALSE)){
+      owSerialNum(w1->portnum, thisdev, TRUE);
+      if(memcmp(thisdev, w->serno, sizeof(thisdev)) == 0){
+	found = 1;
+	break;
+      }
+    }
+
+    return found;
 }
 
 static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
@@ -230,10 +248,13 @@ static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, w))
+    if(w1_select_device(w1, w))
     {
-        if (ReadTemperature(w1->portnum, w->serno, &w->s[0].value))
+        float temp;
+        
+        if (ReadTemperature(w1->portnum, w->serno, &temp))
         {
+            w->s[0].value = temp;
             w1_validate(w1, &w->s[0]);
         }
     }
@@ -255,7 +276,7 @@ static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum, w))
+    if(w1_select_device(w1, w))
     {
         if(w->s[0].abbrv)
         {
@@ -305,7 +326,7 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
         w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
-    if(w1_check_device(w1->portnum, w))
+    if(w1_select_device(w1, w))
     {
         vdd = ReadAtoD(w1->portnum,TRUE, w->serno);    
         vad = ReadAtoD(w1->portnum,FALSE,w->serno);
@@ -372,7 +393,7 @@ static int w1_read_sht11 (w1_devlist_t *w1, w1_device_t *w)
         w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
-    if(w1_check_device(w1->portnum,w))
+    if(w1_select_device(w1,w))
     {
         if(ReadSHT11(w1->portnum, w->serno, &temp, &rh))
         {
@@ -424,7 +445,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-    if(w1_check_device(w1->portnum,w))
+    if(w1_select_device(w1,w))
     {
         vdd = vddx = ReadAtoD(w1->portnum,TRUE, w->serno);
         vad = ReadAtoD(w1->portnum, FALSE, w->serno);
@@ -488,7 +509,7 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
     
-    if(w1_check_device(w1->portnum, w))
+    if(w1_select_device(w1, w))
     {
         if(w->init == 1)
         {
@@ -558,7 +579,7 @@ static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
   
   private = (w1_windvane_private_t *)w->private;
   
-  if(w1_check_device(w1->portnum, w) && (private != NULL)){
+  if(w1_select_device(w1, w) && (private != NULL)){
     if(w->init == 1){
       if(SetupAtoDControl(w1->portnum, w->serno, private->control, message) &&
 	 WriteAtoD(w1->portnum, FALSE, w->serno, private->control, 0x08, 0x11))
@@ -592,32 +613,45 @@ static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
   return nv;
 }
 
-static void w1_couplers(w1_devlist_t *w1)
+static void w1_initialize_couplers(w1_devlist_t *w1)
 {
     w1_device_t *w;
-    int n,j;
+    int n, b;
     int nc = 0;
     w1_couplist_t clist[MAXCPL];
+    w1_coupler_private_t *priv;
+
     for(w = w1->devs, n = 0; n < w1->numdev; n++, w++)
     {
         if (w->stype == W1_COUPLER && nc < MAXCPL)
         {
-            char tmp[32], *p1,*p2;
-            for(j = 0; j < 2; j++)
+            w1_make_serial(w->serial, w->serno);
+	    w->private = calloc(1, sizeof(w1_coupler_private_t));
+	    priv = (w1_coupler_private_t*)w->private;
+	    priv->active_lines = COUPLER_UNDEFINED;
+
+            char *tmp, *p1, *p2;
+
+            for(b = 0; b < 2; b++)
             {
-                if(w->s[j].abbrv && w->s[j].name)
+                if(w->s[b].abbrv && w->s[b].name)
                 {
-                    p1 = strcpy(tmp, w->s[j].name);
+		    tmp = strdup(w->s[b].name);
+		    p1 = tmp;
                     for(; (p2 = strtok(p1,", |"));p1=NULL)
                     {
                         if(*p2)
                         {
-                            w1_make_serial(w->serial, clist[nc].couplerid);
-                            strcpy(clist[nc].devid,p2);
-                            clist[nc].branch = j;                    
+  			    clist[nc].coupler_device = w;
+                            strcpy(clist[nc].devid, p2);
+			    if(b == 0)
+			      clist[nc].branch = COUPLER_MAIN_ON;
+			    else
+			      clist[nc].branch = COUPLER_AUX_ON;
                             nc++;
                         }
                     }
+		    free(tmp);
                 }
             }
         }
@@ -629,16 +663,27 @@ static void w1_couplers(w1_devlist_t *w1)
     {
         for(w = w1->devs, n = 0; n < w1->numdev; n++, w++)
         {
-            if (w->stype != W1_COUPLER && w->c == NULL &&
+	    if (w->stype != W1_COUPLER && w->coupler == NULL &&
                 strcmp(w->serial, clist[nx].devid) == 0)
             {
-                w->c  = calloc(1, sizeof( w1_coupler_t));
-                w->c->branch = clist[nx].branch;
-                memcpy(w->c->id, clist[nx].couplerid, 8);
+                w->coupler = (w1_coupler_t*)calloc(1, sizeof(w1_coupler_t));
+                w->coupler->branch = clist[nx].branch;
+		w->coupler->coupler_device = clist[nx].coupler_device;
                 break;
             }
         }
     }
+}
+
+static void w1_all_couplers_off(w1_devlist_t *w1)
+{
+  w1_device_t *w;
+  int n;
+
+  if(w1->doread)
+    for(w = w1->devs, n = 0; n < w1->numdev; n++, w++)
+      if (w->stype == W1_COUPLER)
+	w1_set_coupler(w1, w, COUPLER_ALL_OFF);
 }
 
 static void do_init(w1_devlist_t *w1)
@@ -667,7 +712,7 @@ static void do_init(w1_devlist_t *w1)
         {
             if(!(g_module_symbol (w1->dlls[n].handle,
                                  "w1_logger",
-                                  (gpointer *)&w1->dlls[n].func)))
+                                  (void *)&w1->dlls[n].func)))
             {
                 perror("logger");
                 exit(1);
@@ -677,7 +722,7 @@ static void do_init(w1_devlist_t *w1)
         {
             if(!(g_module_symbol (w1->dlls[n].handle,
                                  "w1_report",
-                                  (gpointer *)&w1->dlls[n].func)))
+                                  (void *)&w1->dlls[n].func)))
             {
                 perror("replogger");
                 exit(1);
@@ -690,7 +735,7 @@ static void do_init(w1_devlist_t *w1)
         perror("Init fails");
         exit(1);
     }
-    w1_couplers(w1);
+    w1_initialize_couplers(w1);
 }
 
 void dll_parse(w1_devlist_t *w1, int typ, char *params)
@@ -757,6 +802,7 @@ static void cleanup(int n, void * w)
     w1->rcfile = NULL;
 }
 
+/*
 static void w1_show_id(uchar *id, char *res)
 {
     int i;
@@ -765,6 +811,7 @@ static void w1_show_id(uchar *id, char *res)
         sprintf((res+i*2), "%02X", id[i]);
     }
 }
+*/
 
 
 static void w1_show(w1_devlist_t *w1, int forced)
@@ -785,12 +832,10 @@ static void w1_show(w1_devlist_t *w1, int forced)
             fprintf(stderr, "%s %s\n",
                     w1->devs[i].serial, w1->devs[i].devtype);
 
-            if(w1->devs[i].c)
+            if(w1->devs[i].coupler)
             {
-                char myid[20];
-                char *branch = (w1->devs[i].c->branch) ? "aux" : "main";
-                w1_show_id(w1->devs[i].c->id, myid);
-                fprintf(stderr, "\tMicrolan: %s, %s\n", myid, branch);
+	        char *branch = (w1->devs[i].coupler->branch == COUPLER_AUX_ON) ? "aux" : "main";
+                fprintf(stderr, "\tVia coupler: %s, %s\n", w1->devs[i].coupler->coupler_device->serial, branch);
             }
 
             if(w1->devs[i].params)
@@ -898,15 +943,10 @@ static int w1_read_all_sensors(w1_devlist_t *w1)
             }
         }
 
+	/* Put the bus back in a known state */
+	w1_all_couplers_off(w1);
     }
     return nv;
-}
-
-static void usage(void)
-{
-    fputs("w1retap v" VERSION " (c) 2005,2006 Jonathan Hudson\n"
-          "$ w1retap [-T] [-d] [-i interface] [-N] [-v] [-t sec]\n", stderr);
-    exit(1);
 }
 
 static inline void nanosub(struct timespec *a, struct timespec *b,
@@ -923,15 +963,36 @@ static inline void nanosub(struct timespec *a, struct timespec *b,
 
 int main(int argc, char **argv)
 {
-
-    w1_devlist_t *w1;
     struct sigaction act ={{0}};
-    int doversion = 0;
     int immed = 1;
     int n;
-    int c;
     char *p;
-    
+    poptContext ctx;
+    w1_devlist_t *w1 = calloc(1, sizeof(w1_devlist_t));
+    struct poptOption options[]=
+    {
+        POPT_AUTOHELP
+        {"wait",'w', POPT_ARG_VAL, &immed, 0,
+         "At startup, wait until next interval",NULL},
+        {"daemonise",'d',POPT_ARG_NONE, &w1->daemonise, 0,
+         "Daemonise (background) application", NULL},
+        {"no-tmp-log",'T',POPT_ARG_VAL, &w1->logtmp,0,
+         "Disables /tmp/.w1retap.dat logging", NULL},
+        {"interface", 'i', POPT_ARG_STRING, &w1->iface, 0,
+         "Interface device", NULL},
+        {"cycle-time", 't', POPT_ARG_INT, &w1->delay, 0,
+         "Time (secs) bewwen device readings", NULL},
+        {"dont-read",'N', POPT_ARG_VAL, &w1->doread, 0,
+         "Don't read sensors (for debugging)",NULL},
+        {"verbose", 'v', POPT_ARG_VAL, &w1->verbose, 1,
+         "Verbose messages", NULL},
+        {"version",'V', POPT_ARG_VAL, &w1->verbose, 2,
+         "Display version number (and exit)", NULL},
+        {"report-log",'r', POPT_ARG_STRING, &w1->repfile, 0,
+         "Report log file", NULL},
+        POPT_TABLEEND
+    };
+
     if(!g_module_supported())
     {
         exit(2);
@@ -949,9 +1010,8 @@ int main(int argc, char **argv)
     act.sa_handler = sig_hup;
     sigaction (SIGHUP, &act, NULL);
 
-    w1 = calloc(1, sizeof(w1_devlist_t));
     w1->logtmp = 1;
-    w1->portnum = -1; 
+    w1->portnum = -1;
     w1->doread = 1;
 
     if((p = getenv("W1RCFILE")))
@@ -960,54 +1020,20 @@ int main(int argc, char **argv)
     }
     read_config(w1);
 
-    while((c = getopt (argc, argv,"r:dt:i:TvNh?Vw")) != EOF)
-    {
-        switch(c)
-        {
-            case 'w':
-                immed = 0;
-                break;
-            case 'T':
-                w1->logtmp = 0;
-                break;
-            case 'd':
-                w1->daemonise = 1;
-                break;
-            case 'i':
-                w1->iface = strdup(optarg);
-                break;
-            case 't':
-                w1->delay = strtol(optarg, NULL, 0);
-                break;
-            case 'N':
-                w1->doread = 0;
-                break;
-            case 'v':
-                w1->verbose = 1;
-                break;
-            case 'V':
-                w1->verbose = 1;
-                doversion = 1;
-                break;
-            case 'r':
-                w1->repfile = strdup(optarg);
-                break;
-            case 'h':
-            case '?':
-                usage();
-                break;
-        }
-    }
+    ctx = poptGetContext(NULL, argc, (const char **)argv, options, 0);
+    poptSetOtherOptionHelp(ctx, "[OPTIONS...]");
+    poptGetNextOpt (ctx);
+    poptFreeContext (ctx);
 
     if(w1->verbose)
     {
         fputs("w1retap v" VERSION " (c) 2005,2006 Jonathan Hudson\n", stderr);
-        if(doversion)
+        if(w1->verbose == 2)
         {
             exit (0);
         }
     }
-    
+
     if(w1->doread)
     {
         if(w1->iface == NULL)
@@ -1029,7 +1055,9 @@ int main(int argc, char **argv)
     
     if(w1->daemonise)
         daemon(0,0);
-    
+
+    w1_all_couplers_off(w1);
+
     while(1)
     {
         int nv = 0;
@@ -1037,7 +1065,7 @@ int main(int argc, char **argv)
         if(immed)
         {
             nv = w1_read_all_sensors(w1);
-        
+
             if(nv)
             {
                 for(n = 0; n < w1->ndll; n++)

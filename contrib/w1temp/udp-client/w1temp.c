@@ -57,6 +57,37 @@ typedef struct MY_STUFF
 } MY_STUFF_t;
 
 
+/* Verbatim from netspeed applet, thanks */
+static void
+change_background_cb(PanelApplet *applet_widget,
+                     PanelAppletBackgroundType type,
+                     GdkColor *color, GdkPixmap *pixmap,
+                     MY_STUFF_t *t)
+{
+    GtkStyle *style;
+    GtkRcStyle *rc_style = gtk_rc_style_new ();
+    gtk_widget_set_style (GTK_WIDGET (applet_widget), NULL);
+    gtk_widget_modify_style (GTK_WIDGET (applet_widget), rc_style);
+    gtk_rc_style_unref (rc_style);
+    switch (type)
+    {
+        case PANEL_PIXMAP_BACKGROUND:
+            style = gtk_style_copy (GTK_WIDGET (applet_widget)->style);
+            if(style->bg_pixmap[GTK_STATE_NORMAL])
+                g_object_unref (style->bg_pixmap[GTK_STATE_NORMAL]);
+            style->bg_pixmap[GTK_STATE_NORMAL] = g_object_ref (pixmap);
+            gtk_widget_set_style (GTK_WIDGET(applet_widget), style);
+            g_object_unref (style);
+            break;
+        case PANEL_COLOR_BACKGROUND:
+            gtk_widget_modify_bg(GTK_WIDGET(applet_widget), GTK_STATE_NORMAL,
+                                 color);
+            break;
+        case PANEL_NO_BACKGROUND:
+            break;
+    }
+}
+
 gboolean read_data(GIOChannel *source, GIOCondition condition,
                gpointer data)
 {
@@ -237,12 +268,17 @@ static gboolean w1temp_fill (
     m.label = gtk_label_new ("???");
     GtkWidget *hbox1 = gtk_hbox_new (FALSE, 0);
     m.tips = gtk_tooltips_new ();
+    m.applet = applet;
+    g_signal_connect(G_OBJECT(applet), "change_background",
+                     G_CALLBACK(change_background_cb),
+                     (gpointer)&m);
+
     gtk_tooltips_set_tip (m.tips, GTK_WIDGET (applet),"no data", NULL);
     gtk_box_pack_start(GTK_BOX(hbox1), m.image,  TRUE, TRUE, 0);
     gtk_box_pack_end  (GTK_BOX(hbox1), m.label,  FALSE, FALSE, 0);    
     gtk_container_add (GTK_CONTAINER (applet), hbox1);    
     gtk_widget_show_all (GTK_WIDGET (applet));
-    m.applet = applet;
+
     timerfunc(&m);
     return TRUE;
 }
