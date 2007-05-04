@@ -61,7 +61,6 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
 
    // reset the DS2490
    DS2490Reset(hDevice);
-
    // set the strong pullup duration to infinite
    setup.RequestTypeReservedBits = 0x40;
    setup.Request = COMM_CMD;
@@ -306,10 +305,11 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
     SMALLINT bufferlength = 0;
 
     // initialize buffer
-    memset(&buffer[0],0x00,sizeof(buffer));
+    memset(buffer,0x00,sizeof(buffer));
     // get status buffer
-    bufferlength = usb_bulk_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);
+//    bufferlength = usb_bulk_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);
 
+    bufferlength = usb_interrupt_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);   
     if (bufferlength < 0)
     {
        OWERROR(OWERROR_ADAPTER_ERROR);

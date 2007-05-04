@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 PACKAGE=w1retap
-VERSION=1.0.2
+VERSION=1.0.3
 
-AC_INIT(w1retap,1.0.2,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.0.3,jh+w1retap@daria.co.uk,w1retap)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -31,11 +31,11 @@ AC_CHECK_LIB([m], [sin], [])
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h popt.h])
+AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h ])
 
 AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_HEADERS(sql.h)
-AC_CHECK_HEADERS(usb.h)
+AC_CHECK_HEADERS([usb.h popt.h],[],[AC_MSG_ERROR([libusb and libpopt are required])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -158,6 +158,9 @@ libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,USE_APPLET="w1temp",USE_APPLET="")
 fi
 
 AC_SUBST(USE_APPLET)	
+
+
+
 
 AC_OUTPUT(
 Makefile

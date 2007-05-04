@@ -504,40 +504,47 @@ static int find_press_roles(int portnum, u_char *serno)
     short hnd;
     FileEntry fe ;
     uchar buf[100];
-
-    reader = writer = -1;
-    memcpy(SwitchSN[0], serno, sizeof(SwitchSN[0]));    
-    owSerialNum (portnum, SwitchSN[0], FALSE);
-    memset(&fe, 0, sizeof(fe));
-    memcpy(fe.Name, "8570", 4) ;
-
-    found = owOpenFile(portnum, SwitchSN[0], &fe, &hnd) ;
-    if (found)
+    int j;
+    
+    for(j =0; j < 2 && found == 0; j++)
     {
-        int info;
-        owReadFile(portnum, SwitchSN[0], hnd, buf, 99, &fl_len) ;
-        
-        owSerialNum (portnum, SwitchSN[0], false);
-        owCloseFile(portnum, SwitchSN[0], hnd);        
+        reader = writer = -1;
+        memcpy(SwitchSN[0], serno, sizeof(SwitchSN[0]));    
+        owSerialNum (portnum, SwitchSN[0], FALSE);
+        memset(&fe, 0, sizeof(fe));
+        memcpy(fe.Name, "8570", 4) ;
 
-        info = ReadSwitch12(portnum, false) ;
-        if (info == -1)
+        found = owOpenFile(portnum, SwitchSN[0], &fe, &hnd) ;
+        if (found)
         {
-            fprintf(stderr, "Unable to read info byte\n") ;
-            exit(1) ;
+            int info;
+            owReadFile(portnum, SwitchSN[0], hnd, buf, 99, &fl_len) ;
+        
+            owSerialNum (portnum, SwitchSN[0], false);
+            owCloseFile(portnum, SwitchSN[0], hnd);        
+            
+            info = ReadSwitch12(portnum, false) ;
+            if (info == -1)
+            {
+                fprintf(stderr, "Unable to read info byte\n") ;
+                found = 0;
+            }
+            else
+            {
+                if ((info & 0x80) == 0)
+                {
+                    reader=0;
+                    writer=1;
+                }
+                else
+                {
+                    reader=1;
+                    writer=0;
+                }
+                memcpy(SwitchSN[1], buf, sizeof(SwitchSN[1]));
+            }
         }
         
-        if ((info & 0x80) == 0)
-        {
-            reader=0;
-            writer=1;
-        }
-        else
-        {
-            reader=1;
-            writer=0;
-        }
-        memcpy(SwitchSN[1], buf, sizeof(SwitchSN[1]));
     }
     return found;
 }
