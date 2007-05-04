@@ -1027,7 +1027,7 @@ int main(int argc, char **argv)
 
     if(w1->verbose)
     {
-        fputs("w1retap v" VERSION " (c) 2005,2006 Jonathan Hudson\n", stderr);
+        fputs("w1retap v" VERSION " (c) 2005-2007 Jonathan Hudson\n", stderr);
         if(w1->verbose == 2)
         {
             exit (0);

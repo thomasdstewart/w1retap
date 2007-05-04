@@ -1,8 +1,10 @@
 w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/gtk-2.0/gdk/gdk.h /usr/include/gtk-2.0/gdk/gdkcairo.h \
   /usr/include/gtk-2.0/gdk/gdkcolor.h /usr/include/cairo/cairo.h \
-  /usr/include/cairo/cairo-features.h /usr/include/gtk-2.0/gdk/gdktypes.h \
-  /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
+  /usr/include/cairo/cairo-features.h \
+  /usr/include/cairo/cairo-deprecated.h \
+  /usr/include/gtk-2.0/gdk/gdktypes.h /usr/include/glib-2.0/glib.h \
+  /usr/include/glib-2.0/glib/galloca.h \
   /usr/include/glib-2.0/glib/gtypes.h \
   /usr/lib/glib-2.0/include/glibconfig.h \
   /usr/include/glib-2.0/glib/gmacros.h \
@@ -75,6 +77,9 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/glib-2.0/gobject/gtypeplugin.h \
   /usr/include/glib-2.0/gobject/gvaluearray.h \
   /usr/include/glib-2.0/gobject/gvaluetypes.h \
+  /usr/include/pango-1.0/pango/pango-matrix.h \
+  /usr/include/pango-1.0/pango/pango-script.h \
+  /usr/include/pango-1.0/pango/pango-gravity.h \
   /usr/include/pango-1.0/pango/pango-break.h \
   /usr/include/pango-1.0/pango/pango-item.h \
   /usr/include/pango-1.0/pango/pango-context.h \
@@ -82,12 +87,16 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/pango-1.0/pango/pango-fontset.h \
   /usr/include/pango-1.0/pango/pango-engine.h \
   /usr/include/pango-1.0/pango/pango-glyph.h \
-  /usr/include/pango-1.0/pango/pango-script.h \
   /usr/include/pango-1.0/pango/pango-enum-types.h \
-  /usr/include/pango-1.0/pango/pango-layout.h \
+  /usr/include/pango-1.0/pango/pango-features.h \
   /usr/include/pango-1.0/pango/pango-glyph-item.h \
+  /usr/include/pango-1.0/pango/pango-layout.h \
   /usr/include/pango-1.0/pango/pango-tabs.h \
   /usr/include/pango-1.0/pango/pango-renderer.h \
+  /usr/include/pango-1.0/pango/pango-utils.h /usr/include/stdio.h \
+  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+  /usr/include/bits/wchar.h /usr/include/gconv.h \
+  /usr/include/bits/sys_errlist.h /usr/include/bits/stdio.h \
   /usr/lib/gtk-2.0/include/gdkconfig.h \
   /usr/include/gtk-2.0/gdk/gdkpixbuf.h /usr/include/gtk-2.0/gdk/gdkrgb.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf.h \
@@ -96,10 +105,7 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-transform.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-animation.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-simple-anim.h \
-  /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-io.h /usr/include/stdio.h \
-  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
-  /usr/include/bits/wchar.h /usr/include/gconv.h \
-  /usr/include/bits/sys_errlist.h /usr/include/bits/stdio.h \
+  /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-io.h \
   /usr/include/glib-2.0/gmodule.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-loader.h \
   /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-enum-types.h \
@@ -166,7 +172,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/atk-1.0/atk/atkselection.h \
   /usr/include/atk-1.0/atk/atkstateset.h \
   /usr/include/atk-1.0/atk/atkstreamablecontent.h \
-  /usr/include/atk-1.0/atk/atktable.h /usr/include/atk-1.0/atk/atkvalue.h \
+  /usr/include/atk-1.0/atk/atktable.h /usr/include/atk-1.0/atk/atkmisc.h \
+  /usr/include/atk-1.0/atk/atkvalue.h \
   /usr/include/gtk-2.0/gtk/gtkaction.h \
   /usr/include/gtk-2.0/gtk/gtkactiongroup.h \
   /usr/include/gtk-2.0/gtk/gtkitemfactory.h \
@@ -351,7 +358,6 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/bits/errno.h /usr/include/linux/errno.h \
   /usr/include/asm/errno.h /usr/include/asm-x86_64/errno.h \
   /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
-  /usr/include/popt.h \
   /usr/include/libgnomeui-2.0/libgnomeui/gnome-client.h \
   /usr/include/unistd.h /usr/include/bits/posix_opt.h \
   /usr/include/bits/environments.h /usr/include/bits/confname.h \
@@ -406,6 +412,7 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-activate.h \
   /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-server-info.h \
   /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-init.h \
+  /usr/include/popt.h \
   /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-shlib.h \
   /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-register.h \
   /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-async.h \
@@ -417,6 +424,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
   /usr/include/libbonoboui-2.0/bonobo/bonobo-ui-node.h \
   /usr/include/libbonobo-2.0/bonobo/bonobo-generic-factory.h \
   /usr/include/libbonobo-2.0/bonobo/bonobo-i18n.h \
+  /usr/include/glib-2.0/glib/gi18n.h /usr/include/libintl.h \
+  /usr/include/locale.h /usr/include/bits/locale.h \
   /usr/include/panel-2.0/GNOME_Panel.h /usr/include/sys/time.h \
   /usr/include/netinet/in.h /usr/include/stdint.h \
   /usr/include/sys/socket.h /usr/include/sys/uio.h \
@@ -439,6 +448,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/cairo/cairo.h:
 
 /usr/include/cairo/cairo-features.h:
+
+/usr/include/cairo/cairo-deprecated.h:
 
 /usr/include/gtk-2.0/gdk/gdktypes.h:
 
@@ -630,6 +641,12 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/glib-2.0/gobject/gvaluetypes.h:
 
+/usr/include/pango-1.0/pango/pango-matrix.h:
+
+/usr/include/pango-1.0/pango/pango-script.h:
+
+/usr/include/pango-1.0/pango/pango-gravity.h:
+
 /usr/include/pango-1.0/pango/pango-break.h:
 
 /usr/include/pango-1.0/pango/pango-item.h:
@@ -644,17 +661,35 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/pango-1.0/pango/pango-glyph.h:
 
-/usr/include/pango-1.0/pango/pango-script.h:
-
 /usr/include/pango-1.0/pango/pango-enum-types.h:
 
-/usr/include/pango-1.0/pango/pango-layout.h:
+/usr/include/pango-1.0/pango/pango-features.h:
 
 /usr/include/pango-1.0/pango/pango-glyph-item.h:
+
+/usr/include/pango-1.0/pango/pango-layout.h:
 
 /usr/include/pango-1.0/pango/pango-tabs.h:
 
 /usr/include/pango-1.0/pango/pango-renderer.h:
+
+/usr/include/pango-1.0/pango/pango-utils.h:
+
+/usr/include/stdio.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/include/bits/wchar.h:
+
+/usr/include/gconv.h:
+
+/usr/include/bits/sys_errlist.h:
+
+/usr/include/bits/stdio.h:
 
 /usr/lib/gtk-2.0/include/gdkconfig.h:
 
@@ -675,22 +710,6 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-simple-anim.h:
 
 /usr/include/gtk-2.0/gdk-pixbuf/gdk-pixbuf-io.h:
-
-/usr/include/stdio.h:
-
-/usr/include/libio.h:
-
-/usr/include/_G_config.h:
-
-/usr/include/wchar.h:
-
-/usr/include/bits/wchar.h:
-
-/usr/include/gconv.h:
-
-/usr/include/bits/sys_errlist.h:
-
-/usr/include/bits/stdio.h:
 
 /usr/include/glib-2.0/gmodule.h:
 
@@ -839,6 +858,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/atk-1.0/atk/atkstreamablecontent.h:
 
 /usr/include/atk-1.0/atk/atktable.h:
+
+/usr/include/atk-1.0/atk/atkmisc.h:
 
 /usr/include/atk-1.0/atk/atkvalue.h:
 
@@ -1252,8 +1273,6 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/asm-generic/errno-base.h:
 
-/usr/include/popt.h:
-
 /usr/include/libgnomeui-2.0/libgnomeui/gnome-client.h:
 
 /usr/include/unistd.h:
@@ -1366,6 +1385,8 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 
 /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-init.h:
 
+/usr/include/popt.h:
+
 /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-shlib.h:
 
 /usr/include/bonobo-activation-2.0/bonobo-activation/bonobo-activation-register.h:
@@ -1387,6 +1408,14 @@ w1temp-w1temp.o w1temp-w1temp.o: w1temp.c /usr/include/gtk-2.0/gtk/gtk.h \
 /usr/include/libbonobo-2.0/bonobo/bonobo-generic-factory.h:
 
 /usr/include/libbonobo-2.0/bonobo/bonobo-i18n.h:
+
+/usr/include/glib-2.0/glib/gi18n.h:
+
+/usr/include/libintl.h:
+
+/usr/include/locale.h:
+
+/usr/include/bits/locale.h:
 
 /usr/include/panel-2.0/GNOME_Panel.h:
 
