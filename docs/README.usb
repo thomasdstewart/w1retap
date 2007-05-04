@@ -62,6 +62,14 @@ then
 
 # /sbin/depmod -a
 
+Note also that later kernels load modules 
+
+wire
+ds9490
+
+w1retap runs with these loaded, but reading the sensors very slow. It
+is recommended that they are also removed.
+
 Now plugging the adaptor should not cause the module to load.
 
 If it still does not work, verify:
