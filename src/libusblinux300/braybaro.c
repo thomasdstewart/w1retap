@@ -81,8 +81,9 @@ int main(int argc, char **argv)
    char *serial = NULL;
    u_char ident[8];
    int verbose = 0;
-   
-   while((c = getopt(argc, argv, "a:s:v")) != EOF)
+   short dac=0;
+    
+   while((c = getopt(argc, argv, "da:s:v")) != EOF)
    {
        switch (c)
        {
@@ -95,13 +96,14 @@ int main(int argc, char **argv)
            case 'a':
                alt = atoi(optarg);
                break;
-           default:
+           case 'd':
+               dac = 1;
+               break;
+	 default:
                break;
        }
    }
-   
    dev = argv[optind];
-   
    if (dev == NULL || serial == NULL)
    {
        fputs("1-Wire Net name required on command line!\n"
@@ -141,12 +143,16 @@ int main(int argc, char **argv)
            Vdd = (float) 4.0;
        }
        Vad = ReadAtoD(portnum,FALSE,ident);
-       if (Vad > 0.0)
+       printf("VSup %.2f Vout %.2f", Vdd, Vad);
+       if (dac)
+       {
+           fputc('\n', stdout);	       
+       }
+       else
        {
            float temp = Get_Temperature(portnum,ident);
            float pres = GetPressure(Vad, temp, alt);
-           printf("VSup %.2f Vout %.2f Temp %.2f Pressure %.1f\n",
-                  Vdd, Vad, temp, pres);
+           printf(" Temp %.2f Pressure %.1f\n", temp, pres);
        }
    }
    return 0;

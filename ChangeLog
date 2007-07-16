@@ -1,6 +1,12 @@
-1.0.3  2007-04-22
-       Changed the usb read for DS2490GetStatus() in libusbds2490.c to
-       usb_interrupt_read(). This makes it work again on 2.6.20+ kernels.
+1.0.4   2007-07-10
+	Fixes potential buffer overflow in w1util.c:w1_tmpfilelog.
+	Reorganises some of the source files to make it a bit more
+	maintainable.
+	Removed popt dependency.
+
+1.0.3   2007-04-22
+        Changed the usb read for DS2490GetStatus() in libusbds2490.c to
+	usb_interrupt_read(). This makes it work again on 2.6.20+ kernels.
 
 1.0.2   2007-01-20
         Fixed a configure.ac typo and added some more MySQL checks.

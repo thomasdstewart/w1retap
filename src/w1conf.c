@@ -60,6 +60,7 @@ void read_config(w1_devlist_t *w1)
                    sscanf(buf,"delay = %d", &w1->delay) ||
                    sscanf(buf,"demonise = %d", &w1->daemonise) ||
                    sscanf(buf,"altitude = %d", &w1->altitude) ||
+                   sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
                    sscanf(buf,"timestamp = %d", &w1->timestamp) ||
                    sscanf(buf,"logtemp = %d", &w1->logtmp));
 

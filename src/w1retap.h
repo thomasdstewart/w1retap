@@ -26,10 +26,11 @@
 #endif
 
 #include <stdarg.h>
+#include <glib.h>
 #include <gmodule.h>
 
 enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
-              W1_SHT11, W1_COUPLER, W1_WINDVANE };
+              W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V };
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
 /* coupler states: see SetSwitch1F() in swt1f.c */
@@ -127,13 +128,14 @@ struct w1_devlist
     char *repfile;
     time_t logtime;
     dlldef_t dlls[MAXDLL];
-    int verbose;
-    int daemonise;
-    int logtmp;
-    int doread;
+    gboolean verbose;
+    gboolean daemonise;
+    gboolean logtmp;
+    gboolean doread;
     w1_device_t *devs;
     char *lastmsg;
     int timestamp;
+    int vane_offset;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);
@@ -148,5 +150,8 @@ extern w1_sensor_t * w1_find_sensor(w1_devlist_t *, const char *);
 extern void w1_replog(w1_devlist_t *, const char *,...);
 extern void w1_set_device_data(w1_device_t *, const char *, char *);
 extern void w1_set_device_data_index(w1_device_t *, int, char *);
+extern void w1_all_couplers_off(w1_devlist_t *);
+extern int w1_read_all_sensors(w1_devlist_t *);
+extern void w1_initialize_couplers(w1_devlist_t *);
 #endif
 
