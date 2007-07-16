@@ -38,9 +38,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+target_triplet = @target@
 bin_PROGRAMS = w1find$(EXEEXT) braybaro$(EXEEXT) temp$(EXEEXT) \
 	gethumd$(EXEEXT) humids$(EXEEXT) setds2409$(EXEEXT) \
-	coupler$(EXEEXT) counter$(EXEEXT)
+	coupler$(EXEEXT) counter$(EXEEXT) mweather$(EXEEXT) \
+	lcdtest$(EXEEXT)
 subdir = src/libusblinux300
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -63,7 +65,7 @@ am_libowfat_a_OBJECTS = mbappreg.$(OBJEXT) mbeprom.$(OBJEXT) \
 	owprgm.$(OBJEXT) owcache.$(OBJEXT) temp10.$(OBJEXT) \
 	atod26.$(OBJEXT) screenio.$(OBJEXT) cnt1d.$(OBJEXT) \
 	swt12.$(OBJEXT) pressure.$(OBJEXT) sht11_humid.$(OBJEXT) \
-	swt1f.$(OBJEXT) atod20.$(OBJEXT)
+	swt1f.$(OBJEXT) atod20.$(OBJEXT) ds2408lcd.$(OBJEXT)
 libowfat_a_OBJECTS = $(am_libowfat_a_OBJECTS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -96,6 +98,11 @@ am_gethumd_OBJECTS = gethumd.$(OBJEXT) findtype.$(OBJEXT)
 gethumd_OBJECTS = $(am_gethumd_OBJECTS)
 am_humids_OBJECTS = humid.$(OBJEXT)
 humids_OBJECTS = $(am_humids_OBJECTS)
+am_lcdtest_OBJECTS = lcdtest.$(OBJEXT) findtype.$(OBJEXT)
+lcdtest_OBJECTS = $(am_lcdtest_OBJECTS)
+am_mweather_OBJECTS = mweather.$(OBJEXT) findtype.$(OBJEXT) \
+	weather.$(OBJEXT)
+mweather_OBJECTS = $(am_mweather_OBJECTS)
 am_setds2409_OBJECTS = setds2409.$(OBJEXT)
 setds2409_OBJECTS = $(am_setds2409_OBJECTS)
 am_temp_OBJECTS = temp.$(OBJEXT) findtype.$(OBJEXT)
@@ -116,13 +123,15 @@ LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 SOURCES = $(libowfat_a_SOURCES) $(libw1common_la_SOURCES) \
 	$(libw1serial_la_SOURCES) $(libw1usb_la_SOURCES) \
 	$(braybaro_SOURCES) $(counter_SOURCES) $(coupler_SOURCES) \
-	$(gethumd_SOURCES) $(humids_SOURCES) $(setds2409_SOURCES) \
-	$(temp_SOURCES) $(w1find_SOURCES)
+	$(gethumd_SOURCES) $(humids_SOURCES) $(lcdtest_SOURCES) \
+	$(mweather_SOURCES) $(setds2409_SOURCES) $(temp_SOURCES) \
+	$(w1find_SOURCES)
 DIST_SOURCES = $(libowfat_a_SOURCES) $(libw1common_la_SOURCES) \
 	$(libw1serial_la_SOURCES) $(libw1usb_la_SOURCES) \
 	$(braybaro_SOURCES) $(counter_SOURCES) $(coupler_SOURCES) \
-	$(gethumd_SOURCES) $(humids_SOURCES) $(setds2409_SOURCES) \
-	$(temp_SOURCES) $(w1find_SOURCES)
+	$(gethumd_SOURCES) $(humids_SOURCES) $(lcdtest_SOURCES) \
+	$(mweather_SOURCES) $(setds2409_SOURCES) $(temp_SOURCES) \
+	$(w1find_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -246,7 +255,11 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
+target = @target@
 target_alias = @target_alias@
+target_cpu = @target_cpu@
+target_os = @target_os@
+target_vendor = @target_vendor@
 EXTRA_DIST = $(wildcard *.c) $(wildcard *.h) makefile.shrlib README ReadMe.txt
 AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I . $(GLIB_CFLAGS)
 pkglib_LTLIBRARIES = libw1common.la libw1serial.la libw1usb.la
@@ -266,7 +279,7 @@ libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \
 	owpgrw.c owprgm.c owcache.c		     \
 	temp10.c atod26.c screenio.c		     \
 	cnt1d.c swt12.c pressure.c sht11_humid.c \
-	swt1f.c atod20.c
+	swt1f.c atod20.c ds2408lcd.c
 
 w1find_SOURCES = w1find.c findtype.c
 w1find_DEPENDENCIES = libw1common.la
@@ -300,6 +313,14 @@ counter_SOURCES = counter.c findtype.c
 counter_DEPENDENCIES = libw1common.la
 counter_LDADD = -L. -lowfat -lw1common -lm
 counter_LDFLAGS = -rdynamic  $(GLIB_LIBS)
+mweather_SOURCES = mweather.c  findtype.c  weather.c 
+mweather_DEPENDENCIES = libw1common.la
+mweather_LDADD = -L. -lowfat -lw1common -lm
+mweather_LDFLAGS = -rdynamic  $(GLIB_LIBS)
+lcdtest_SOURCES = lcdtest.c findtype.c
+lcdtest_DEPENDENCIES = libw1common.la 
+lcdtest_LDADD = -L. -lowfat -lw1common -lm 
+lcdtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 all: all-am
 
 .SUFFIXES:
@@ -416,6 +437,12 @@ gethumd$(EXEEXT): $(gethumd_OBJECTS) $(gethumd_DEPENDENCIES)
 humids$(EXEEXT): $(humids_OBJECTS) $(humids_DEPENDENCIES) 
 	@rm -f humids$(EXEEXT)
 	$(LINK) $(humids_LDFLAGS) $(humids_OBJECTS) $(humids_LDADD) $(LIBS)
+lcdtest$(EXEEXT): $(lcdtest_OBJECTS) $(lcdtest_DEPENDENCIES) 
+	@rm -f lcdtest$(EXEEXT)
+	$(LINK) $(lcdtest_LDFLAGS) $(lcdtest_OBJECTS) $(lcdtest_LDADD) $(LIBS)
+mweather$(EXEEXT): $(mweather_OBJECTS) $(mweather_DEPENDENCIES) 
+	@rm -f mweather$(EXEEXT)
+	$(LINK) $(mweather_LDFLAGS) $(mweather_OBJECTS) $(mweather_LDADD) $(LIBS)
 setds2409$(EXEEXT): $(setds2409_OBJECTS) $(setds2409_DEPENDENCIES) 
 	@rm -f setds2409$(EXEEXT)
 	$(LINK) $(setds2409_LDFLAGS) $(setds2409_OBJECTS) $(setds2409_LDADD) $(LIBS)
@@ -440,11 +467,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/counter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coupler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crcutil.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ds2408lcd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ds2480ut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/findtype.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethumd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/humid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ioutil.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lcdtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libusbds2490.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libusbllnk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libusbnet.Plo@am__quote@
@@ -464,6 +493,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mbscrx77.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mbsha.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mbshaee.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mweather.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/owcache.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/owerr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/owfile.Po@am__quote@
@@ -484,6 +514,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/temp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/temp10.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1find.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/weather.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

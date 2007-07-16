@@ -324,3 +324,208 @@ double Get_Temperature(int portnum,uchar *SNum)
    return ret;
 }
 
+/**
+ * Sets the DS2438 to read Vsens
+ *
+ * portnum  the port number of the port being used for the
+ *          1-Wire Network.
+ * SNum     the serial number for the part that the read is
+ *          to be done on.
+ *
+ * @return 'true' if the read was complete
+ */
+static int SetupAtoD_vsens(int portnum, uchar *SNum)
+{
+   uchar send_block[50];
+   int send_cnt=0;
+   int i;
+   ushort lastcrc8 = 0;
+   int busybyte; 
+
+   owSerialNum(portnum,SNum,FALSE);
+   // Recall the Status/Configuration page
+   // Recall command
+   send_block[send_cnt++] = 0xB8;
+
+   // Page to Recall
+   send_block[send_cnt++] = 0x00;
+
+   if(!owBlock(portnum,FALSE,send_block,send_cnt))
+      return FALSE;
+
+   send_cnt = 0;
+
+   if(owAccess(portnum))
+   {
+      // Read the Status/Configuration byte
+      // Read scratchpad command
+      send_block[send_cnt++] = 0xBE;
+
+      // Page for the Status/Configuration byte
+      send_block[send_cnt++] = 0x00;
+
+      for(i=0;i<9;i++)
+         send_block[send_cnt++] = 0xFF;
+
+      if(owBlock(portnum,FALSE,send_block,send_cnt))
+      {
+         setcrc8(portnum,0);
+
+         for(i=2;i<send_cnt;i++)
+            lastcrc8 = docrc8(portnum,send_block[i]);
+
+         if(lastcrc8 != 0x00)
+            return FALSE;
+      }//Block
+      else
+         return FALSE;
+
+      if(send_block[2] & 0x01)
+         return TRUE;
+   }//Access
+
+   if(owAccess(portnum))
+   {
+      send_cnt = 0;
+      // Write the Status/Configuration byte
+      // Write scratchpad command
+      send_block[send_cnt++] = 0x4E;
+
+      // Write page
+      send_block[send_cnt++] = 0x00;
+
+      send_block[send_cnt++] = send_block[2] | 0x01;
+
+      for(i=0;i<7;i++)
+         send_block[send_cnt++] = send_block[i+4];
+
+      if(owBlock(portnum,FALSE,send_block,send_cnt))
+      {
+         send_cnt = 0;
+
+         if(owAccess(portnum))
+         {
+            // Copy the Status/Configuration byte
+            // Copy scratchpad command
+            send_block[send_cnt++] = 0x48;
+
+            // Copy page
+            send_block[send_cnt++] = 0x00;
+
+            if(owBlock(portnum,FALSE,send_block,send_cnt))
+            {
+               busybyte = owReadByte(portnum);
+         
+               while(busybyte == 0)
+                  busybyte = owReadByte(portnum);
+
+               return TRUE;
+            }//Block
+         }//Access
+      }//Block
+
+   }//Access
+
+   return FALSE;
+}
+      
+/**
+ * Read the Vsens from the DS2438
+ *
+ * portnum  the port number of the port being used for the
+ *          1-Wire Network.
+ * SNum     the serial number for the part that the read is
+ *          to be done on.
+ *
+ * @return the floating point value of Vsens
+ */
+
+float ReadVsens(int portnum, uchar *SNum)
+{
+   uchar send_block[50];
+   int send_cnt=0;
+   int i;
+   int busybyte; 
+   ushort lastcrc8 = 0;
+   short curr;
+   float ret= -1.0;
+
+   if(SetupAtoD_vsens(portnum,SNum))
+   {
+       if(owAccess(portnum))
+       {
+           if(!owWriteByte(portnum,0xB4))
+           {
+               OWERROR(OWERROR_WRITE_BYTE_FAILED);
+               return ret;
+           }
+           
+           busybyte = owReadByte(portnum);
+           
+           while(busybyte == 0)
+               busybyte = owReadByte(portnum);
+       }
+       
+       if(owAccess(portnum))
+       {
+               // Recall the Status/Configuration page
+               // Recall command
+           send_block[send_cnt++] = 0xB8;
+           
+               // Page to Recall
+           send_block[send_cnt++] = 0x00;
+           
+           if(!owBlock(portnum,FALSE,send_block,send_cnt))
+               return ret;
+       }
+       
+       send_cnt = 0;
+
+       if(owAccess(portnum))
+       {
+               // Read the Status/Configuration byte
+               // Read scratchpad command
+           send_block[send_cnt++] = 0xBE;
+           
+               // Page for the Status/Configuration byte
+           send_block[send_cnt++] = 0x00;
+           
+           for(i=0;i<9;i++)
+               send_block[send_cnt++] = 0xFF;
+           
+           if(owBlock(portnum,FALSE,send_block,send_cnt))
+           {
+               setcrc8(portnum,0);
+               
+               for(i=2;i<send_cnt;i++)
+                  lastcrc8 = docrc8(portnum,send_block[i]);
+               
+               if(lastcrc8 != 0x00)
+                   return ret;
+               
+           }
+           else
+               return ret;    
+           
+           curr = (send_block[8] << 8) | send_block[7];
+               // Can't happen ????????
+           if (send_block[8] & 0x80) 
+               curr |= ~0x3ff;
+           ret = ((float) (curr) * 0.2441);
+#if 0
+           {
+               int k;
+               fputs("Buffer: ", stderr);
+               for(k=0; k < 9; k++)
+               {
+                   fprintf(stderr, "%02x ", send_block[k]);
+               }
+               fputc('\n', stderr);
+               fprintf(stderr,"Curr = %d %f\n", curr, ret);
+           }
+#endif
+           
+       }//Access
+   }
+   return ret;
+}

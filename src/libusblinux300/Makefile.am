@@ -2,8 +2,8 @@ EXTRA_DIST=$(wildcard *.c) $(wildcard *.h) makefile.shrlib README ReadMe.txt
 
 AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I . $(GLIB_CFLAGS)
 
-bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter
-
+bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter mweather lcdtest
+ 
 pkglib_LTLIBRARIES = libw1common.la libw1serial.la libw1usb.la
 noinst_LIBRARIES = libowfat.a
 
@@ -25,7 +25,7 @@ libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \
 	owpgrw.c owprgm.c owcache.c		     \
 	temp10.c atod26.c screenio.c		     \
 	cnt1d.c swt12.c pressure.c sht11_humid.c \
-	swt1f.c atod20.c
+	swt1f.c atod20.c ds2408lcd.c
 
 w1find_SOURCES = w1find.c findtype.c
 w1find_DEPENDENCIES = libw1common.la
@@ -66,4 +66,14 @@ counter_SOURCES = counter.c findtype.c
 counter_DEPENDENCIES = libw1common.la
 counter_LDADD = -L. -lowfat -lw1common -lm
 counter_LDFLAGS = -rdynamic  $(GLIB_LIBS)
+
+mweather_SOURCES = mweather.c  findtype.c  weather.c 
+mweather_DEPENDENCIES = libw1common.la
+mweather_LDADD = -L. -lowfat -lw1common -lm
+mweather_LDFLAGS = -rdynamic  $(GLIB_LIBS)
+
+lcdtest_SOURCES = lcdtest.c findtype.c
+lcdtest_DEPENDENCIES = libw1common.la 
+lcdtest_LDADD = -L. -lowfat -lw1common -lm 
+lcdtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 

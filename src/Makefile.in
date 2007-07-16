@@ -37,6 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+target_triplet = @target@
 bin_PROGRAMS = w1retap$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -68,7 +69,7 @@ libw1xml_la_OBJECTS = $(am_libw1xml_la_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_w1retap_OBJECTS = w1retap.$(OBJEXT) w1conf.$(OBJEXT) \
-	w1util.$(OBJEXT)
+	w1util.$(OBJEXT) w1sensors.$(OBJEXT)
 w1retap_OBJECTS = $(am_w1retap_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -214,12 +215,16 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
+target = @target@
 target_alias = @target_alias@
+target_cpu = @target_cpu@
+target_os = @target_os@
+target_vendor = @target_vendor@
 SUBDIRS = $(USE_SQLITE) $(USE_MYSQL) $(USE_PGSQL) $(USE_ODBC) libusblinux300
 DIST_SUBDIRS = sqlite mysql pgsql odbc libusblinux300
 EXTRA_DIST = w1retap.h sensors.sql
 pkglib_LTLIBRARIES = libw1file.la  libw1xml.la  libw1csv.la 
-w1retap_SOURCES = w1retap.c w1conf.c w1util.c
+w1retap_SOURCES = w1retap.c w1conf.c w1util.c w1sensors.c
 AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I libusblinux300 -DMODULE_DIR=\"$(pkglibdir)\" $(GLIB_CFLAGS)
 w1retap_DEPENDENCIES = libw1file.la
 w1retap_LDADD = "-dlopen" libw1file.la  -L./libusblinux300/.libs -L./libusblinux300 -lowfat -lw1common -lm
@@ -338,6 +343,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1csv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1file.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1retap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1sensors.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/w1xml.Plo@am__quote@
 

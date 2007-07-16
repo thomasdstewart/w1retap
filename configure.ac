@@ -1,11 +1,14 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-PACKAGE=w1retap
-VERSION=1.0.3
+AC_INIT(w1retap,1.0.4,jh+w1retap@daria.co.uk,w1retap)
 
-AC_INIT(w1retap,1.0.3,jh+w1retap@daria.co.uk,w1retap)
-AM_CONFIG_HEADER(config.h)
+AC_PREREQ(2.60)
+AC_CONFIG_HEADER([config.h])
+AC_CANONICAL_SYSTEM
+
 AM_INIT_AUTOMAKE([dist-bzip2])
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
 
 # Checks for programs.
 AC_PROG_CC
@@ -35,7 +38,7 @@ AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/tim
 
 AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_HEADERS(sql.h)
-AC_CHECK_HEADERS([usb.h popt.h],[],[AC_MSG_ERROR([libusb and libpopt are required])])
+AC_CHECK_HEADERS([usb.h],[],[AC_MSG_ERROR([libusb is required])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -55,7 +58,6 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([alarm atexit gettimeofday memset sqrt stpcpy strcasecmp strchr strdup strncasecmp strpbrk strrchr strstr strtol])
-AC_CHECK_LIB(popt, poptGetContext)
 
 USE_SQLITE=
 USE_ODBC=

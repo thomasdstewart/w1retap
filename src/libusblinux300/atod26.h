@@ -30,6 +30,7 @@
 
 int SetupAtoD(int portnum, int vdd, uchar *);
 float ReadAtoD(int portnum, int vdd, uchar *);
+float ReadVsens(int portnum, uchar *);
 double Get_Temperature(int portnum,uchar *);
 
 #define SBATTERY_FAM  0x26
