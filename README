@@ -27,7 +27,8 @@ supported:
 
 w1retap is designed to run on the Linux operating system and assumes
 that the interface between the computer and the 1-wire system is
-either a DS2490 USB adaptor or a DS2480 RS232 serial adaptor.
+either a DS2490 USB adaptor (aka DS9490R) or a DS2480 RS232 serial
+adaptor (aka DS9097U-S09),
 
 The logging is performed by one or more "plugin" modules, these
 currently include:

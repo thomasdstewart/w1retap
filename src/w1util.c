@@ -207,6 +207,10 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_COUPLER;
     }
+    else if( MATCHES("VOLTAGE") || MATCHES("DS2438"))
+    {
+        w->stype=W1_DS2438V;
+    }
 }
 
 
@@ -256,40 +260,46 @@ void logtimes(time_t now, char *tbuf)
 
 void w1_tmpfilelog (w1_devlist_t *w1)
 {
-    char line[256];
-    *line = 0;
+    char* line;
     int n = 0;
     int i;
     w1_device_t *devs;
-    
-    for(devs=w1->devs, i = 0; i < w1->numdev; i++,devs++)
+
+    line = malloc( ((w1->numdev)*256 + 512));
+
+    if(line)
     {
-        if(devs->init)
+        *line = 0;
+        for(devs=w1->devs, i = 0; i < w1->numdev; i++,devs++)
         {
-            int j;
-            for (j = 0; j < 2; j++)
+            if(devs->init)
             {
-                if(devs->s[j].valid)
+                int j;
+                for (j = 0; j < 2; j++)
                 {
-                    n += sprintf(line+n, "%s=%.2f %s\n",
-                                 devs->s[j].abbrv, devs->s[j].value,
-                                 (devs->s[j].units) ? (devs->s[j].units) : ""
-                                 );
+                    if(devs->s[j].valid)
+                    {
+                        n += sprintf(line+n, "%s=%.2f %s\n",
+                                     devs->s[j].abbrv, devs->s[j].value,
+                                     (devs->s[j].units) ? (devs->s[j].units) : ""
+                                     );
+                    }
                 }
             }
         }
-    }
-    if(n)
-    {
-        char tbuf[TBUF_SZ];
-        logtimes(w1->logtime, tbuf);
-        n += sprintf(line+n,"udate=%ld\ndate=%s\n", w1->logtime, tbuf);
-        
-        int fd = open("/tmp/.w1retap.dat", O_WRONLY|O_CREAT|O_TRUNC, 0664);
-        flock(fd, LOCK_EX);
-        write(fd,line,n);
-        flock(fd, LOCK_UN);        
-        close(fd);
+        if(n)
+        {
+            char tbuf[TBUF_SZ];
+            logtimes(w1->logtime, tbuf);
+            n += sprintf(line+n,"udate=%ld\ndate=%s\n", w1->logtime, tbuf);
+            
+            int fd = open("/tmp/.w1retap.dat", O_WRONLY|O_CREAT|O_TRUNC, 0664);
+            flock(fd, LOCK_EX);
+            write(fd,line,n);
+            flock(fd, LOCK_UN);        
+            close(fd);
+        }
+        free(line);
     }
 }
 
