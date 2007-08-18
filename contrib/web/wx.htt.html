@@ -8,7 +8,12 @@
 	  <meta name="keywords" content=
 	    "Jonathan Hudson,Daria Hudson,Linux,Weather,1-wire,Dallas,
 	    Netley Marsh,Southampton" />
-	    <title>Weather</title>
+	    <meta name="geo.position" content="50.9153; -1.53036" />
+	      <meta name="geo.placename" content="Netley Marsh" />
+		<meta name="geo.region" content="GB-STH" />
+		  <meta name="ICBM" content="50.9153, -1.53036" />
+		    <meta name="DC.title" content="Netley Marsh Weather" />
+	    <title>Netley Marsh Weather Station</title>
 	    <link rel="stylesheet" type="text/css" href="wxdefaults.css"/>
 	    <link rel="alternate" type="application/rss+xml" title="RSS"
 	    href="wx.rss2.xml" />
@@ -38,12 +43,16 @@
 		Timestamp:
 		<!-- var:date --><br />
 		  <b>Greenhouse</b><br />
-		    <!-- var:gtemp --> (24 hour min
-		    <!-- var:gmin -->, max
-		    <!-- var:gmax -->)<br />
+		    <!-- var:gtemp --> (24 hour max
+		    <!-- var:gmax -->, min
+		    <!-- var:gmin -->), Propagators 1: 
+		      <!-- var:itemp1 -->, 2: <!-- var:itemp2 -->
+		      Soil: <!-- var:stemp -->
+		      <br />
 		      <b>Garden Weather</b><br />
 			Temperature:
-			<!-- var:temp --><br />
+			<!-- var:temp --> [max:&nbsp;<!-- var:tmax -->, min:&nbsp;<!-- var:tmin -->]
+			  <br />
 			  Pressure:
 			  <!-- var:press --><br />
 			    Relative Humidity:
@@ -174,7 +183,8 @@
 	<div class="space-line"></div>
       </div>
     </div>
-    <div id="right">
+    <div id="right" class="rightd">
+      <div class="content">
       <p>
 	<img src="stnmap.png" alt="Map" class="cimag"
 	  title= "Netley Marsh weather station location (50.9N,1.5W)" />
@@ -225,7 +235,7 @@
 	    src="xhtmlvalid.png" 
 	    alt="Valid XHTML 1.0 Transitional" class="cimag" /> </a>
 
-	<a href="wx.wrss1.xml"><img src="rss-1.0-icon.png" 
+	<a href="wx.rss1.xml"><img src="rss-1.0-icon.png" 
 	    alt="RSS 1.0 Feed" class="cimag"/></a>
 	<a href="wx.rss2.xml"><img src="rss-2.0-icon.png" 
 	    alt="RSS 2.0 Feed"  class="cimag" /></a>
@@ -239,6 +249,11 @@
 	<a href="http://www.ruby-lang.org/en/"><img
 	    src="Ruby-POWERED.png" 
 	    alt="Remember. Understand. Believe. Yield!" class="cimag" /> </a>
+	<!--  
+	<a
+	href="http://geourl.org/near?lat=50.9153&amp;long=-1.53036">
+	  <img src="geourl.png" alt="GeoURL" class="cimag" /> </a>
+        -->
       </p>
       <h6>Weather Forecast Links</h6>
       <p>
@@ -254,11 +269,12 @@
 	      href="http://www.wunderground.com/global/stations/03865.html">
 	      Wunderground.com</a>
 	    <br />
-	      <a href="http://theyr.net/cg/cny/I1f8484/F=js*L=NC*v*050712*12*EN*engl_Southampton">
-	      Theyr Weather Forecasts</a>
-
+	      <a
+	      href="http://www.metoffice.gov.uk/satpics/latest_uk_ir.html">
+		UK Met Office Satellite Images</a>
       </p>
       <!-- var:wx_notice -->
+    </div>
     </div>
     <div class="space-line" />
     <div class="base">

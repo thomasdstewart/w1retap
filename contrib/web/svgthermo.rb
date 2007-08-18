@@ -49,7 +49,7 @@ module SvgThermo
     tf.open
     tf.print svg.to_s
     tf.close
-    system "rsvg -h #{ph} -w #{pw} #{tf.path} thermo.png"
+    system "rsvg -h #{ph} -w #{pw} #{tf.path} _thermo.png"
   end
 end
 

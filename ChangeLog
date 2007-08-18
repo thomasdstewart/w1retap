@@ -1,3 +1,10 @@
+1.0.5	2007-08-18
+	Modified configure and pgsql/Makefile.am to allow building against
+	postgreSQL installed on non-default paths. Problem reported by 
+	Andrejus (from Vilnius).
+	Corrected "Init fails:success" message :)
+	Updated the contrib/web examples so wplot.rb works with MySQL.
+	
 1.0.4   2007-07-10
 	Fixes potential buffer overflow in w1util.c:w1_tmpfilelog.
 	Reorganises some of the source files to make it a bit more

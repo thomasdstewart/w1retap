@@ -17,17 +17,17 @@
 
 #proc getdata
  file: w1.dat
- fieldnames times gtemp
+ fieldnames times gtemp itemp1 itemp2
 
 #proc page
- outfilename gtemp.@DEVICE
+ outfilename _gtemp.@DEVICE
  textsize: @TSIZE
  backgroundcolor: rgb(1,1,0.92156863)
 
 #proc areadef
   title: Greenhouse Temperature
   titledetails: align=C
-  yautorange: datafield=gtemp
+  yautorange: datafield=gtemp,itemp1,itemp2
   xscaletype: datetime yyyy-mm-dd.hh:mm
   xautorange: datafield=times hifix=@edate nearest=hours
   rectangle: @RAREA
@@ -46,26 +46,42 @@
   labeldetails: adjust=@ADJ1,0
 
 #proc lineplot
+ yfield: itemp1
+ xfield: times
+ linedetails: width=@LW color=yelloworange
+ legendlabel: Propagator1
+
+#proc lineplot
+ yfield: itemp2
+ xfield: times
+ linedetails: width=@LW color=pink
+ legendlabel: Propagator2
+
+#proc lineplot
  yfield: gtemp
  xfield: times
  linedetails: width=@LW color=green
+ legendlabel: Greenhouse
+
+#proc legend
+ location: min+1 max
+ seglen: 0.2
 
 // Outside
 
 #proc getdata
  file: w2.dat
- fieldnames times otemp
+ fieldnames times otemp stemp
 
 #proc page
- outfilename temp.@DEVICE
+ outfilename _temp.@DEVICE
  backgroundcolor: rgb(1,1,0.92156863)
  textsize: @TSIZE
 
- 
 #proc areadef
   title: Outside Temperature
   titledetails: align=C
-  yautorange: datafield=otemp
+  yautorange: datafield=otemp,stemp
   xscaletype: datetime yyyy-mm-dd.hh:mm
   xautorange: datafield=times hifix=@edate nearest=hours
   rectangle: @RAREA
@@ -88,6 +104,17 @@
  xfield: times
  linedetails: width=@LW color=red
  stairstep: no
+ legendlabel: Air
+
+#proc lineplot
+ yfield: stemp
+ xfield: times
+ linedetails: width=@LW color=tan2
+ legendlabel: Soil
+
+#proc legend
+ location: min+1 max
+ seglen: 0.2
  
 //Pressure 
 
@@ -96,7 +123,7 @@
  fieldnames times press
 
 #proc page
- outfilename press.@DEVICE
+ outfilename _press.@DEVICE
  backgroundcolor: rgb(1,1,0.92156863)
  textsize: @TSIZE
 
@@ -133,7 +160,7 @@
  fieldnames times humid
 
 #proc page
- outfilename humid.@DEVICE
+ outfilename _humid.@DEVICE
  backgroundcolor: rgb(1,1,0.92156863)
  textsize: @TSIZE
 
@@ -168,7 +195,7 @@
  fieldnames times gtemp otemp htemp btemp
 
 #proc page
- outfilename temps.@DEVICE
+ outfilename _temps.@DEVICE
  backgroundcolor: rgb(1,1,0.92156863)
  textsize: @TSIZE
 
@@ -198,7 +225,7 @@
  xfield: times
  linedetails: width=@LW color=skyblue
  legendlabel: Garage
-
+ 
 #proc lineplot
  yfield: htemp
  xfield: times
@@ -216,7 +243,7 @@
  xfield: times
  linedetails: width=@LW color=claret
  legendlabel: Outside
-
+  
 #proc legend
  location: min+1 max
  seglen: 0.2
@@ -227,7 +254,7 @@
  fieldnames times dirn ws gs tide
 
 #proc page
- outfilename wspeed.@DEVICE
+ outfilename _wspeed.@DEVICE
  backgroundcolor: rgb(0.92156863,1,1)
  textsize: @TSIZE
 
@@ -269,7 +296,7 @@
  seglen: 0.2
 
 #proc page
- outfilename tide.@DEVICE
+ outfilename _tide.@DEVICE
  backgroundcolor: rgb(0.92156863,1,1)
  textsize: @TSIZE
 
@@ -300,7 +327,7 @@
  linedetails: color=blue width=@LW
 
 #proc page
- outfilename wdirn.@DEVICE
+ outfilename _wdirn.@DEVICE
  backgroundcolor: rgb(0.92156863,1,1)
  textsize: @TSIZE
 
@@ -335,7 +362,7 @@
  file: w6.dat
 
 #proc page
- outfilename rain.@DEVICE
+ outfilename _rain.@DEVICE
  backgroundcolor: rgb(1,1,0.92156863)
  textsize: @TSIZE
 

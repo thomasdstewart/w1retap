@@ -158,7 +158,7 @@ static void do_init(w1_devlist_t *w1)
 
     if (done_i == 0)
     {
-        perror("Init fails");
+        fputs("Init fails: No w1_init() in init= loadable library", stderr);
         exit(1);
     }
     w1_initialize_couplers(w1);
@@ -171,7 +171,7 @@ void dll_parse(w1_devlist_t *w1, int typ, char *params)
     
     if(w1->ndll == (MAXDLL-1))
     {
-        perror("Too many DLLs");
+        fputs("Too many DLLs", stderr);
         exit(1);
     }
 
