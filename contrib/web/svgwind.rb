@@ -49,7 +49,7 @@ module SvgWind
     tf.open
     tf.print svg.to_s
     tf.close
-    system "rsvg -h #{ph} -w #{pw} #{tf.path} winddirn.png"
+    system "rsvg -h #{ph} -w #{pw} #{tf.path} _winddirn.png"
   end
 end
 

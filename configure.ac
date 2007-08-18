@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.0.4,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.0.5,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -109,16 +109,23 @@ AC_PATH_PROG(PG_CONFIG, pg_config, no)
 if test "$PG_CONFIG" = "no" -o "$with_pgsql" = "no"  ; then
  : # AC_MSG_RESULT([Not found])
 else
- save_libs="$LIBS"
- AC_CHECK_LIB([pq], [PQconnectdb])
- LIBS="$save_libs"
- if test $ac_cv_lib_pq_PQconnectdb = yes ; then
-  PGSQL_CFLAGS="$(pg_config --includedir)"
-  PGSQL_LIBS="$(pg_config --libdir)"
-  PGV="$(pg_config --version | cut -f 2 -d ' ' | cut -f 1 -d '.')" 
-  PGSQL_CFLAGS="$PGSQL_CFLAGS -DPGV=$PGV"
-  USE_PGSQL=pgsql
+ PGSQL_CFLAGS="$(pg_config --includedir)"
+ PGSQL_LIBS="$(pg_config --libdir)"
+ save_flags="$CPPFLAGS"
+ CPPFLAGS="$CPPFLAGS -I$PGSQL_CFLAGS"
+ AC_CHECK_HEADER(libpq-fe.h)
+ if test "$ac_cv_header_libpq_fe_h" = "yes" ;  then
+  save_libs="$LIBS"
+  LIBS="$LIBS -L$PGSQL_LIBS"
+  AC_CHECK_LIB([pq], [PQconnectdb])
+  if test $ac_cv_lib_pq_PQconnectdb = yes ; then
+   PGV="$(pg_config --version | cut -f 2 -d ' ' | cut -f 1 -d '.')" 
+   PGSQL_CFLAGS="$PGSQL_CFLAGS -DPGV=$PGV"
+   USE_PGSQL=pgsql
+  fi
+  LIBS="$save_libs"
  fi
+ CPPFLAGS="$save_flags"
 fi
 
 AC_SUBST(MYSQL_LIBS)
@@ -137,7 +144,6 @@ if test "$PKG_CONFIG" = "no" ; then
 else
  PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
 fi
-
 
 AC_MSG_CHECKING(for fine weather)
 GLIB_CFLAGS="$GLIB_MODULE_CFLAGS"
