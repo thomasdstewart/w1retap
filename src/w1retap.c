@@ -28,6 +28,7 @@
 #include <math.h>
 #include <glib.h>
 #include <assert.h>
+#include <syslog.h>
 
 #include "ownet.h"
 
@@ -158,7 +159,7 @@ static void do_init(w1_devlist_t *w1)
 
     if (done_i == 0)
     {
-        fputs("Init fails: No w1_init() in init= loadable library", stderr);
+        fputs("Init fails: No w1_init() in init= loadable library\n", stderr);
         exit(1);
     }
     w1_initialize_couplers(w1);
@@ -171,7 +172,7 @@ void dll_parse(w1_devlist_t *w1, int typ, char *params)
     
     if(w1->ndll == (MAXDLL-1))
     {
-        fputs("Too many DLLs", stderr);
+        fputs("Too many DLLs\n", stderr);
         exit(1);
     }
 
@@ -374,6 +375,8 @@ int main(int argc, char **argv)
         {NULL}
     };
 
+    openlog("w1retap", LOG_PID, LOG_USER);
+
     if(!g_module_supported())
     {
         exit(2);
@@ -445,7 +448,6 @@ int main(int argc, char **argv)
     w1->logtime =time(NULL);
     w1_replog (w1, "Startup w1retap v" VERSION);
     
-    on_exit(cleanup, w1);
     w1_show(w1, 0);
     
     if(w1->daemonise)

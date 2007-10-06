@@ -39,6 +39,7 @@ void read_config(w1_devlist_t *w1)
     if(w1->rcfile && access(w1->rcfile,R_OK) != 0)
     {
         free(w1->rcfile);
+        w1->rcfile = NULL;
     }
 
     if(w1->rcfile == NULL)
