@@ -187,9 +187,7 @@ static void db_syslog(char *p)
     
     if(q)
     {
-        openlog("w1retap", LOG_PID, LOG_USER);
         syslog(LOG_ERR, "psql: %s", q);
-        closelog();
     }
     if(qa) free(q);
 }
@@ -232,6 +230,17 @@ void w1_cleanup(void)
     }
 }
 
+void handle_result(PGresult *res)
+{
+    if(res){
+        ExecStatusType status = PQresultStatus(res);
+        if((status == PGRES_NONFATAL_ERROR) || (status == PGRES_FATAL_ERROR)){
+            syslog(LOG_ERR, "psql: %s", PQresultErrorMessage(res));
+        }
+        PQclear(res);
+    }
+}
+
 void w1_logger(w1_devlist_t *w1, char *dbnam)
 {
     int i;
@@ -267,43 +276,56 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
     }
     
     res = PQexec(db,"begin");
-    if(res) PQclear(res);
-    for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
+    handle_result(res);
+    for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++) // for each device
     {
-        if(devs->init)
+        if(devs->init) // if the device is initialised
         {
             int j;
-            for (j = 0; j < 2; j++)
+            for (j = 0; j < 2; j++) // for each sensor
             {
-                if(devs->s[j].valid)
+                if(devs->s[j].valid) // if there's a valid reading
                 {
-                    char tval[64];
                     char *rval;
-                    const char * pvals[3];
-                    if(w1->timestamp)
-                    {
+                    char tval[64];
+
+                    if(devs->stype == W1_COUNTER || devs->stype == W1_WINDVANE)
+                        asprintf(&rval, "%.0f", devs->s[j].value); // do not include any decimal places for integer values
+                    else
+                        asprintf(&rval, "%f", devs->s[j].value);   // include default 6 decimal places
+
+                    if(w1->timestamp){
                         struct tm *tm;
                         tm = localtime(&w1->logtime);
                         strftime(tval, sizeof(tval), "%F %T%z", tm);
-                    }
-                    else
-                    {
+                    }else{
                         snprintf(tval, sizeof(tval), "%ld", w1->logtime);
                     }
 
-                    asprintf(&rval, "%f", devs->s[j].value);
+                    if(devs->s[j].abbrv[0] == '>'){
+                        // store sensor value in a separate named table
+                        char *query;
+                        asprintf(&query, "INSERT INTO %s (date, value) VALUES ('%s', '%s')", &devs->s[j].abbrv[1], tval, rval);
+                        res = PQexec(db, query);
+                        handle_result(res);
+                        free(query);
+                    }else{
+                        // store sensor value in the 'readings' table
+                        const char * pvals[3];
                     pvals[0] = tval;
                     pvals[1] = devs->s[j].abbrv;
                     pvals[2] = rval;
                     res = PQexecPrepared(db, stmt, 3, pvals, NULL, NULL, 0);
-                    if(res) PQclear(res);                    
+                        handle_result(res);
+                    }
+
                     free(rval);
                 }
             }
         }
     }
     res = PQexec(db,"commit");
-    if(res) PQclear(res);    
+    handle_result(res);
 }
 
 void w1_report(w1_devlist_t *w1, char *dbnam)

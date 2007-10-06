@@ -89,7 +89,7 @@
 // Common Includes to ownet applications
 //--------------------------------------------------------------//
 #include <stdlib.h>
-
+#include <sys/types.h>
 
 //--------------------------------------------------------------//
 // Typedefs

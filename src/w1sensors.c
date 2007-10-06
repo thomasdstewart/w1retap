@@ -27,6 +27,7 @@
 #include <gmodule.h>
 #include <math.h>
 #include <assert.h>
+#include <syslog.h>
 
 #include "ownet.h"
 #include "temp10.h"
@@ -39,23 +40,30 @@
 
 #include "w1retap.h"
 
-static float wind_conversion_table[16][4] = { {0.06, 4.64, 4.64, 4.64},
-					      {0.06, 0.06, 4.60, 4.60},
-					      {4.64, 0.06, 4.64, 4.64},
-					      {4.62, 0.06, 0.06, 4.60},
-					      {4.64, 4.64, 0.06, 4.64},
-					      {4.60, 4.60, 0.06, 0.06},
-					      {4.64, 4.64, 4.64, 0.06},
-					      {2.36, 4.62, 4.60, 0.06},
-					      {2.38, 4.66, 4.66, 4.66},
-					      {3.20, 3.20, 4.66, 4.64},
-					      {4.66, 2.38, 4.66, 4.66},
-					      {4.66, 3.18, 3.20, 4.64},
-					      {4.66, 4.66, 2.38, 4.66},
-					      {4.66, 4.66, 3.18, 3.18},
-					      {4.66, 4.66, 4.66, 2.38},
-					      {0.06, 4.62, 4.62, 2.34} };
+// Table from DalSemi application note 755A (page four): http://pdfserv.maxim-ic.com/en/an/app755A.pdf
+#define WINDVANE_VCC       (1.0)                                // connected to VCC through pull-up resistor
+#define WINDVANE_R2        (WINDVANE_VCC / 2.0)                 // connected to 50% voltage divider
+#define WINDVANE_R1        (WINDVANE_VCC * (2.0/3.0))           // connected to 66% voltage divider
+#define WINDVANE_GND       (0.0)                                // connected to GND
+#define WINDVANE_MAX_ERROR ((WINDVANE_R1 - WINDVANE_R2) / 2.0)  // max acceptable error
 
+static float wind_conversion_table[16][4] = { 
+    {WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC},  
+    {WINDVANE_GND, WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_GND, WINDVANE_GND, WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_GND, WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_GND, WINDVANE_GND},  
+    {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_GND},  
+    {WINDVANE_R2,  WINDVANE_VCC, WINDVANE_VCC, WINDVANE_GND},  
+    {WINDVANE_R2,  WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC},  
+    {WINDVANE_R1,  WINDVANE_R1,  WINDVANE_VCC, WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_R2,  WINDVANE_VCC, WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_R1,  WINDVANE_R1,  WINDVANE_VCC},  
+    {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2,  WINDVANE_VCC}, 
+    {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R1,  WINDVANE_R1 },  
+    {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2 },  
+    {WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2 }}; 
 
 static void w1_make_serial(char * asc, unsigned char *bin)
 {
@@ -551,38 +559,43 @@ static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
   
   private = (w1_windvane_private_t *)w->private;
   
+    w->s[0].valid = w->s[1].valid = 0;
+
   if(w1_select_device(w1, w) && (private != NULL)){
     if(w->init == 1){
-      if(SetupAtoDControl(w1->portnum, w->serno, private->control, message) &&
-	 WriteAtoD(w1->portnum, FALSE, w->serno, private->control, 0x08, 0x11))
+            if(SetupAtoDControl(w1->portnum, w->serno, private->control, message) && WriteAtoD(w1->portnum, FALSE, w->serno, private->control, 0x08, 0x11))
 	w->init = 2;
     }
       
     if(w->init == 2){
-      if(DoAtoDConversion(w1->portnum, FALSE, w->serno) &&
-	 ReadAtoDResults(w1->portnum, FALSE, w->serno, analogue, private->control)){
-	for(i=0; i<16; i++){
-	  if( ((analogue[0] <= wind_conversion_table[i][0]+0.25) &&
-	       (analogue[0] >= wind_conversion_table[i][0]-0.25)) &&
-	      ((analogue[1] <= wind_conversion_table[i][1]+0.25) &&
-	       (analogue[1] >= wind_conversion_table[i][1]-0.25)) &&
-	      ((analogue[2] <= wind_conversion_table[i][2]+0.25) &&
-	       (analogue[2] >= wind_conversion_table[i][2]-0.25)) &&
-	      ((analogue[3] <= wind_conversion_table[i][3]+0.25) &&
-	       (analogue[3] >= wind_conversion_table[i][3]-0.25)) ){
-              if(w1->vane_offset)
+            if(DoAtoDConversion(w1->portnum, FALSE, w->serno) && ReadAtoDResults(w1->portnum, FALSE, w->serno, analogue, private->control))
               {
-                  i = ((i - w1->vane_offset) & 0xf);
-              }
-              w->s[0].value = i;
+                // In order to read the position of the wind vane, we first scale the readings
+                // relative to the highest reading (which must be approximately VCC) and then
+                // search a table of recognised vane positions to match our observation.
+                float scaled[4], factor = fmaxf(analogue[0], fmaxf(analogue[1], fmaxf(analogue[2], analogue[3])));
+
+                for(i=0; i<4; i++)
+                    scaled[i] = analogue[i] / factor;
+                
+                // syslog(LOG_INFO, "Wind vane: analogue: %.4f %.4f %.4f %.4f   scaled: %.4f %.4f %.4f %.4f   max error %.4f",
+                //        analogue[0], analogue[1], analogue[2], analogue[3], scaled[0], scaled[1], scaled[2], scaled[3], WINDVANE_MAX_ERROR);
+
+                w->s[0].value = -1;
+                for(i=0; i<16; i++){
+                    if( ((scaled[0] <= wind_conversion_table[i][0]+WINDVANE_MAX_ERROR) && (scaled[0] >= wind_conversion_table[i][0]-WINDVANE_MAX_ERROR)) &&
+                        ((scaled[1] <= wind_conversion_table[i][1]+WINDVANE_MAX_ERROR) && (scaled[1] >= wind_conversion_table[i][1]-WINDVANE_MAX_ERROR)) &&
+                        ((scaled[2] <= wind_conversion_table[i][2]+WINDVANE_MAX_ERROR) && (scaled[2] >= wind_conversion_table[i][2]-WINDVANE_MAX_ERROR)) &&
+                        ((scaled[3] <= wind_conversion_table[i][3]+WINDVANE_MAX_ERROR) && (scaled[3] >= wind_conversion_table[i][3]-WINDVANE_MAX_ERROR)) ) {
+                        w->s[0].value = ((i - w1->vane_offset) & 0xf);
             nv += w1_validate(w1, &w->s[0]);
 	    break;
 	  }
 	}
+
+                if(w->s[0].value == -1) // no match found?
+                    syslog(LOG_WARNING, "Wind vane: Unexpected values: v0=%.4f, v1=%.4f, v2=%.4f, v3=%.4f", analogue[0], analogue[1], analogue[2], analogue[3]);
       }
-    }
-    else{
-      w->s[0].valid = w->s[1].valid = 0;
     }
   }
       
@@ -665,7 +678,7 @@ void w1_all_couplers_off(w1_devlist_t *w1)
 
 int w1_read_all_sensors(w1_devlist_t *w1)
 {
-    int nv = 0;
+    int nv = 0, r;
 
     if(w1->doread)
     {
@@ -677,40 +690,47 @@ int w1_read_all_sensors(w1_devlist_t *w1)
             switch(d->stype)
             {
                 case W1_TEMP:
-                    nv += w1_read_temp(w1, d);
+                    r = w1_read_temp(w1, d);
                     break;
                     
                 case W1_HUMID:
-                    nv += w1_read_humidity(w1, d);
+                    r = w1_read_humidity(w1, d);
                     break;
                     
                 case W1_PRES:
-                    nv += w1_read_pressure(w1, d);
+                    r = w1_read_pressure(w1, d);
                     break;
                     
                 case W1_COUNTER:
-                    nv += w1_read_counter(w1, d);
+                    r = w1_read_counter(w1, d);
                     break;
                     
                 case W1_BRAY:
-                    nv += w1_read_bray(w1, d);
+                    r = w1_read_bray(w1, d);
                     break;
 
                 case W1_SHT11:
-                    nv += w1_read_sht11(w1, d);
+                    r = w1_read_sht11(w1, d);
                     break;
                     
                 case W1_WINDVANE:
-                    nv += w1_read_windvane(w1, d);
+                    r = w1_read_windvane(w1, d);
                     break;
 
                 case W1_DS2438V:
-                    nv += w1_read_voltages(w1, d);
+                    r = w1_read_voltages(w1, d);
                     break;
                     
                 case W1_INVALID:
                 default:
+                    r = -1;
                     break;
+            }
+
+            if(r >= 0){
+                nv += r;
+                if(r == 0)
+                    syslog(LOG_WARNING, "Failed to read sensor %s (type %s)", d->serial, d->devtype);
             }
         }
 

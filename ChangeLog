@@ -1,3 +1,21 @@
+1.0.6	2007-10-06
+	The default config file (/etc/defaults/w1retap) is now read if the
+	user config file is not accessible (reported by Uwe Heidrich)
+
+	Postgres allows one table per sensor if the 'abbrv' field is
+	prefixed with a '>' character. e.g. if one gives a sensor an 'abbrv'
+	value of 'rooftemperature', w1retap will continue to log sensor
+	readings to the 'readings' table, exactly as before. However, if one
+	sets the 'abbrv' to '>rooftemperature' (ie with a ">" as the first
+	character) w1retap will instead insert just a date and value into a
+	table named 'rooftemperature'. This allows one to have separate
+	tables for certain sensors, while continuing to use the 'readings'
+	table for others. Concept and patch by Will Sowerbutts.
+	
+	Improvements to wind vane code (Will Sowerbutts).
+	
+	Miscellaneous clean ups (JH and Will Sowerbutts).
+
 1.0.5	2007-08-18
 	Modified configure and pgsql/Makefile.am to allow building against
 	postgreSQL installed on non-default paths. Problem reported by 
