@@ -174,8 +174,8 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
                     }
                 }
             }
+            mysql_free_result(res); 
         }
-        mysql_free_result(res); 
         mysql_close(conn);
     }
 }
