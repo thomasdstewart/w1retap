@@ -1,3 +1,7 @@
+1.0.7	2007-10-21
+	Fixed double free bug with MySQL if no ratelimit table. Thanks to 
+	Matti Airas for a question that prompted me to look at w1mysql.c
+
 1.0.6	2007-10-06
 	The default config file (/etc/defaults/w1retap) is now read if the
 	user config file is not accessible (reported by Uwe Heidrich)
