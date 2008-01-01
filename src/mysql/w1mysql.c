@@ -26,6 +26,7 @@
 #include <time.h>
 #include <sys/file.h>
 #include <mysql.h>
+#include <syslog.h>
 #include "w1retap.h"
 
 // If you know how to make this stmt/prepare work, the fix this
@@ -39,34 +40,28 @@ static void my_params(char *params,
     char *mp = strdup(params);
     char *s0,*s1;
 
-    *host = *dbname = *user = *pass = NULL;
-
     for(s0 = mp; (s1=strsep(&s0, " "));)
     {
-        char *t,*v;
-        sscanf(s1,"%a[^=]=%as", &t, &v);
-
-        if(strcmp(t,"dbname") == 0)
+        char t[256],v[256];
+        if (2 == sscanf(s1,"%256[^=]=%256s", t, v))
         {
-            *dbname = v;
+            if(strcmp(t,"dbname") == 0)
+            {
+                *dbname = strdup(v);
+            }
+            else if (strcmp(t,"host") == 0)
+            {
+                *host = strdup(v);
+            }
+            else if (strcmp(t,"user") == 0)
+            {
+                *user = strdup(v);
+            }
+            else if (strcmp(t,"password") == 0)
+            {
+                *pass = strdup(v);
+            }
         }
-        else if (strcmp(t,"host") == 0)
-        {
-            *host = v;
-        }
-        else if (strcmp(t,"user") == 0)
-        {
-            *user = v;
-        }
-        else if (strcmp(t,"password") == 0)
-        {
-            *pass = v;
-        }
-        else
-        {
-            free(v);
-        }
-        free(t);
     }
     free(mp);
 }
@@ -75,7 +70,7 @@ static MYSQL * w1_opendb(char *params)
 {
     MYSQL *conn = NULL;
     char *dbname, *user, *password, *host;
-
+    host = dbname = user = password = NULL;
     my_params(params, &host, &dbname, &user, &password);
 
     conn = mysql_init(NULL);
@@ -86,6 +81,14 @@ static MYSQL * w1_opendb(char *params)
         perror(mysql_error(conn));
         conn = NULL;
     }
+    if(dbname)
+        free(dbname);
+    if(user)
+        free(user);
+    if(host)
+        free(host);
+    if (password)
+        free(password);
     return conn;
 }
 
@@ -200,7 +203,7 @@ void w1_cleanup(void)
 
 void w1_logger(w1_devlist_t *w1, char *params)
 {
-    int i;
+    int i,nv = 0;
     w1_device_t *devs;
     
     if (access("/tmp/.w1retap.lock", F_OK) == 0)
@@ -289,11 +292,20 @@ void w1_logger(w1_devlist_t *w1, char *params)
                     {
                         snprintf(tval, sizeof(tval), "%ld", w1->logtime);
                     }
+                    nv++;
                     asprintf(&q,
                              "INSERT into readings(date,name,value) VALUES(%s,'%s',%g)",
                              tval, devs->s[j].abbrv, devs->s[j].value);
 		    if(w1->verbose) puts(q);
-                    mysql_real_query(conn, q, strlen(q));
+                    if(0 != mysql_real_query(conn, q, strlen(q)))
+                    {
+                        const char *mse;
+                        mse = mysql_error(conn);
+                        if (mse)
+                        {
+                            syslog(LOG_ERR, "MySQL error %s", mse);
+                        }
+                    }
                     free(q);
 #endif
                 }
@@ -305,6 +317,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
 #else
     mysql_real_query(conn, "COMMIT", sizeof("COMMIT")-1);            
 #endif
+//    syslog(LOG_WARNING,"MySQL store %d",nv);
 }
 
 

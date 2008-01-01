@@ -35,7 +35,7 @@ void read_config(w1_devlist_t *w1)
     {
 	w1->rcfile = w1_get_from_home(".config/w1retap/rc");
     }
-    
+
     if(w1->rcfile && access(w1->rcfile,R_OK) != 0)
     {
         free(w1->rcfile);
@@ -52,34 +52,35 @@ void read_config(w1_devlist_t *w1)
     {
         while(fgets(buf, sizeof(buf), fp))
         {
-            char *l = NULL,*c = NULL,*r=NULL;
-            
-            (void)(sscanf(buf,"log = %a[^\n]", &l) ||
-                   sscanf(buf,"init = %a[^\n]", &c) ||
-                   sscanf(buf,"rep = %a[^\n]", &r) ||                
-                   sscanf(buf,"device = %a[^\n]", &w1->iface) ||
-                   sscanf(buf,"delay = %d", &w1->delay) ||
-                   sscanf(buf,"demonise = %d", &w1->daemonise) ||
-                   sscanf(buf,"altitude = %d", &w1->altitude) ||
-                   sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
-                   sscanf(buf,"timestamp = %d", &w1->timestamp) ||
-                   sscanf(buf,"logtemp = %d", &w1->logtmp));
-
-            if(l)
+            char lbuf[512];
+            if(1 == sscanf(buf,"log = %512[^\n]", lbuf))
             {
-                dll_parse(w1, 'l', l);
-                free(l);
+                dll_parse(w1, 'l', lbuf);
             }
-
-            if(c)
+            else if (1 == sscanf(buf,"init = %512[^\n]", lbuf))
             {
-                dll_parse(w1, 'c', c);
-                free(c);
+                dll_parse(w1, 'c', lbuf);
             }
-            if(r)
+            else if(1 == sscanf(buf,"rep = %512[^\n]", lbuf))
             {
-                dll_parse(w1, 'r', r);
-                free(r);
+                dll_parse(w1, 'r', lbuf);
+            }
+            else if(1 == sscanf(buf,"device = %512[^\n]", lbuf))
+            {
+                w1->iface = g_strdup(lbuf);
+            }
+            else if(1 == sscanf(buf,"pidfile = %512[^\n]", lbuf))
+            {
+                w1->pidfile = g_strdup(lbuf);
+            }
+            else
+            {
+                (void)(sscanf(buf,"delay = %d", &w1->delay) ||    
+                       sscanf(buf,"demonise = %d", &w1->daemonise) ||
+                       sscanf(buf,"altitude = %d", &w1->altitude) ||
+                       sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
+                       sscanf(buf,"timestamp = %d", &w1->timestamp) ||
+                       sscanf(buf,"logtemp = %d", &w1->logtmp));
             }
         }
         fclose(fp);

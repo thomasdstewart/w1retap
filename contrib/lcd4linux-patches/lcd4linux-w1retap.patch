@@ -1,0 +1,360 @@
+--- lcd4linux-svn-847/Makefile.am	2007-12-31 17:27:28.000000000 +0000
++++ lcd4linux-svn-w1retap/Makefile.am	2007-12-10 15:22:35.000000000 +0000
+@@ -132,6 +132,7 @@
+ plugin_statfs.c               \
+ plugin_uname.c                \
+ plugin_uptime.c               \
++plugin_w1retap.c	      \
+ plugin_wireless.c             \
+ plugin_xmms.c
+ 
+--- lcd4linux-svn-847/config.h.in	2007-12-31 17:27:28.000000000 +0000
++++ lcd4linux-svn-w1retap/config.h.in	2007-12-10 15:35:41.000000000 +0000
+@@ -350,6 +350,9 @@
+ /* uptime plugin */
+ #undef PLUGIN_UPTIME
+ 
++/* w1retap plugin */
++#undef PLUGIN_W1RETAP
++
+ /* wireless plugin */
+ #undef PLUGIN_WIRELESS
+ 
+--- lcd4linux-svn-847/plugin.c	2007-12-31 17:27:28.000000000 +0000
++++ lcd4linux-svn-w1retap/plugin.c	2007-12-10 15:30:06.000000000 +0000
+@@ -108,6 +108,8 @@
+ void plugin_exit_uname(void);
+ int plugin_init_uptime(void);
+ void plugin_exit_uptime(void);
++int plugin_init_w1retap(void);
++void plugin_exit_w1retap(void);
+ int plugin_init_wireless(void);
+ void plugin_exit_wireless(void);
+ int plugin_init_xmms(void);
+@@ -201,6 +203,9 @@
+ #ifdef PLUGIN_UPTIME
+     plugin_init_uptime();
+ #endif
++#ifdef PLUGIN_W1RETAP
++    plugin_init_w1retap();
++#endif
+ #ifdef PLUGIN_WIRELESS
+     plugin_init_wireless();
+ #endif
+@@ -292,6 +297,9 @@
+ #ifdef PLUGIN_UPTIME
+     plugin_exit_uptime();
+ #endif
++#ifdef PLUGIN_W1RETAP
++    plugin_init_w1retap();
++#endif
+ #ifdef PLUGIN_WIRELESS
+     plugin_exit_wireless();
+ #endif
+--- lcd4linux-svn-847/plugin_w1retap.c	1970-01-01 01:00:00.000000000 +0100
++++ lcd4linux-svn-w1retap/plugin_w1retap.c	2007-12-31 18:00:22.000000000 +0000
+@@ -0,0 +1,273 @@
++/* $Id: plugin_w1retap.c
++ *
++ * plugin to perform simple file operations for w1retap
++ *
++ * Copyright (C) 2007 Jonathan Hudson <jh+w1retap@daria.co.uk>
++ * Copyright (C) 2006 The LCD4Linux Team <lcd4linux-devel@users.sourceforge.net>
++ *
++ * This file is part of LCD4Linux.
++ *
++ * LCD4Linux is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * LCD4Linux is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ */
++
++/*
++ * This module returns a specific value associated with a key from a
++ * file containing one or more lines formatted as KEY=VALUE.
++ *
++ * It is intended for use with the w1retap weather station logging
++ * software <http://www.daria.co.uk/wx/tech.html>, but is applicable
++ * to any similarly formatted file.
++ */
++
++/* 
++ * exported functions:
++ *
++ * int plugin_init_file (void)
++ *  adds various functions
++ *
++ */
++
++
++/* define the include files you need */
++#include "config.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
++#include <ctype.h>
++
++/* these should always be included */
++#include "debug.h"
++#include "plugin.h"
++
++#ifdef WITH_DMALLOC
++#include <dmalloc.h>
++#endif
++
++/* function 'my_readkey' */
++/* takes two arguments, file name and key */
++/* returns value associated with key, trimmed to suitable dec places */
++
++static void my_readkey(RESULT * result, RESULT * arg1, RESULT * arg2)
++{
++    char value[80], val2[80];
++    FILE *fp;
++    char *reqkey,*pval;
++    size_t size;
++
++    *value = 0;
++    pval = value;
++    
++    reqkey = R2S(arg2);
++    fp = fopen(R2S(arg1), "r");
++
++    if (!fp)
++    {
++	error("w1retap couldn't open file '%s'", R2S(arg1));
++	value[0] = '\0';
++    }
++    else
++    {
++        size = strlen(reqkey);
++	while (!feof(fp) && pval == value)
++        {
++	    fgets(val2, sizeof(val2), fp);
++            if(*(val2+size) == '=')
++            {
++                if(strncmp(val2, reqkey, size) == 0)
++                {
++                    char *p;
++                    p = index(val2,' ');
++                    if(p == NULL)
++                    {
++                        p = index(val2,'\n');
++                    }
++                    
++                    if(p)
++                    {
++                        *p = 0;
++                        pval = val2 + size + 1;
++                        {
++                            double d;
++                            char *ep;
++                            d = strtod(pval, &ep);
++                            if(ep != pval && (*ep == 0 || isspace(*ep)))
++                            {
++                                if(d > 500)
++                                    sprintf(val2,"%.0f", d);
++                                else
++                                    sprintf(val2,"%.1f", d);
++                                pval = val2;
++                            }
++                        }
++                    }
++                }
++            }
++	}
++	fclose(fp);
++    }
++
++    /* store result */
++    SetResult(&result, R_STRING, pval);
++}
++
++/* plugin initialization */
++/* MUST NOT be declared 'static'! */
++int plugin_init_w1retap(void)
++{
++
++    /* register all our cool functions */
++    /* the second parameter is the number of arguments */
++    /* -1 stands for variable argument list */
++    AddFunction("w1retap::readkey", 2, my_readkey);
++
++    return 0;
++}
++
++void plugin_exit_w1retap(void)
++{
++    /* free any allocated memory */
++    /* close filedescriptors */
++}
++
++/*
++#Sample configuration for w1retap
++#================================
++
++Display Weather {
++   Driver   'Pertelian'
++   Port     '/dev/ttyUSB0'
++   Size     '20x4'
++   Backlight 1
++   Icons     0
++}
++
++Display XWindow {
++    Driver     'X11'
++    Size       '120x32'
++    Font       '6x8'
++    Pixel      '4+1'
++    Gap        '-1x-1'
++    Border      20
++    Foreground '000000ff'
++    Background '00000033'
++    Basecolor '70c000'
++    Buttons   6
++    Brightness 133
++}
++
++Widget LCDTimer {
++   class 'Timer'
++   active 1
++   update 10000
++   expression h=strftime('%H', time()); x=file::readline('/tmp/.lcd',1)+0; b=(h > 5 | h < 23) + x ; LCD::backlight(b)
++}
++
++
++Widget Temp {
++    class 'Text'
++    expression w1retap::readkey(file, 'OTMP0')
++    prefix 'Extr '
++    width 10
++    align 'L'
++    update tick
++}
++
++Widget GHouse {
++    class 'Text'
++    expression w1retap::readkey(file, 'GHT')
++    prefix 'GHT '
++    width 10
++    align 'L'
++    update tick
++}
++
++Widget House {
++    class 'Text'
++    expression w1retap::readkey(file, 'OTMP1')
++    prefix 'Intr '
++    width 10
++    align 'L'
++    update tick
++}
++Widget Garage {
++    class 'Text'
++    expression w1retap::readkey(file, 'OTMP2')
++    prefix 'Gge '
++    width 10
++    align 'L'
++    update tick
++}
++Widget Soil {
++    class 'Text'
++    expression w1retap::readkey(file, 'STMP1')
++    prefix 'Soil '
++    width 10
++    align 'L'
++    update tick
++}
++Widget Press {
++    class 'Text'
++    expression w1retap::readkey(file, 'OPRS')
++    prefix 'Pres '
++    width 10
++    align 'L'
++    update tick
++}
++
++Widget Rain {
++    class 'Text'
++    expression w1retap::readkey(file1, 'RAIN')
++    prefix 'Rain '
++    width 20
++    align 'L'
++    update tick
++}
++
++Layout Default {
++    Timer1 'LCDTimer'
++    Row1 {
++        Col1 'Temp'
++	Col11 'GHouse'
++    }    
++
++    Row2 {
++	Col1 'House'
++        Col11 'Garage'
++    }    
++
++    Row3 {
++        Col1 'Soil'
++	Col11 'Press'
++    }    
++
++    Row4 {
++        Col1 'Rain'
++    }
++}
++
++Variables {
++   tick 120000
++   file '/tmp/.w1retap.dat'
++   file1 '/tmp/.w1rain.txt'
++}
++
++Layout 'Default'
++
++Display 'Weather'
++
++*/
++
+--- lcd4linux-svn-847/plugins.m4	2007-12-31 17:27:28.000000000 +0000
++++ lcd4linux-svn-w1retap/plugins.m4	2007-12-10 15:34:32.000000000 +0000
+@@ -79,6 +79,7 @@
+          PLUGIN_STATFS="yes"
+          PLUGIN_UNAME="yes"
+          PLUGIN_UPTIME="yes"
++         PLUGIN_W1RETAP="yes"    	 
+          PLUGIN_WIRELESS="yes"
+          PLUGIN_XMMS="yes"   
+          ;;
+@@ -160,6 +161,9 @@
+       uptime)
+          PLUGIN_UPTIME=$val
+          ;;
++      w1retap)
++         PLUGIN_W1RETAP=$val
++         ;;
+       wireless)
+          PLUGIN_WIRELESS=$val
+          ;;
+@@ -341,6 +345,10 @@
+    PLUGINS="$PLUGINS plugin_uptime.o"
+    AC_DEFINE(PLUGIN_UPTIME,1,[uptime plugin])
+ fi
++if test "$PLUGIN_W1RETAP" = "yes"; then
++   PLUGINS="$PLUGINS plugin_w1retap.o"
++   AC_DEFINE(PLUGIN_W1RETAP,1,[w1retap plugin])
++fi
+ if test "$PLUGIN_WIRELESS" = "yes"; then
+    PLUGINS="$PLUGINS plugin_wireless.o"
+    AC_DEFINE(PLUGIN_WIRELESS,1,[wireless plugin])

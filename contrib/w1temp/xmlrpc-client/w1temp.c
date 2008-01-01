@@ -144,18 +144,32 @@ static gboolean w1temp_fill (
 
     if((p = getenv("HOME")))
     {
-        char fbuf[1024];
+        char fbuf[PATH_MAX];
+        char buf[256];
         strcpy(fbuf, p);
         strcat(fbuf,"/.config/w1retap/applet");
         if((fp = fopen(fbuf, "r")))
         {
-            while(fgets(fbuf, sizeof(fbuf),fp))
+                // We only read sizeof(buf).
+            while(fgets(fbuf, sizeof(buf),fp))
             {
-                sscanf(fbuf, "xurl = %a[^\n]\n", &m.x.url);
-                sscanf(fbuf, "key = %a[^\n]\n", &m.x.key);
-                sscanf(fbuf, "xuser = %a[^\n]\n", &m.x.user);
-                sscanf(fbuf, "xpass = %a[^\n]\n", &m.x.pass);                
-                sscanf(fbuf, "delay = %d", &m.timeout);
+                if(1 == sscanf(fbuf, "key = %[^\n]", buf))
+                {
+                    m.key = g_strdup(buf);
+                }
+                else if(1 == sscanf(fbuf, "uauth = %[^\n]", buf))
+                {
+                    m.auth = g_strdup(buf);
+                }
+                else if(sscanf(fbuf, "host = %[^\n]", buf))
+                {
+                    m.host = g_strdup(buf);
+                }
+                else
+                {
+                    (void)(sscanf(fbuf, "delay = %d", &m.timeout) ||
+                           sscanf(fbuf, "port = %hd", &m.port));
+                }
             }
             fclose(fp);
         }

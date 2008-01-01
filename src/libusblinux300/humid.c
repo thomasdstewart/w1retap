@@ -13,6 +13,36 @@ static void w1_make_serial(char * asc, unsigned char *bin)
         bin[i] += ToHex(asc[j]); j++;
     }
 }
+
+static void TestScratch (int portnum, u_char *ident)
+{
+    int i;
+    unsigned char c,buf[33];
+
+    owTouchReset(portnum);
+    owTouchByte(portnum, 0x55);
+    for(i=0;i<8;i++)          
+    {
+        owTouchByte(portnum, ident[i]);
+    }
+    owTouchReset(0xBE);
+    for(i=0;i<32;i++)
+    {
+        c = owTouchByte(portnum,0xff);
+        buf[i] = c;
+    }
+    buf[32] = 0;
+    for(i=0;i<32;i++)
+    {
+        printf("%02x ", buf[i]);
+    }
+    fputc('\n', stdout);
+    puts((char *)buf);
+    msDelay(100);
+    owTouchReset(portnum);
+}
+
+
 int main(int argc, char **argv)
 {
     int portnum = 0;
@@ -21,7 +51,12 @@ int main(int argc, char **argv)
     
     if (argc != 3)
     {
-        fputs("humsens device address\n", stderr);
+        fputs("humids device address\n"
+              " Device: e.g. /dev/ttyS0 or DS2490-1\n"
+              " Default is to read temp / humidity\n"
+              " Environment variables\n"
+              "  TEST_SHT11=1 humids device address : Read scratchpad\n"
+              "  SHT11_VERBOSE=1 humids device address : More verbosity\n", stderr);
         exit(1);
         // e.g. /dev/ttyS0 or DS2490-1
    }
@@ -32,9 +67,16 @@ int main(int argc, char **argv)
         exit(1);
     }
     w1_make_serial(argv[2], serial);
-    if(ReadSHT11(portnum, serial, &temp, &rh))
+    if(getenv("TEST_SHT11"))
     {
-        printf("Temp %3.1f RH  %3.1f \n", temp, rh);
+        TestScratch(portnum,serial);
+    }
+    else
+    {
+        if(ReadSHT11(portnum, serial, &temp, &rh))
+        {
+            printf("Temp %3.1f RH  %3.1f \n", temp, rh);
+        }
     }
     return 0;
 }

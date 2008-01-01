@@ -372,8 +372,6 @@ static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
-//  if (w1->verbose) fputs("Voltages\n", stderr);
-
     if(w1_select_device(w1,w))
     {
         int k;
@@ -382,25 +380,38 @@ static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w)
             float val=-1.0;
             if(w->s[k].abbrv)
             {
-//              if(w1->verbose) fprintf(stderr, "Abbrv %s\n", w->s[k].abbrv);
-                
+                int vreq=0;
                 if (strcasecmp(w->s[k].abbrv, "vdd") == 0)
                 {
                     val = ReadAtoD(w1->portnum,TRUE, w->serno);
+                    vreq=1;
                 }
                 else if (strcasecmp(w->s[k].abbrv, "vad") == 0)
                 {
                     val = ReadAtoD(w1->portnum, FALSE, w->serno);
+                    vreq=1;                        
                 }
                 else if (strcasecmp(w->s[k].abbrv, "vsens") == 0)
                 {
                     val = ReadVsens(w1->portnum, w->serno);
+                    vreq=1;
                 }
-                if(val != -1.0)
+                if(vreq == 1)
                 {
-//                  if(w1->verbose) fprintf(stderr, "val %f\n", val);
-                    w->s[k].value = val;
-                    nv += w1_validate(w1, &w->s[k]);
+                    if(val != -1.0)
+                    {
+                        w->s[k].value = val;
+                        nv += w1_validate(w1, &w->s[k]);
+                    }
+                }
+                else
+                {
+                    if(strcasestr(w->s[k].name, "Temp"))
+                    {
+                        val = Get_Temperature(w1->portnum,w->serno);
+                        w->s[k].value = val;
+                        nv += w1_validate(w1, &w->s[k]);
+                    }
                 }
             }
         }
@@ -443,7 +454,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
             vind = '-';
         }
 
-        humid = (((vad/vdd) - 0.16)/0.0062)/(1.0546 - 0.00216 * temp);
+        humid = (((vad/vdd) - (0.8/vdd))/0.0062)/(1.0546 - 0.00216 * temp);
 
         if(w->s[0].name)
         {
@@ -658,7 +669,7 @@ void w1_initialize_couplers(w1_devlist_t *w1)
                 w->coupler = (w1_coupler_t*)calloc(1, sizeof(w1_coupler_t));
                 w->coupler->branch = clist[nx].branch;
 		w->coupler->coupler_device = clist[nx].coupler_device;
-                break;
+//                break;
             }
         }
     }
