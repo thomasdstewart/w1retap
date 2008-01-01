@@ -1,3 +1,16 @@
+1.0.9	2008-01-01
+	There appears not to have been a 1.08.
+
+	The VOLTAGE/DS2438 device returns the temperature if the name
+	contains the text 'Temp'.
+
+	If a device on a coupler appears in the sensors list twice (e.g. a
+	DS2438 for vad/vdd and Temp), then it is now polled correctly.
+
+	A new contrib/lcd4linux directory, which contains patches against
+	lcd4linux 0.10.2-SVN. This makes it simple to display w1retap data
+	on an lcd4linux supported device.
+
 1.0.7	2007-10-21
 	Fixed double free bug with MySQL if no ratelimit table. Thanks to 
 	Matti Airas for a question that prompted me to look at w1mysql.c

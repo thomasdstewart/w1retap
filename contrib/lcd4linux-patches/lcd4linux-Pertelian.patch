@@ -1,0 +1,59 @@
+--- lcd4linux-svn-847/drv_Pertelian.c	2007-12-31 17:27:28.000000000 +0000
++++ lcd4linux-svn-w1retap/drv_Pertelian.c	2007-12-10 20:13:16.000000000 +0000
+@@ -89,7 +89,7 @@
+ 
+     for (i = 0; i < len; i++) {
+ 	drv_generic_serial_write(&data[i], 1);
+-	usleep(1);
++	usleep(100);
+     }
+ }
+ 
+@@ -147,7 +147,7 @@
+     return backlight;
+ }
+ 
+-
++static void plugin_backlight(RESULT *, RESULT * );
+ /* start text mode display */
+ static int drv_Pertelian_start(const char *section)
+ {
+@@ -193,7 +193,6 @@
+     }
+ 
+     drv_Pertelian_clear();	/* clear display */
+-
+     return 0;
+ }
+ 
+@@ -202,6 +201,12 @@
+ /***            plugins               ***/
+ /****************************************/
+ 
++static void plugin_backlight(RESULT * result, RESULT * arg1)
++{
++    double backlight=0;
++    backlight = drv_Pertelian_backlight(R2N(arg1));
++    SetResult(&result, R_NUMBER, &backlight);
++}
+ 
+ /****************************************/
+ /***        widget callbacks          ***/
+@@ -291,8 +296,7 @@
+     wc = Widget_Bar;
+     wc.draw = drv_generic_text_bar_draw;
+     widget_register(&wc);
+-
+-
++    AddFunction("LCD::backlight", 1, plugin_backlight);
+     return 0;
+ }
+ 
+@@ -314,6 +318,7 @@
+ 	drv_generic_text_greet("goodbye!", NULL);
+     }
+ 
++    drv_Pertelian_backlight(0);
+     debug("closing connection");
+     drv_Pertelian_close();
+ 

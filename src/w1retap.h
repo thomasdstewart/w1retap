@@ -136,6 +136,7 @@ struct w1_devlist
     char *lastmsg;
     int timestamp;
     int vane_offset;
+    char *pidfile;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);

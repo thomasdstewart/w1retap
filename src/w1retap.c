@@ -425,7 +425,7 @@ int main(int argc, char **argv)
     
     if(w1->verbose)
     {
-        fputs("w1retap v" VERSION " (c) 2005-2007 Jonathan Hudson\n", stderr);
+        fputs("w1retap v" VERSION " (c) 2005-2008 Jonathan Hudson\n", stderr);
         if(w1->verbose == 2)
         {
             exit (0);
@@ -453,6 +453,17 @@ int main(int argc, char **argv)
     if(w1->daemonise)
         daemon(0,0);
 
+    if(w1->pidfile)
+    {
+        FILE *fp;
+        if(NULL != (fp = fopen(w1->pidfile,"w")))
+        {
+            fprintf(fp,"%d\n", getpid());
+            fclose(fp);
+        }
+        free(w1->pidfile);
+    }
+    
     w1_all_couplers_off(w1);
 
     while(1)

@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.0.7,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.0.9,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -24,8 +24,6 @@ AC_ARG_WITH(sqlite, AC_HELP_STRING([--without-sqlite], [Don't build for SQLite])
 AC_ARG_WITH(odbc, AC_HELP_STRING([--without-odbc], [Don't build for ODBC]))
 
 # Checks for libraries.
-AC_CHECK_LIB([usb], [usb_control_msg])
-AC_CHECK_LIB([sqlite3], [sqlite3_open])
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
 # But don't set fscking LIBS ....
 LIBS=
@@ -35,10 +33,7 @@ AC_CHECK_LIB([m], [sin], [])
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h ])
-
-AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_HEADERS(sql.h)
-AC_CHECK_HEADERS([usb.h],[],[AC_MSG_ERROR([libusb is required])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -67,9 +62,15 @@ USE_APPLET=
 GLIB_CFLAGS=
 GLIB_LIBS=
 
-if test "$ac_cv_header_sqlite3_h" = "no" -o "$ac_cv_lib_sqlite3_sqlite3_open" = "no" ; then
- with_sqlite="no"
+PKG_CHECK_MODULES(SQLITE,sqlite3,[],[USE_SQLITE=no])
+
+
+if test "x${SQLITE_LIBS}" = "x" ; then 
+   with_sqlite="no"
 fi
+
+AC_SUBST(SQLITE_CFLAGS)
+AC_SUBST(SQLITE_LIBS)    
 
 if test "$with_sqlite" != "no" ; then
  USE_SQLITE=sqlite
@@ -142,7 +143,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
 if test "$PKG_CONFIG" = "no" ; then
  AC_MSG_ERROR([Sorry, we need pkg-config])
 else
- PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
+ PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.8.0)
 fi
 
 AC_MSG_CHECKING(for fine weather)
@@ -166,9 +167,9 @@ libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,USE_APPLET="w1temp",USE_APPLET="")
 fi
 
 AC_SUBST(USE_APPLET)	
-
-
-
+PKG_CHECK_MODULES(LIBUSB, libusb)
+AC_SUBST(LIBUSB_CFLAGS)
+AC_SUBST(LIBUSB_LIBS)
 
 AC_OUTPUT(
 Makefile

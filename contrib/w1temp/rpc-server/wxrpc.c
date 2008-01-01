@@ -18,9 +18,10 @@ xmlrpc_value * getWeather (xmlrpc_env *env, xmlrpc_value *param_array,
         {
             while(fgets(buf, sizeof(buf), fp))
             {
-                char *n = 0, *v = 0, *u = 0;
-                sscanf(buf, "%as %as %as", &n, &v, &u);
-                if(n && v && u)
+                char n[128], v[128], u[128];
+                *n = *v = *u = 0;
+                sscanf(buf, "%s %s %s", n, v, u);
+                if(*n && *v && *u)
                 {
                     if(0 == strcmp(n, "Date"))
                     {
