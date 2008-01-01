@@ -1,6 +1,6 @@
 EXTRA_DIST=$(wildcard *.c) $(wildcard *.h) makefile.shrlib README ReadMe.txt
 
-AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I . $(GLIB_CFLAGS)
+AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I . $(GLIB_CFLAGS) $(LIBUSB_CFLAGS)
 
 bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter mweather lcdtest
  
@@ -14,7 +14,7 @@ libw1serial_la_LIBADD = -L. -lw1common
 libw1serial_la_DEPENDENCIES = libw1common.la
 
 libw1usb_la_SOURCES = libusbllnk.c libusbds2490.c libusbnet.c libusbses.c libusbtran.c
-libw1usb_la_LIBADD = -L. -lw1common -lusb
+libw1usb_la_LIBADD = -L. -lw1common $(LIBUSB_LIBS)
 libw1usb_la_DEPENDENCIES = libw1common.la
 
 libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \

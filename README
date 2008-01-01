@@ -60,4 +60,17 @@ panel applet (actually two, using different transports).
 Please see the docs sub-directory for information on building,
 installing and running w1retap. In particular, README.usb
 
+Building on FreeBSD
+~~~~~~~~~~~~~~~~~~~
+
+You need a load of GNU stuff, including (possibly) the autotools.
+I'm no BSD expert, and found it necessary to set:
+
+export ACLOCAL_FLAGS="-I /usr/local/share/aclocal"
+export PATH=$PATH:/usr/local/gnu-autotools/bin/
+export LDFLAGS="-L/usr/local/lib"
+
+In addition, if you want the gnome applet, you need to move the bonobo
+server and pixmaps manually.
+
 Jonathan Hudson, Netley Marsh, England.

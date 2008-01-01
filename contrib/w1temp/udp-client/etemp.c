@@ -21,12 +21,12 @@ int main (int argc, char **argv)
     char *fnam = "/tmp/.wx_static.dat";
     struct sockaddr_in name;
     int c;
-    char *auth = "foo";
+    char auth[256] = "foo";
     char *p;
     
     if((p = getenv("HOME")))
     {
-        char fbuf[1024];
+        char fbuf[256];
         FILE *fp;
         
         strcpy(fbuf, p);
@@ -35,7 +35,7 @@ int main (int argc, char **argv)
         {
             while(fgets(fbuf, sizeof(fbuf),fp))
             {
-                sscanf(fbuf, "uauth = %a[^\n]\n", &auth);
+                sscanf(fbuf, "uauth = %[^\n]", auth);
             }
             fclose(fp);
         }

@@ -1,0 +1,10 @@
+Patches against the 0.10.2-SVN lcd4linux that:
+
+* Enables the backlight on the Pertelian LCD device;
+
+* Adds a w1retap plugin to lcd4linux.
+
+There is a screen-shot of this device displaying w1retap data at
+<http://www.daria.co.uk/wx/tech.html>
+
+-jh
