@@ -324,6 +324,10 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             fprintf(stderr,"Vane offset %d\n",w1->vane_offset);
         }
+        if(w1->logtmp)
+        {
+            fprintf (stderr, "Log file is %s\n", w1->tmpname);
+        }
     }
 }
 
@@ -358,6 +362,8 @@ int main(int argc, char **argv)
          "Daemonise (background) application", NULL},
         {"no-tmp-log",'T',0, G_OPTION_ARG_NONE, &w1->logtmp,
          "Disables /tmp/.w1retap.dat logging", NULL},
+        {"tmp-log-name",'l',0, G_OPTION_ARG_STRING, &w1->tmpname,
+         "Names logging file (/tmp/.w1retap.dat)", "FILE"},
         {"interface", 'i', 0, G_OPTION_ARG_STRING, &w1->iface,
          "Interface device", "DEVICE"},
         {"cycle-time", 't', 0, G_OPTION_ARG_INT, &w1->delay,
@@ -416,6 +422,12 @@ int main(int argc, char **argv)
         } 
     }
 
+    if(w1->tmpname == NULL)
+    {
+        w1->tmpname = "/tmp/.w1retap.dat";
+    }
+
+    
     w1->doread ^= 1;
 
     if(showvers)
