@@ -1,3 +1,9 @@
+1.1.0   2006-02-01
+	Close and reopen log file on each write (Will Sowerbutts).
+
+	Option to name /tmp/.wiretap.dat to something else (suggested by 
+	Mihail Peltekov to allow multiple daemons per machine).
+
 1.0.9	2008-01-01
 	There appears not to have been a 1.08.
 

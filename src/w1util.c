@@ -292,8 +292,7 @@ void w1_tmpfilelog (w1_devlist_t *w1)
             char tbuf[TBUF_SZ];
             logtimes(w1->logtime, tbuf);
             n += sprintf(line+n,"udate=%ld\ndate=%s\n", w1->logtime, tbuf);
-            
-            int fd = open("/tmp/.w1retap.dat", O_WRONLY|O_CREAT|O_TRUNC, 0664);
+            int fd = open(w1->tmpname, O_WRONLY|O_CREAT|O_TRUNC, 0664);
             flock(fd, LOCK_EX);
             write(fd,line,n);
             flock(fd, LOCK_UN);        

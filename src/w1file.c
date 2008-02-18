@@ -91,13 +91,9 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
     int i;
     char timb[TBUF_SZ];
     w1_device_t *devs;
-    
-    static FILE *lfp;
+    FILE *lfp;
 
-    if(lfp == NULL)
-    {
-        lfp = w1_file_open(logfile);
-    }
+    lfp = fopen(logfile, "a");
     
     if(lfp == NULL)
     {
@@ -123,7 +119,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
             }
         }
     }
-    fflush(lfp);
+    fclose(lfp);
 }
 
 
