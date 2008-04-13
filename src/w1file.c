@@ -85,7 +85,6 @@ void w1_init(w1_devlist_t * w1, char *fname)
     w1->devs=devs;
 }
 
-
 void w1_logger (w1_devlist_t *w1, char *logfile)
 {
     int i;
@@ -93,7 +92,22 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
     w1_device_t *devs;
     FILE *lfp;
 
-    lfp = fopen(logfile, "a");
+    if(logfile == NULL)
+    {
+        lfp = stdout;
+        setvbuf(lfp, (char *)NULL, _IOLBF, 0);
+    }
+    else
+    {
+        if(*logfile == '|')
+        {
+            lfp = popen(logfile+1,"w");
+        }
+        else
+        {
+            lfp = fopen(logfile, "a");
+        }
+    }
     
     if(lfp == NULL)
     {
@@ -119,8 +133,16 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
             }
         }
     }
-    fclose(lfp);
+
+    if(logfile)
+    {
+        if (*logfile == '|')
+        {
+            pclose(lfp);
+        }
+        else
+        {
+            fclose(lfp);
+        }
+    }
 }
-
-
-
