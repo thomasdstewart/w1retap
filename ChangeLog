@@ -1,4 +1,16 @@
-1.1.0   2006-02-01
+1.2.0	2008-04-13
+	Support HobbyBoards 'Bitson' barometer. This is of type HB_BARO
+	(or HB-BARO). As with the Bray, the calibration parameters (slope,
+	offset are given in the 'params' field of the configuration table.
+
+	For the Bray Barometer, allow params field to have either two or
+	three values. If a third value is given it is assumed to be a
+	fixed temperature (°C) for use in pressure normalisation.
+	
+	Allow the w1file 'filename' to be a pipe (popen(2)) when the
+	initial character is '|' (requested by Mihail Peltekov).
+	
+1.1.0   2008-02-01
 	Close and reopen log file on each write (Will Sowerbutts).
 
 	Option to name /tmp/.wiretap.dat to something else (suggested by 

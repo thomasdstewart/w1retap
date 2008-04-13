@@ -30,7 +30,7 @@
 #include <gmodule.h>
 
 enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
-              W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V };
+              W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V, W1_HBBARO };
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
 /* coupler states: see SetSwitch1F() in swt1f.c */
