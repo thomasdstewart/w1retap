@@ -243,8 +243,8 @@ static float pressure_at_msl(float pres, float temp, int altitude)
     return pres;
 }
 
-#define SLOPE (35.949367089)
-#define OFFSET (751.075949363)
+#define BRAY_SLOPE (35.949367089)
+#define BRAY_OFFSET (751.075949363)
 
 static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 {
@@ -265,6 +265,91 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
             float pres;
             float temp = Get_Temperature(w1->portnum,w->serno);
             double slope,offset;
+	    float ptemp;
+            if(w->params && w->params->num >= 2)
+            {
+                slope = w->params->values[0];
+                offset = w->params->values[1];
+		ptemp = w->params->values[2];
+            }
+            else
+            {
+                slope = BRAY_SLOPE;
+                offset = BRAY_OFFSET;
+		ptemp = temp;
+            }
+            pres = slope * vad + offset;
+            if(w1->verbose)
+            {
+		fprintf(stderr,"vad %.3f slope %f, offset %f\n", vad, slope, offset);
+            }
+
+            if (w1->altitude)
+            {
+		if(w1->verbose)
+		{
+		    fprintf(stderr,"raw %f %f %d\n",pres, temp, w1->altitude);
+		}
+                pres = pressure_at_msl(pres, ptemp, w1->altitude);
+		if(w1->verbose)
+		{
+		    fprintf(stderr,"msl %f \n",pres);
+		}
+            }
+            
+            if(w->s[0].name)
+            {
+                w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
+                    ? pres : temp;
+                nv += w1_validate(w1, &w->s[0]);
+            }
+            else
+            {
+                w->s[0].valid = 0;
+            }
+            
+            if(w->s[1].name)
+            {
+                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
+                    ? temp : pres;
+                nv += w1_validate(w1, &w->s[1]);
+            }
+            else
+            {
+                w->s[1].valid = 0;
+            }
+        }
+    }
+    else
+    {
+        w->s[0].valid = w->s[1].valid = 0;
+    }
+    return nv;
+}
+
+// Values for MSL
+#define HB_SLOPE (0.6562)
+#define HB_OFFSET (26.0827)
+
+static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
+{
+    float vdd =0 ,vad =0;
+    int nv = 0;
+
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    if(w1_select_device(w1, w))
+    {
+        vdd = ReadAtoD(w1->portnum,TRUE, w->serno);    
+        vad = ReadAtoD(w1->portnum,FALSE,w->serno);
+        if (vad > 0.0)
+        {
+            float pres,pimp;
+            float temp = Get_Temperature(w1->portnum,w->serno);
+            double slope,offset;
 
             if(w->params && w->params->num == 2)
             {
@@ -273,16 +358,19 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
             }
             else
             {
-                slope = SLOPE;
-                offset = OFFSET;
+                slope = HB_SLOPE;
+                offset = HB_OFFSET;
             }
-            pres = slope * vad + offset;
+	    pimp = slope * vad + offset;
+            pres = 33.863886 * pimp;
             if(w1->verbose)
-                fprintf(stderr,"slope %f, offset %f\n", slope, offset);
-            if (w1->altitude)
             {
-                pres = pressure_at_msl(pres, temp, w1->altitude);
+                fprintf(stderr,"vad %.3f, vdd %.3f, slope %.4f, offset %.4f\n",
+                        vad, vdd, slope, offset);
+                fprintf(stderr,"temp %.2f, pres %.1f hPa (%.3f in)\n",
+                        temp, pres, pimp);
             }
+            
             if(w->s[0].name)
             {
                 w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
@@ -381,17 +469,17 @@ static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w)
             if(w->s[k].abbrv)
             {
                 int vreq=0;
-                if (strcasecmp(w->s[k].abbrv, "vdd") == 0)
+                if (strcasestr(w->s[k].abbrv, "vdd"))
                 {
                     val = ReadAtoD(w1->portnum,TRUE, w->serno);
                     vreq=1;
                 }
-                else if (strcasecmp(w->s[k].abbrv, "vad") == 0)
+                else if (strcasestr(w->s[k].abbrv, "vad"))
                 {
                     val = ReadAtoD(w1->portnum, FALSE, w->serno);
                     vreq=1;                        
                 }
-                else if (strcasecmp(w->s[k].abbrv, "vsens") == 0)
+                else if (strcasestr(w->s[k].abbrv, "vsens"))
                 {
                     val = ReadVsens(w1->portnum, w->serno);
                     vreq=1;
@@ -406,7 +494,7 @@ static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w)
                 }
                 else
                 {
-                    if(strcasestr(w->s[k].name, "Temp"))
+                    if(strcasestr(w->s[k].name, "temp"))
                     {
                         val = Get_Temperature(w1->portnum,w->serno);
                         w->s[k].value = val;
@@ -718,6 +806,10 @@ int w1_read_all_sensors(w1_devlist_t *w1)
                     
                 case W1_BRAY:
                     r = w1_read_bray(w1, d);
+                    break;
+
+                case W1_HBBARO:
+                    r = w1_read_hb_pressure(w1, d);
                     break;
 
                 case W1_SHT11:

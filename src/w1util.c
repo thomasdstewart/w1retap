@@ -211,6 +211,10 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_DS2438V;
     }
+    else if (MATCHES("HB-BARO") || MATCHES("HB_BARO") )
+    {
+        w->stype=W1_HBBARO;
+    }
 }
 
 

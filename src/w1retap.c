@@ -349,6 +349,7 @@ int main(int argc, char **argv)
     struct sigaction act ={{0}};
     gboolean immed = 1;
     gboolean showvers=0;
+    gboolean once=0;
     int n;
     char *p;
     GError *error = NULL;
@@ -358,6 +359,8 @@ int main(int argc, char **argv)
     {
         {"wait",'w', 0, G_OPTION_ARG_NONE, &immed,
          "At startup, wait until next interval",NULL},
+        {"once-only",'1', 0, G_OPTION_ARG_NONE, &once,
+         "Read once and exit",NULL},
         {"daemonise",'d', 0, G_OPTION_ARG_NONE, &w1->daemonise,
          "Daemonise (background) application", NULL},
         {"no-tmp-log",'T',0, G_OPTION_ARG_NONE, &w1->logtmp,
@@ -502,6 +505,9 @@ int main(int argc, char **argv)
                 }
             }
         }
+
+        if(once)
+            break;
         
         if(w1->delay)
         {
