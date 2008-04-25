@@ -30,6 +30,17 @@ SYSFS{idVendor}=="04fa", SYSFS{idProduct}=="2490", GROUP="w1retap", MODE="0664"
 LABEL="w1retap_rules_end"
 ################################################################
 
+or for later kernels / udev (2008 era)
+
+################################################################
+# udev rules file for w1retap
+SUBSYSTEMS=="usb", GOTO="usb_w1_start"
+GOTO="usb_w1_end"
+LABEL="usb_w1_start"
+ATTRS{idVendor}=="04fa", ATTRS{idProduct}=="2490", GROUP="w1retap", MODE="0664"
+LABEL="usb_w1_end"
+################################################################
+
 Note that files in /etc/udev/rules.d/ are run in alphanumeric order,
 so on Gentoo, where the default 50-udev.rules will set the permission
 to 0644, then the ??-w1retap.rules must have a greater number, e.g. 
@@ -151,6 +162,10 @@ run_program: '/lib/udev/check_ptp_camera' returned with status 2
 create_node: creating device node '/dev/bus/usb/003/023', major = '189', minor = '278', mode = '0664', uid = '0', gid = '1003'
 
 Again, the device has the correct mode and gid (1003 in this machine).
+
+On more modern systems (e.g. 2008, Hardy Heron)
+
+udevadm info etc.
 
 dstest
 ~~~~~~
