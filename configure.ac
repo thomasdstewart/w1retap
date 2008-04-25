@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.2.0,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.2.1,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -62,7 +62,7 @@ USE_APPLET=
 GLIB_CFLAGS=
 GLIB_LIBS=
 
-PKG_CHECK_MODULES(SQLITE,sqlite3,[],[USE_SQLITE=no])
+PKG_CHECK_MODULES(SQLITE,sqlite3,[],[USE_SQLITE=])
 
 
 if test "x${SQLITE_LIBS}" = "x" ; then 
