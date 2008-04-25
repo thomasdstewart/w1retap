@@ -1,3 +1,13 @@
+1.2.1	2008-04-25
+	Fixes configure.ac for the case where libsqlite3-dev was not
+	installed (reported by Dave Johns).
+
+	Updated docs/README.usb to describe a udev script for contemporary
+	udev / kernels (e.g. as released in Ubuntu 8.04 Hardy Heron).
+
+	Added a pertd example for displaying to the Pertelian X2040 LCD in
+	docs/pert-log.rb
+
 1.2.0	2008-04-13
 	Support HobbyBoards 'Bitson' barometer. This is of type HB_BARO
 	(or HB-BARO). As with the Bray, the calibration parameters (slope,
