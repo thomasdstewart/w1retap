@@ -31,7 +31,7 @@
 void w1_init(w1_devlist_t * w1, char *fname)
 {
     FILE *fp;
-    int n = 0;
+    int n = 0, nn = 0;
     w1_device_t * devs = NULL;
     int alldev = 0;
     short allocf = 0;
@@ -52,25 +52,44 @@ void w1_init(w1_devlist_t * w1, char *fname)
             
             if(isalnum(*line))
             {
+                char *serno=NULL;
+                char *devtype=NULL;
                 if(NULL != (s = strchr(line,'\n')))
                 {
                     *s = 0;
                 }
                 
-                if(n == alldev)
-                {
-                    alldev += ALLOCDEV;
-                    devs = realloc(devs, sizeof(w1_device_t)*alldev);
-                    memset(devs+n, 0, sizeof(w1_device_t)*ALLOCDEV);
-                }
-                
                 for(j =0, s = line; (p = strsep(&s,"|:"));  j++)
                 {
                     char *sv = (p && *p) ? strdup(p) : NULL;
-                    w1_set_device_data_index (devs+n, j, sv);
+                    switch(j)
+                    {
+                        case 0:
+                            serno = sv;
+                            break;
+                        case 1:
+                            devtype =sv;
+                            if((nn = w1_get_device_index(devs, n, serno, devtype)) == -1)
+                            {
+                                if(n == alldev)
+                                {
+                                    alldev += ALLOCDEV;
+                                    devs = realloc(devs, sizeof(w1_device_t)*alldev);
+                                    memset(devs+n, 0, sizeof(w1_device_t)*ALLOCDEV);
+                                }
+                                
+                                nn = n;
+                                n++;
+                            }
+                            w1_set_device_data_index (devs+nn, 0, serno);
+                            w1_set_device_data_index (devs+nn, 1, devtype);
+                            w1_enumdevs(devs+nn);
+                            break;
+                        default:
+                            w1_set_device_data_index (devs+nn, j, sv);
+                            break;
+                    }
                 }
-                w1_enumdevs(devs+n);
-                n++;
             }
         }
         fclose(fp);
@@ -121,7 +140,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
         if(devs->init)
         {
             int j;
-            for (j = 0; j < 2; j++)
+            for (j = 0; j < devs->ns; j++)
             {
                 if(devs->s[j].valid)
                 {

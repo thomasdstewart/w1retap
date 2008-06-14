@@ -25,7 +25,7 @@ libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \
 	owpgrw.c owprgm.c owcache.c		     \
 	temp10.c atod26.c screenio.c		     \
 	cnt1d.c swt12.c pressure.c sht11_humid.c \
-	swt1f.c atod20.c ds2408lcd.c
+	swt1f.c atod20.c ds2408lcd.c ds2760.c
 
 w1find_SOURCES = w1find.c findtype.c
 w1find_DEPENDENCIES = libw1common.la

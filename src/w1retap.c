@@ -276,7 +276,7 @@ static void w1_show(w1_devlist_t *w1, int forced)
                 fputc('\n', stderr);
             }
             
-            for(j = 0; j < 2; j++)
+            for(j = 0; j < w1->devs[i].ns; j++)
             {
                 if(w1->devs[i].s[j].abbrv)
                 {
@@ -308,12 +308,33 @@ static void w1_show(w1_devlist_t *w1, int forced)
         
         for(i = 0; i < w1->ndll; i++)
         {
+            char *s;
+            char *p=NULL;
+            
+            if((s=w1->dlls[i].param))
+            {
+                if ((p = strcasestr(w1->dlls[i].param,"password=")))
+                {
+                    char *q;
+                    s = strdup(w1->dlls[i].param);
+                    q = (char*)((s+(p-w1->dlls[i].param))+sizeof("password=")-1);
+                    while (*q && !isspace(*q))
+                    {
+                        *q++='*';
+                    }
+                }
+            }
+            else
+            {
+                s="";
+            }
+            
             fprintf(stderr, "%2d: %c [%p] %s => %s\n",
                     i,
                     w1->dlls[i].type,
                     w1->dlls[i].handle,
-                    g_module_name(w1->dlls[i].handle),
-                    (w1->dlls[i].param) ? w1->dlls[i].param : "");
+                    g_module_name(w1->dlls[i].handle),s);
+            if(p) free(s);
         }
 
         if(w1->altitude)
@@ -466,8 +487,14 @@ int main(int argc, char **argv)
     w1_show(w1, 0);
     
     if(w1->daemonise)
-        daemon(0,0);
+    {
+        // preserve redirected log files unless TTYs
+        int iclose;
+        iclose = !(isatty(1) && isatty(2));
+        daemon(0,iclose);
+    }
 
+    
     if(w1->pidfile)
     {
         FILE *fp;

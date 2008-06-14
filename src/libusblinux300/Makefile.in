@@ -65,7 +65,8 @@ am_libowfat_a_OBJECTS = mbappreg.$(OBJEXT) mbeprom.$(OBJEXT) \
 	owprgm.$(OBJEXT) owcache.$(OBJEXT) temp10.$(OBJEXT) \
 	atod26.$(OBJEXT) screenio.$(OBJEXT) cnt1d.$(OBJEXT) \
 	swt12.$(OBJEXT) pressure.$(OBJEXT) sht11_humid.$(OBJEXT) \
-	swt1f.$(OBJEXT) atod20.$(OBJEXT) ds2408lcd.$(OBJEXT)
+	swt1f.$(OBJEXT) atod20.$(OBJEXT) ds2408lcd.$(OBJEXT) \
+	ds2760.$(OBJEXT)
 libowfat_a_OBJECTS = $(am_libowfat_a_OBJECTS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -287,7 +288,7 @@ libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \
 	owpgrw.c owprgm.c owcache.c		     \
 	temp10.c atod26.c screenio.c		     \
 	cnt1d.c swt12.c pressure.c sht11_humid.c \
-	swt1f.c atod20.c ds2408lcd.c
+	swt1f.c atod20.c ds2408lcd.c ds2760.c
 
 w1find_SOURCES = w1find.c findtype.c
 w1find_DEPENDENCIES = libw1common.la
@@ -477,6 +478,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crcutil.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ds2408lcd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ds2480ut.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ds2760.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/findtype.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethumd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/humid.Po@am__quote@

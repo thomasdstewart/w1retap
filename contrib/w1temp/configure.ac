@@ -13,10 +13,11 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 AC_ARG_WITH(xmlrpc, AC_HELP_STRING([--with-xmlrpc], [Force sppport for XMLRPC client]))
-AC_ARG_WITH(xmlrpc, AC_HELP_STRING([--with-curl], [Force sppport for cURL client]))
-
+AC_ARG_WITH(curl, AC_HELP_STRING([--with-curl], [Force sppport for cURL client]))
+AC_ARG_WITH(gio, AC_HELP_STRING([--with-gio], [Force sppport for GVFS client]))
 
 # Checks for libraries.
 AC_CHECK_LIB([curl], [curl_easy_init])
@@ -53,6 +54,8 @@ AC_CHECK_FUNCS([alarm atexit gettimeofday memset sqrt stpcpy strcasecmp strchr s
 USE_APPLET=
 GLIB_CFLAGS=
 GLIB_LIBS=
+GIO_CFLAGS=
+GIO_LIBS=
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
 
@@ -61,59 +64,54 @@ if test "$PKG_CONFIG" = "no" ; then
 fi
 
 PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
-#AC_MSG_RESULT(OK)
+PKG_CHECK_MODULES(GIO_MODULE, gio-2.0 >= 2.16.0)
 
-dnl need expat for starters for the applet
-if test "$ac_cv_lib_expat_XML_ParserCreate" = "yes"
-then
- GTK_REQUIRED=2.2.0
- LIBPANEL_REQUIRED=2.6.0
- PKG_CHECK_MODULES(GNOME_APPLETS, gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,,false)
- if test -z "$GNOME_APPLETS_PKG_ERRORS" ; then
-  if test "$with_xmlrpc" != "yes" -a "$with_curl" != "yes"
-  then
-    USE_APPLET=udp-client
-  elif test "$ac_cv_lib_curl_curl_easy_init" = "yes"
-  then
-   if test "$ac_cv_lib_xmlrpc_xmlrpc_array_new" = "yes" -a "$with_xmlrpc" = "yes"
-   then	
-    USE_RPCAPP=xmlrpc-client
-    USE_RPCCGI=rpc-server
-    XMLRPC_CFLAGS="$(xmlrpc-c-config client --cflags)"
-    XMLRPC_LIBS="$(xmlrpc-c-config client --libs)"
-    XMLRPCCGI_CFLAGS="$(xmlrpc-c-config cgi-server --cflags)"
-    XMLRPCCGI_LIBS="$(xmlrpc-c-config cgi-server --libs)"
-    AC_SUBST(XMLRPC_CFLAGS)
-    AC_SUBST(XMLRPC_LIBS)
-    AC_SUBST(XMLRPCCGI_CFLAGS)
-    AC_SUBST(XMLRPCCGI_LIBS)
-   else
-    AC_MSG_ERROR([Sorry, we need XMLRPC])
-   fi	
+GTK_REQUIRED=2.2.0
+LIBPANEL_REQUIRED=2.6.0
+PKG_CHECK_MODULES(GNOME_APPLETS, gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,,false)
+if test -z "$GNOME_APPLETS_PKG_ERRORS" ; then
+ USE_APPLET=udp-client
+ if test "$ac_cv_lib_xmlrpc_xmlrpc_array_new" = "yes" -a "$with_xmlrpc" = "yes"
+ then	
+  USE_RPCAPP=xmlrpc-client
+  USE_RPCCGI=rpc-server
+  XMLRPC_CFLAGS="$(xmlrpc-c-config client --cflags)"
+  XMLRPC_LIBS="$(xmlrpc-c-config client --libs)"
+  XMLRPCCGI_CFLAGS="$(xmlrpc-c-config cgi-server --cflags)"
+  XMLRPCCGI_LIBS="$(xmlrpc-c-config cgi-server --libs)"
+  AC_SUBST(XMLRPC_CFLAGS)
+  AC_SUBST(XMLRPC_LIBS)
+  AC_SUBST(XMLRPCCGI_CFLAGS)
+  AC_SUBST(XMLRPCCGI_LIBS)
+ fi	
 
-   if "$with_curl" = "yes"
-   then
-    USE_CURLAPP=curl-client
-    CURL_CFLAGS="$(curl-config --cflags)"
-    CURL_LIBS="$(curl-config --libs)"
-    AC_SUBST(CURL_CFLAGS)
-    AC_SUBST(CURL_LIBS)
-   else
-    AC_MSG_ERROR([Sorry, we need cURL])
-   fi
-  fi
- else
-  : #echo "************ FAILS **************"
+ if test "x$with_curl" = "xyes" -a "x$ac_cv_lib_curl_curl_easy_init" = "xyes"
+ then
+  USE_CURLAPP=curl-client
+  CURL_CFLAGS="$(curl-config --cflags)"
+  CURL_LIBS="$(curl-config --libs)"
+  AC_SUBST(CURL_CFLAGS)
+  AC_SUBST(CURL_LIBS)
+ fi
+
+ if test -z "$GIO_PKG_ERRORS" -a "x$with_gio" = "xyes"
+ then
+  USE_GIOAPP=gvfs-client
+  AC_SUBST(GIO_MODULE_CFLAGS)
+  AC_SUBST(GIO_MODULE_LIBS)
  fi
 fi
+
 AC_MSG_CHECKING(for sunny days)
 
+CFLAGS=-Werror
 GLIB_CFLAGS="$GLIB_MODULE_CFLAGS"
 GLIB_LIBS="$GLIB_MODULE_LIBS"
 AC_SUBST(USE_APPLET)
 AC_SUBST(USE_RPCAPP)
 AC_SUBST(USE_CURLAPP)
 AC_SUBST(USE_RPCCGI)
+AC_SUBST(USE_GIOAPP)
 AC_SUBST(GNOME_APPLETS_CFLAGS)
 AC_SUBST(GNOME_APPLETS_LIBS)
 AC_SUBST(GLIB_CFLAGS)
@@ -126,5 +124,6 @@ udp-client/Makefile
 curl-client/Makefile
 xmlrpc-client/Makefile
 rpc-server/Makefile
+gvfs-client/Makefile
 )
 
