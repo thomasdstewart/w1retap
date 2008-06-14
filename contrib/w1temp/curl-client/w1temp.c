@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#define _GNU_SOURCE
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <stdio.h>
@@ -311,14 +312,13 @@ static gboolean w1temp_fill (
                 {
                     m.auth = g_strdup(buf);
                 }
-                else if(sscanf(fbuf, "host = %[^\n]", buf))
+                else if(sscanf(fbuf, "url = %[^\n]", buf))
                 {
-                    m.host = g_strdup(buf);
+                    m.url = g_strdup(buf);
                 }
                 else
                 {
-                    (void)(sscanf(fbuf, "delay = %d", &m.timeout) ||
-                           sscanf(fbuf, "port = %hd", &m.port));
+                    sscanf(fbuf, "delay = %d", &m.timeout);
                 }
             }
             fclose(fp);

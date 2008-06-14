@@ -37,6 +37,7 @@
 #include "pressure.h"
 #include "sht11.h"
 #include "swt1f.h"
+#include "ds2760.h"
 
 #include "w1retap.h"
 
@@ -46,6 +47,18 @@
 #define WINDVANE_R1        (WINDVANE_VCC * (2.0/3.0))           // connected to 66% voltage divider
 #define WINDVANE_GND       (0.0)                                // connected to GND
 #define WINDVANE_MAX_ERROR ((WINDVANE_R1 - WINDVANE_R2) / 2.0)  // max acceptable error
+
+typedef struct 
+{
+    float vdd;
+    float vad;
+    float vsens;
+    float temp;
+    int   req;
+} ds2438v_t;
+
+enum W1_DS2438_modes {DS2438_VDD=1, DS2438_VAD=2, DS2438_VSENS=4,
+                      DS2438_TEMP=8};
 
 static float wind_conversion_table[16][4] = { 
     {WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC},  
@@ -64,6 +77,16 @@ static float wind_conversion_table[16][4] = {
     {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R1,  WINDVANE_R1 },  
     {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2 },  
     {WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2 }}; 
+
+
+static void w1_set_invalid(w1_device_t *w)
+{
+    int k;
+    for(k = 0; k < w->ns; k++)
+    {
+        w->s[k].valid = 0;
+    }
+}
 
 static void w1_make_serial(char * asc, unsigned char *bin)
 {
@@ -205,7 +228,7 @@ static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
         w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
-
+    w1_set_invalid(w);
     if(w1_select_device(w1, w))
     {
         if(w->s[0].abbrv)
@@ -226,9 +249,103 @@ static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
             }
         }
     }
-    else
+    return nv;
+}
+
+static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w, ds2438v_t *v)
+{
+    int nv = 0;
+    int sel = 1;
+    
+    if(w->init == 0)
     {
-        w->s[0].valid = w->s[1].valid = 0;
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+
+    if(v == NULL)
+    {
+        sel = w1_select_device(w1,w);
+    }
+
+    w1_set_invalid(w);
+    if(sel)
+    {
+        float val=-1.0;
+        w1_sensor_t *s;
+
+        s = w1_match_sensor(w, "vdd");
+        if ((v && (v->req & DS2438_VDD)) || s)
+        {
+            val = ReadAtoD(w1->portnum,TRUE, w->serno);
+            if(s)
+            {
+                if(val != -1.0)
+                {
+                    s->value = val;
+                    nv += w1_validate(w1, s);
+                }
+                else
+                {
+                    s->valid = 0;
+                }
+            }
+            if(v)
+                v->vdd = val;
+        }
+
+        s = w1_match_sensor(w, "vad");
+        if ((v && (v->req & DS2438_VAD)) || s)
+        {
+            val = ReadAtoD(w1->portnum, FALSE, w->serno);
+            if(s)
+            {
+                if(val != -1.0)
+                {
+                    s->value = val;
+                    nv += w1_validate(w1, s);
+                }
+                else
+                {
+                    s->valid = 0;
+                }
+            }
+            if(v)
+                v->vad = val;
+        }
+                
+        s = w1_match_sensor(w, "vsens");
+        if ((v && (v->req & DS2438_VSENS)) || s)
+        {
+            val = ReadVsens(w1->portnum, w->serno);
+            if(s)
+            {
+                if(val != -1.0)
+                {
+                    s->value = val;
+                    nv += w1_validate(w1, s);
+                }
+                else
+                {
+                    s->valid = 0;
+                }
+            }
+            if(v)
+                v->vsens = val;
+        }
+
+        s = w1_match_sensor(w, "temp");
+        if ((v && (v->req & DS2438_TEMP)) || s)
+        {
+            val = Get_Temperature(w1->portnum,w->serno);
+            if(s)
+            {
+                s->value = val;
+                nv += w1_validate(w1, s);
+            }
+            if(v)
+                v->temp = val;
+        }
     }
     return nv;
 }
@@ -248,9 +365,9 @@ static float pressure_at_msl(float pres, float temp, int altitude)
 
 static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 {
-    float vdd =0 ,vad =0;
     int nv = 0;
-
+    int k;
+    
     if(w->init == 0)
     {
         w1_make_serial(w->serial, w->serno);
@@ -258,12 +375,13 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
     }
     if(w1_select_device(w1, w))
     {
-        vdd = ReadAtoD(w1->portnum,TRUE, w->serno);    
-        vad = ReadAtoD(w1->portnum,FALSE,w->serno);
-        if (vad > 0.0)
+        ds2438v_t v = {0};
+        v.req = DS2438_VAD | DS2438_TEMP;
+        nv = w1_read_voltages(w1, w, &v);
+        
+        if (v.vad > 0.0)
         {
             float pres;
-            float temp = Get_Temperature(w1->portnum,w->serno);
             double slope,offset;
 	    float ptemp;
             if(w->params && w->params->num >= 2)
@@ -276,19 +394,19 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
             {
                 slope = BRAY_SLOPE;
                 offset = BRAY_OFFSET;
-		ptemp = temp;
+		ptemp = v.temp;
             }
-            pres = slope * vad + offset;
+            pres = slope * v.vad + offset;
             if(w1->verbose)
             {
-		fprintf(stderr,"vad %.3f slope %f, offset %f\n", vad, slope, offset);
+		fprintf(stderr,"vad %.3f slope %f, offset %f\n", v.vad, slope, offset);
             }
 
             if (w1->altitude)
             {
 		if(w1->verbose)
 		{
-		    fprintf(stderr,"raw %f %f %d\n",pres, temp, w1->altitude);
+		    fprintf(stderr,"raw %f %f %d\n",pres, v.temp, w1->altitude);
 		}
                 pres = pressure_at_msl(pres, ptemp, w1->altitude);
 		if(w1->verbose)
@@ -296,33 +414,20 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 		    fprintf(stderr,"msl %f \n",pres);
 		}
             }
-            
-            if(w->s[0].name)
+            w1_sensor_t *s;
+            if((s = w1_match_sensor(w, "Pres")))
             {
-                w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
-                    ? pres : temp;
-                nv += w1_validate(w1, &w->s[0]);
-            }
-            else
-            {
-                w->s[0].valid = 0;
-            }
-            
-            if(w->s[1].name)
-            {
-                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
-                    ? temp : pres;
-                nv += w1_validate(w1, &w->s[1]);
-            }
-            else
-            {
-                w->s[1].valid = 0;
+                s->value = pres;
+                nv += w1_validate(w1, s);
             }
         }
     }
     else
     {
-        w->s[0].valid = w->s[1].valid = 0;
+        for(k = 0; k < w->ns; k++)
+        {
+            w->s[k].valid = 0;
+        }
     }
     return nv;
 }
@@ -333,7 +438,6 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 
 static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
 {
-    float vdd =0 ,vad =0;
     int nv = 0;
 
     if(w->init == 0)
@@ -341,14 +445,17 @@ static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
         w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
+
+    w1_set_invalid(w);
     if(w1_select_device(w1, w))
     {
-        vdd = ReadAtoD(w1->portnum,TRUE, w->serno);    
-        vad = ReadAtoD(w1->portnum,FALSE,w->serno);
-        if (vad > 0.0)
+        ds2438v_t v = {0};
+        v.req = DS2438_VAD | DS2438_VDD | DS2438_TEMP;
+        nv = w1_read_voltages(w1, w, &v);
+
+        if (v.vad > 0.0)
         {
             float pres,pimp;
-            float temp = Get_Temperature(w1->portnum,w->serno);
             double slope,offset;
 
             if(w->params && w->params->num == 2)
@@ -361,42 +468,23 @@ static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
                 slope = HB_SLOPE;
                 offset = HB_OFFSET;
             }
-	    pimp = slope * vad + offset;
+	    pimp = slope * v.vad + offset;
             pres = 33.863886 * pimp;
             if(w1->verbose)
             {
                 fprintf(stderr,"vad %.3f, vdd %.3f, slope %.4f, offset %.4f\n",
-                        vad, vdd, slope, offset);
+                        v.vad, v.vdd, slope, offset);
                 fprintf(stderr,"temp %.2f, pres %.1f hPa (%.3f in)\n",
-                        temp, pres, pimp);
+                        v.temp, pres, pimp);
             }
             
-            if(w->s[0].name)
+            w1_sensor_t *s;
+            if((s = w1_match_sensor(w, "Pres")))
             {
-                w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
-                    ? pres : temp;
-                nv += w1_validate(w1, &w->s[0]);
-            }
-            else
-            {
-                w->s[0].valid = 0;
-            }
-            
-            if(w->s[1].name)
-            {
-                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
-                    ? temp : pres;
-                nv += w1_validate(w1, &w->s[1]);
-            }
-            else
-            {
-                w->s[1].valid = 0;
+                s->value = pres;
+                nv += w1_validate(w1, s);
             }
         }
-    }
-    else
-    {
-        w->s[0].valid = w->s[1].valid = 0;
     }
     return nv;
 }
@@ -411,112 +499,35 @@ static int w1_read_sht11 (w1_devlist_t *w1, w1_device_t *w)
         w1_make_serial(w->serial, w->serno);
         w->init = 1;
     }
+    w1_set_invalid(w);
     if(w1_select_device(w1,w))
     {
         if(ReadSHT11(w1->portnum, w->serno, &temp, &rh))
         {
-            if(w->s[0].name)
+            w1_sensor_t *s;
+            if((s = w1_match_sensor(w, "Temp")))
             {
-                w->s[0].value = (strcasestr(w->s[0].name, "Humidity"))
-                    ? rh : temp;
-                nv += w1_validate(w1, &w->s[0]);
+                s->value = temp;
+                nv += w1_validate(w1, s);
             }
-            else
-            {
-                w->s[0].valid = 0;
-            }
-            
-            if(w->s[1].name)
-            {
-                w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
-                    ? temp : rh;
-                nv += w1_validate(w1, &w->s[1]);
-            }
-            else
-            {
-                w->s[1].valid = 0;
-            }
-        }
-        else
-        {
-            w->init = 0;
-        }
-    }
-    else
-    {
-        w->s[0].valid = w->s[1].valid = 0;
-    }
-    
-    return nv;
-}
 
-static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w)
-{
-    int nv = 0;
-    
-    if(w->init == 0)
-    {
-        w1_make_serial(w->serial, w->serno);
-        w->init = 1;
-    }
-
-    if(w1_select_device(w1,w))
-    {
-        int k;
-        for(k =0; k< 2; k++)
-        {
-            float val=-1.0;
-            if(w->s[k].abbrv)
+            if((s = w1_match_sensor(w, "Humidity")))
             {
-                int vreq=0;
-                if (strcasestr(w->s[k].abbrv, "vdd"))
-                {
-                    val = ReadAtoD(w1->portnum,TRUE, w->serno);
-                    vreq=1;
-                }
-                else if (strcasestr(w->s[k].abbrv, "vad"))
-                {
-                    val = ReadAtoD(w1->portnum, FALSE, w->serno);
-                    vreq=1;                        
-                }
-                else if (strcasestr(w->s[k].abbrv, "vsens"))
-                {
-                    val = ReadVsens(w1->portnum, w->serno);
-                    vreq=1;
-                }
-                if(vreq == 1)
-                {
-                    if(val != -1.0)
-                    {
-                        w->s[k].value = val;
-                        nv += w1_validate(w1, &w->s[k]);
-                    }
-                }
-                else
-                {
-                    if(strcasestr(w->s[k].name, "temp"))
-                    {
-                        val = Get_Temperature(w1->portnum,w->serno);
-                        w->s[k].value = val;
-                        nv += w1_validate(w1, &w->s[k]);
-                    }
-                }
+                s->value = rh;
+                nv += w1_validate(w1, s);
             }
         }
-    }
-    else
-    {
-        w->s[0].valid = w->s[1].valid = 0;
     }
     return nv;
 }
                            
 static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
 {
-    float humid=0,temp=0;
-    float vdd =0 ,vad =0 ,vddx =0;
+    float humid=0;
+    float vddx =0;
     int nv = 0;
     char vind=' ';
+    ds2438v_t v = {0};
     
     if(w->init == 0)
     {
@@ -524,56 +535,94 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
         w->init = 1;
     }
 
+    w1_set_invalid(w);
+
     if(w1_select_device(w1,w))
     {
-        vdd = vddx = ReadAtoD(w1->portnum,TRUE, w->serno);
-        vad = ReadAtoD(w1->portnum, FALSE, w->serno);
-        temp = Get_Temperature(w1->portnum, w->serno);
-
-        if(vdd > 5.8)
+        v.req = DS2438_VAD | DS2438_VDD | DS2438_TEMP;
+        nv = w1_read_voltages(w1, w, &v);
+        vddx = v.vdd;
+        
+        if(v.vdd > 5.8)
         {
-
-            vdd = (float)5.8;
+            v.vdd = (float)5.8;
             vind='+';
         }
-        else if(vdd < 4.0)
+        else if(v.vdd < 4.0)
         {
-            vdd = (float) 4.0;
+            v.vdd = (float) 4.0;
             vind = '-';
         }
 
-        humid = (((vad/vdd) - (0.8/vdd))/0.0062)/(1.0546 - 0.00216 * temp);
+        humid = (((v.vad/v.vdd) - (0.8/v.vdd))/0.0062)/
+            (1.0546 - 0.00216 * v.temp);
 
-        if(w->s[0].name)
+        w1_sensor_t *s;
+        if((s = w1_match_sensor(w, "Temp")))
         {
-            w->s[0].value = (strcasestr(w->s[0].name, "Humidity"))
-                ? humid : temp;
-            nv += w1_validate(w1, &w->s[0]);
-        }
-        else
-        {
-            w->s[0].valid = 0;
+            s->value = v.temp;
+            nv += w1_validate(w1, s);
         }
 
-        if(w->s[1].name)
+        if((s = w1_match_sensor(w, "Humidity")))
         {
-            w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
-                ? temp : humid;
-            nv += w1_validate(w1, &w->s[1]);
+            s->value = humid;
+            nv += w1_validate(w1, s);
         }
-        else
-        {
-            w->s[1].valid = 0;
-        }
-    }
-    else
-    {
-        w->s[0].valid = w->s[1].valid = 0;
     }
     
     if(w->s[0].valid == 0 || w->s[1].valid == 0 )
     {
-        w1_replog (w1, "%f %f %f %f %c", vddx, vad, temp, humid, vind);
+        w1_replog (w1, "%f %f %f %f %c", vddx, v.vad, v.temp, humid, vind);
+    }
+    return nv;
+}
+
+static int w1_read_hih (w1_devlist_t *w1, w1_device_t *w)
+{
+    float humid=0,temp=0;
+    float vdd =0 ,vad =0;
+    int nv = 0;
+    
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    w1_set_invalid(w);
+    if(w1_select_device(w1,w))
+    {
+        ds2438v_t v = {0};
+        v.req = DS2438_VAD | DS2438_VDD | DS2438_TEMP;
+        nv = w1_read_voltages(w1, w, &v);
+
+        // Shamelessly researched from owfs; ow_2438.c
+        humid = (v.vad/v.vdd-(0.8/v.vdd)) /
+            (0.0062*(1.0305+0.000044*temp+0.0000011*v.temp*v.temp));
+
+        if (w1->verbose)
+        {
+            fprintf(stderr, "vdd %f vad %f temp %f rh %f\n",
+                    v.vdd, v.vad, v.temp, humid);
+        }
+
+        w1_sensor_t *s;
+        if((s = w1_match_sensor(w, "Temp")))
+        {
+            s->value = v.temp;
+            nv += w1_validate(w1, s);
+        }
+
+        if((s = w1_match_sensor(w, "Humidity")))
+        {
+            s->value = humid;
+            nv += w1_validate(w1, s);
+        }
+    }
+    
+    if(w->s[0].valid == 0 || w->s[1].valid == 0 )
+    {
+        w1_replog (w1, "%f %f %f %f", vdd, vad, temp, humid);
     }
     return nv;
 }
@@ -605,26 +654,18 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
                 {
                     pres = pressure_at_msl(pres, temp, w1->altitude);
                 }
-                if(w->s[0].name)
+
+                w1_sensor_t *s;
+                if((s = w1_match_sensor(w, "Temp")))
                 {
-                    w->s[0].value = (strcasestr(w->s[0].name, "Pres"))
-                        ? pres : temp;
-                    nv += w1_validate(w1, &w->s[0]);
+                    s->value = temp;
+                    nv += w1_validate(w1, s);
                 }
-                else
+
+                if((s = w1_match_sensor(w, "Pres")))
                 {
-                    w->s[0].valid = 0;
-                }
-                
-                if(w->s[1].name)
-                {
-                    w->s[1].value = (strcasestr(w->s[1].name, "Temp"))
-                        ? temp : pres;
-                    nv += w1_validate(w1, &w->s[1]);
-                }
-                else
-                {
-                    w->s[1].valid = 0;
+                    s->value = pres;
+                    nv += w1_validate(w1, s);
                 }
             }
             else
@@ -632,15 +673,65 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
                 w->init = 0;
             }
         }
-        
     }
     else
     {
-        w->s[0].valid = w->s[1].valid = 0;
         w->init  = 1;
     }
     return nv;
 }
+
+static int w1_read_ds2760 (w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+    ds2760_t v = {0};
+    
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    w1_set_invalid(w);
+
+    if(w1_select_device(w1,w))
+    {
+        if(ReadDS2760(w1->portnum, w->serno, &v))
+        {
+            w1_sensor_t *s;
+            if(w1->verbose)
+            {
+                fprintf(stderr,"ReadDS2760: v %f t %f i %f a %f\n",
+                        v.volts, v.temp, v.curr, v.accum);
+            }
+            
+            if((s = w1_match_sensor(w, "Temp")))
+            {
+                s->value = v.temp;
+                nv += w1_validate(w1, s);
+            }
+
+            if((s = w1_match_sensor(w, "Current")))
+            {
+                s->value = v.curr;
+                nv += w1_validate(w1, s);
+            }
+
+            if((s = w1_match_sensor(w, "Volt")))
+            {
+                s->value = v.volts;
+                nv += w1_validate(w1, s);
+            }
+
+            if((s = w1_match_sensor(w, "Accumulator")))
+            {
+                s->value = v.accum;
+                nv += w1_validate(w1, s);
+            }
+        }
+    }
+    return nv;
+}
+
 
 static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
 {
@@ -720,6 +811,7 @@ void w1_initialize_couplers(w1_devlist_t *w1)
 
             char *tmp, *p1, *p2;
 
+            // b < 2 (vice w->ns) is OK here
             for(b = 0; b < 2; b++)
             {
                 if(w->s[b].abbrv && w->s[b].name)
@@ -757,7 +849,6 @@ void w1_initialize_couplers(w1_devlist_t *w1)
                 w->coupler = (w1_coupler_t*)calloc(1, sizeof(w1_coupler_t));
                 w->coupler->branch = clist[nx].branch;
 		w->coupler->coupler_device = clist[nx].coupler_device;
-//                break;
             }
         }
     }
@@ -821,7 +912,15 @@ int w1_read_all_sensors(w1_devlist_t *w1)
                     break;
 
                 case W1_DS2438V:
-                    r = w1_read_voltages(w1, d);
+                    r = w1_read_voltages(w1, d, NULL);
+                    break;
+
+                case W1_HIH:
+                    r = w1_read_hih(w1, d);
+                    break;
+
+                case W1_DS2760:
+                    r = w1_read_ds2760(w1, d);
                     break;
                     
                 case W1_INVALID:

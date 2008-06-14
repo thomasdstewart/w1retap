@@ -54,25 +54,57 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     char *err;
     int n = 0, nr = 0, nc;
     char **rt;
-
+    int nx = 0, ni = 0;
+    
     db = w1_opendb(dbnam);
     if(sqlite3_get_table (db, sql, &rt, &nr, &nc, &err) == SQLITE_OK)
     {
         if(nr > 0 && nc > 0)
         {
+            int k;
+            int nn = 0;
+            int id = -1;
+            int it = -1;
+
             devs = malloc(sizeof(w1_device_t)*nr);
             memset(devs, 0, sizeof(w1_device_t)*nr);
-            int k;
+
+            for(k = 0; k < nc; k++)
+            {
+                if(strcmp(rt[k],"device") == 0)
+                {
+                    id = k;
+                }
+                else if (strcmp(rt[k], "type") == 0)
+                {
+                    it = k;
+                }
+                if (it != -1 && id != -1)
+                    break;
+            }
+
             for(n = 0; n < nr; n++)
             {
+                nn = w1_get_device_index(devs, ni, rt[(n+1)*nc + id],
+                                         rt[(n+1)*nc + it]);
+                if (nn == -1)
+                {
+                    nx = ni;
+                    ni++;
+                }
+                else
+                {
+                    nx = nn;
+                }
                 for(k = 0; k < nc; k++)
                 {
                     char *fnam = rt[k];
                     char *s = rt[(n+1)*nc + k];
                     char *sv = (s && *s) ? strdup(s) : NULL;
-                    w1_set_device_data(devs+n, fnam, sv);                    
+                    if (fnam && sv)
+                        w1_set_device_data(devs+nx, fnam, sv);
                 }
-                w1_enumdevs(devs+n);
+                w1_enumdevs(devs+nx);
             }
             sqlite3_free_table(rt);
         }
@@ -86,9 +118,10 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
         }
     }
 
-    w1->numdev = n;
+    w1->numdev = ni;
     w1->devs=devs;
-
+    printf("read = %d, found = %d\n", ni, nr);
+    
     if(sqlite3_get_table (db, "select name,value,rmin,rmax from ratelimit",
                           &rt, &nr, &nc, &err) == SQLITE_OK)
     {
@@ -211,7 +244,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         if(devs->init)
         {
             int j;
-            for (j = 0; j < 2; j++)
+            for (j = 0; j < devs->ns; j++)
             {
                 if(devs->s[j].valid)
                 {

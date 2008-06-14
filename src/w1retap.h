@@ -30,7 +30,9 @@
 #include <gmodule.h>
 
 enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
-              W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V, W1_HBBARO };
+              W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V, W1_HBBARO,
+              W1_HIH, W1_DS2760};
+
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
 /* coupler states: see SetSwitch1F() in swt1f.c */
@@ -47,6 +49,8 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define TBUF_SZ 32
 #define MAXDLL 16
 #define MAXCPL 64
+#define MAXSENS 8
+#define W1_NOP (-1)
 
 typedef struct w1_devlist w1_devlist_t;
 typedef struct w1_device w1_device_t;
@@ -91,12 +95,14 @@ struct w1_device
     char *serial;
     char *devtype;
     short init;
+    short ignore;
     enum W1_type stype;
-    w1_sensor_t s[2];
+    w1_sensor_t s[MAXSENS];
     unsigned char serno[8];
     w1_coupler_t *coupler;
     w1_params_t *params;
     void *private;
+    int ns;
 };
 
 typedef struct
@@ -149,11 +155,14 @@ extern void dll_parse(w1_devlist_t *, int, char *);
 extern void read_config(w1_devlist_t *);
 extern FILE * w1_file_open(char *);
 extern w1_sensor_t * w1_find_sensor(w1_devlist_t *, const char *);
+extern w1_sensor_t * w1_match_sensor(w1_device_t *, const char *);
 extern void w1_replog(w1_devlist_t *, const char *,...);
 extern void w1_set_device_data(w1_device_t *, const char *, char *);
 extern void w1_set_device_data_index(w1_device_t *, int, char *);
 extern void w1_all_couplers_off(w1_devlist_t *);
 extern int w1_read_all_sensors(w1_devlist_t *);
 extern void w1_initialize_couplers(w1_devlist_t *);
+extern int w1_get_device_index(w1_device_t *, int, char *, char *);
+
 #endif
 

@@ -56,34 +56,66 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 
     PGconn *idb;
     PGresult *res;
-    int n = 0;
-
+    int n = 0, ni = 0;
+    
     idb = w1_opendb(dbnam);
     res = PQexec(idb, SENSQRY);
 
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
-        int nn = PQntuples(res);
-        devs = malloc(sizeof(w1_device_t)*nn);
-        memset(devs, 0, sizeof(w1_device_t)*nn);
-        
-        for (n = 0; n < nn; n++)        
-        {
-            int j;
-            int nfields;
-            nfields = PQnfields(res);
+        int nr = PQntuples(res);
+        int nfields;
+        int j;
+        int nx = 0;
+        int nn = 0;
+        int id = -1;
+        int it = -1;
 
+        devs = malloc(sizeof(w1_device_t)*nr);
+        memset(devs, 0, sizeof(w1_device_t)*nr);
+        nfields = PQnfields(res);
+
+        for(j = 0; j < nfields; j++)
+        {
+            char *fnam = PQfname(res, j);
+            if(strcmp(fnam, "device") == 0)
+            {
+                id = j;
+            }
+            else if (strcmp(fnam, "type") == 0)
+            {
+                it = j;
+            }
+            if (it != -1 && id != -1)
+                break;
+        }
+
+        for (n = 0; n < nr; n++)        
+        {
+            nn = w1_get_device_index(devs, ni, PQgetvalue(res, n, id),
+                                     PQgetvalue(res, n, it));
+             if (nn == -1)
+             {
+                 nx = ni;
+                 ni++;
+             }
+             else
+             {
+                 nx = nn;
+             }
+            
             for(j = 0; j < nfields; j++)
             {
                 char *fnam = PQfname(res, j);
                 char *s = PQgetvalue(res, n, j);
                 char *sv = (s && *s) ? strdup(s) : NULL;
-                w1_set_device_data(devs+n, fnam, sv);
+                if(sv)
+                    w1_set_device_data(devs+nx, fnam, sv);
             }
-            w1_enumdevs(devs+n);
+            w1_enumdevs(devs+nx);
         }
     }
-    w1->numdev = n;
+    w1->numdev = ni;
     w1->devs=devs;
     if(res) PQclear(res);
 
@@ -282,7 +314,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         if(devs->init) // if the device is initialised
         {
             int j;
-            for (j = 0; j < 2; j++) // for each sensor
+            for (j = 0; j < devs->ns; j++) // for each sensor
             {
                 if(devs->s[j].valid) // if there's a valid reading
                 {

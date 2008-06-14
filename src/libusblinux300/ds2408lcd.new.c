@@ -136,7 +136,7 @@ int send_text_lcd(int portnum, char *text, int line, int cls)
     prep_display(portnum);
     set_line(portnum, line);
     fprintf(stdout, "Text is %s\n", text);
-    show_text(portnum, text);
+    show_text(portnum, (unsigned char*)text);
     return 0;
 }
 
