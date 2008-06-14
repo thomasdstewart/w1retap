@@ -101,32 +101,71 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     MYSQL_ROW row;
     MYSQL_FIELD *field;
     int n = 0;
-
+    int nr = 0;
+    int nx = 0;
+    int nn = 0;
+    int id = -1;
+    int it = -1;
+    int ni = 0;
+    
     conn = w1_opendb(dbnam);
     if (!mysql_query(conn, sql))
     {
         res = mysql_store_result(conn);        
-        int nn = mysql_num_rows(res);
+        nr = mysql_num_rows(res);
         
-        devs = malloc(sizeof(w1_device_t)*nn);
-        memset(devs, 0, sizeof(w1_device_t)*nn);
+        devs = malloc(sizeof(w1_device_t)*nr);
+        memset(devs, 0, sizeof(w1_device_t)*nr);
         
-        for (n = 0; n < nn; n++)        
+        for (n = 0; n < nr; n++)        
         {
             int j;
+            char *fnam;
+            
             row = mysql_fetch_row(res);
             int nf = mysql_num_fields(res);            
+            if (n == 0)
+            {
+                for(j = 0; j < nf; j++)
+                {
+                    field = mysql_fetch_field_direct(res, j);
+                    fnam = field->name;
+                    if(strcmp(fnam, "device") == 0)
+                    {
+                        id = j;
+                    }
+                    else if (strcmp(fnam, "type") == 0)
+                    {
+                        it = j;
+                    }
+                    if (it != -1 && id != -1)
+                        break;
+                }
+            }
+            
+            nn = w1_get_device_index(devs, ni, row[id], row[it]);
+            if (nn == -1)
+            {
+                nx = ni;
+                ni++;
+            }
+            else
+            {
+                nx = nn;
+            }
+
             for(j = 0; j < nf; j++)
             {
                 char *s = row[j];
                 char *sv = (s && *s) ? strdup(s) : NULL;
                 field = mysql_fetch_field_direct(res, j);
-                char *fnam = field->name;
-                w1_set_device_data(devs+n, fnam, sv);
+                fnam = field->name;
+                if(sv)
+                    w1_set_device_data(devs+nx, fnam, sv);
             }
-            w1_enumdevs(devs+n);
+            w1_enumdevs(devs+nx);
         }
-        w1->numdev = n;
+        w1->numdev = ni;
         w1->devs=devs;
         mysql_free_result(res); 
 
@@ -243,7 +282,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
             my_bool is_null = 0;
             unsigned int length[3];
 #endif
-            for (j = 0; j < 2; j++)
+            for (j = 0; j < devs->ns; j++)
             {
 
                 if(devs->s[j].valid)

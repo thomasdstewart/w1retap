@@ -10,6 +10,6 @@ install-data-local:
 	@for f in docs/*.pdf docs/*.txt docs/*.sql docs/README* docs/ds2490* docs/*.odt ; do \
 		$(INSTALL_DATA) $$f $(DESTDIR)$(docdir) ; \
 	done
-	@for f in docs/*.png docs/*.html ; do \
-		$(INSTALL_DATA) $$f $(DESTDIR)$(docdir)/html ; \
+	@for f in docs/*.pdf docs/*.odt ; do \
+		$(INSTALL_DATA) $$f $(DESTDIR)$(docdir) ; \
 	done

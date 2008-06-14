@@ -83,7 +83,7 @@ w1_sensor_t * w1_find_sensor(w1_devlist_t * w1, const char * s)
     
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
-        for (j = 0; j < 2; j++)
+        for (j = 0; j < devs->ns; j++)
         {
             if(devs->s[j].abbrv && (0 == strcmp(devs->s[j].abbrv, s)))
             {
@@ -95,37 +95,68 @@ w1_sensor_t * w1_find_sensor(w1_devlist_t * w1, const char * s)
     return sensor;
 }
 
+w1_sensor_t * w1_match_sensor(w1_device_t * dev, const char * s)
+{
+    w1_sensor_t *sensor = NULL;
+    int j;
+    
+    for (j = 0; j < dev->ns; j++)
+    {
+        if(dev->s[j].abbrv && strcasestr(dev->s[j].name, s))
+        {
+            sensor = &dev->s[j];
+            break;
+        }
+    }
+    return sensor;
+}
+
+int  w1_get_device_index(w1_device_t *devs, int ndev, char *serno, char *devtype)
+{
+    int i;
+    int nn = -1;
+    
+    for(i = 0; i < ndev; i++, devs++)
+    {
+        if(strcmp(serno, devs->serial) == 0 &&
+           (devtype == NULL || strcmp(devtype, devs->devtype) == 0))
+        {
+            nn = i;
+            break;
+        }
+    }
+    return nn;
+}
+
 void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
 {
-    switch (idx)
+    if(sv)
     {
-        case 0:
-            w1->serial = sv;
-            break;
-        case 1:
-            w1->devtype = sv;
-            break;
-        case 2:
-            w1->s[0].abbrv = sv;
-            break;
-        case 3:
-            w1->s[0].name = sv;
-            break;
-        case 4:
-            w1->s[0].units = sv;
-            break;
-        case 5:
-            w1->s[1].abbrv = sv;
-            break;
-        case 6:
-            w1->s[1].name = sv;
-            break;
-        case 7:
-            w1->s[1].units = sv;
-            break;
-        case 8:
-            w1->params = w1_dev_params(sv);
-            break;
+        switch (idx)
+        {
+            case 0:
+                w1->serial = sv;
+                break;
+            case 1:
+                w1->devtype = sv;
+                break;
+            case 2:
+            case 5:            
+                w1->ns += 1;
+                w1->s[w1->ns-1].abbrv = sv;
+                break;
+            case 3:
+            case 6:            
+                w1->s[w1->ns-1].name = sv;
+                break;
+            case 4:
+            case 7:
+                w1->s[w1->ns-1].units = sv;
+                break;
+            case 8:
+                w1->params = w1_dev_params(sv);
+                break;
+        }
     }
 }
 
@@ -135,33 +166,22 @@ void w1_set_device_data(w1_device_t * w1, const char *fnam, char *sv)
     {
         w1->serial = sv;
     }
-    else if (0 == strcmp(fnam, "type"))
+    else if (0 == strcmp(fnam, "type") && w1->devtype == NULL)
     {
         w1->devtype = sv;
     }
-    else if (0 == strcmp(fnam, "abbrv1"))
+    else if ((0 == strcmp(fnam, "abbrv1")) || (0 == strcmp(fnam, "abbrv2")))
     {
-        w1->s[0].abbrv = sv;
+        w1->ns += 1;
+        w1->s[w1->ns-1].abbrv = sv;
     }
-    else if (0 == strcmp(fnam, "name1"))
+    else if ((0 == strcmp(fnam, "name1")) || (0 == strcmp(fnam, "name2")))
     {
-        w1->s[0].name = sv;
+        w1->s[w1->ns-1].name = sv;
     }
-    else if (0 == strcmp(fnam, "units1"))
+    else if ((0 == strcmp(fnam, "units1")) || (0 == strcmp(fnam, "units2")))
     {
-        w1->s[0].units = sv;
-    }
-    else if (0 == strcmp(fnam, "abbrv2"))
-    {
-        w1->s[1].abbrv = sv;
-    }
-    else if (0 == strcmp(fnam, "name2"))
-    {
-        w1->s[1].name = sv;
-    }
-    else if (0 == strcmp(fnam, "units2"))
-    {
-        w1->s[1].units = sv;
+        w1->s[w1->ns-1].units = sv;
     }
     else if (0 == strcmp(fnam, "params"))
     {
@@ -211,9 +231,17 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_DS2438V;
     }
+    else if( MATCHES("DS2760"))
+    {
+        w->stype=W1_DS2760;
+    }
     else if (MATCHES("HB-BARO") || MATCHES("HB_BARO") )
     {
         w->stype=W1_HBBARO;
+    }
+    else if (MATCHES("HWHIH") || MATCHES("MS-TH") )
+    {
+        w->stype=W1_HIH;
     }
 }
 
@@ -238,14 +266,16 @@ void w1_freeup(w1_devlist_t * w1)
     
     for(dev=w1->devs, i = 0; i < w1->numdev; i++, dev++)
     {
+        int i;
+        
         if(dev->serial)free(dev->serial);
         if(dev->devtype) free(dev->devtype);
-        if(dev->s[0].abbrv) free(dev->s[0].abbrv);
-        if(dev->s[0].name) free(dev->s[0].name);
-        if(dev->s[0].units) free(dev->s[0].units);        
-        if(dev->s[1].abbrv) free(dev->s[1].abbrv);
-        if(dev->s[1].name) free(dev->s[1].name);
-        if(dev->s[1].units) free(dev->s[1].units);
+        for(i = 0; i < dev->ns; i++)
+        {
+            if(dev->s[i].abbrv) free(dev->s[i].abbrv);
+            if(dev->s[i].name) free(dev->s[i].name);
+            if(dev->s[i].units) free(dev->s[i].units);
+        }
         if(dev->coupler) free(dev->coupler);
         if(dev->params) free(dev->params);
 	if(dev->private) free(dev->private);
@@ -279,7 +309,7 @@ void w1_tmpfilelog (w1_devlist_t *w1)
             if(devs->init)
             {
                 int j;
-                for (j = 0; j < 2; j++)
+                for (j = 0; j < devs->ns; j++)
                 {
                     if(devs->s[j].valid)
                     {

@@ -58,7 +58,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
         if(devs->init)
         {
             int j;
-            for (j = 0; j < 2; j++)
+            for (j = 0; j < devs->ns; j++)
             {
                 if(devs->s[j].valid)
                 {

@@ -1,3 +1,13 @@
+1.2.2	2008-06-14
+	Added MS-TH (Honeywell HiH4000 series) humidity (and temp)
+	sensors. A side effect is supporting of the HobbyBoards humidity /
+	temp sensor (for Mihail Peltekov & Dave Johns). 
+	Added DS2760 (HobbyBaords Leaf moisture etc), for Hans Fong.
+	Removed the restriction of two sensors per ID, in a way which
+	should be transparent to existing setups;
+	Update the documentation;
+	Hide database passwords in the '-v' data dump.
+	
 1.2.1	2008-04-25
 	Fixes configure.ac for the case where libsqlite3-dev was not
 	installed (reported by Dave Johns).

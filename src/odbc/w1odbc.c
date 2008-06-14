@@ -50,6 +50,13 @@ void w1_init(w1_devlist_t *w1, char *params)
 
     if (SQL_SUCCEEDED(ret))
     {
+        char cnam[256];
+        SQLSMALLINT lcnam;
+        int i;
+        char ** flds, **f;
+        int id=-1,it=-1;
+        int nx = 0, ni = 0, nn = 0;
+
         SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
         SQLExecDirect(stmt, (unsigned char *)sql, SQL_NTS);
 
@@ -57,13 +64,48 @@ void w1_init(w1_devlist_t *w1, char *params)
         SQLRowCount(stmt, &rows);
         devs = malloc(sizeof(w1_device_t)*rows);
         memset(devs, 0, sizeof(w1_device_t)*rows);
+        flds = malloc((columns*sizeof(char *)));
+                    
+        for (f=flds, i = 0; i < columns; i++, f++)
+        {
+            SQLDescribeCol(stmt,i+1, (SQLCHAR*)cnam, sizeof(cnam), &lcnam,
+                           NULL, NULL, NULL, NULL);
+            *f = strdup(cnam);
+            if(strcmp(cnam,"device") == 0)
+            {
+                id = i;
+            }
+            else if (strcmp(cnam, "type") == 0)
+            {
+                it = i;
+            }
+        }
 
         while (SQL_SUCCEEDED(ret = SQLFetch(stmt)))
         {
             int  i;
+            char device[32] = {0};
+            char type[32] = {0}; 
+            SQLLEN indicator;
+            
+            SQLGetData(stmt, id+1, SQL_C_CHAR, device, sizeof(device),
+                                 &indicator);
+            SQLGetData(stmt, it+1, SQL_C_CHAR, type, sizeof(type),
+                                 &indicator);
+            
+            nn = w1_get_device_index(devs, ni, device, type);
+            if (nn == -1)
+            {
+                nx = ni;
+                ni++;
+            }
+            else
+            {
+                nx = nn;
+            }
+
             for (i = 0; i < columns; i++)
             {
-                SQLLEN indicator;
                 char buf[512];
                 
                 ret = SQLGetData(stmt, i+1, SQL_C_CHAR, buf, sizeof(buf),
@@ -79,15 +121,22 @@ void w1_init(w1_devlist_t *w1, char *params)
                     {
                         sv = strdup(buf);
                     }
-                    w1_set_device_data_index (devs+n, i, sv);
+                    if(sv)
+                        w1_set_device_data (devs+nx, flds[i], sv);
                 }
             }
-            w1_enumdevs(devs+n);
+            w1_enumdevs(devs+nx);
             n++;
         }
-        w1->numdev = n;
+        w1->numdev = ni;
         w1->devs=devs;
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);    
+
+        for (f=flds, i = 0; i < columns; i++, f++)
+        {
+            free(*f);
+        }
+        free(flds);
         
         SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
         ret = SQLExecDirect(stmt, (unsigned char *)"select name,value,rmin,rmax from ratelimit", SQL_NTS);
@@ -200,7 +249,7 @@ void w1_logger (w1_devlist_t *w1, char *params)
         if(devs->init)
         {
             int j;
-            for (j = 0; j < 2; j++)
+            for (j = 0; j < devs->ns; j++)
             {
                 if(devs->s[j].valid)
                 {
@@ -251,7 +300,6 @@ void w1_logger (w1_devlist_t *w1, char *params)
                                            SQL_REAL,
                                            0, 0,
                                            &devs->s[j].value, psz, &psz);
-                    
                     res = SQLExecute(stmt);
                 }
             }

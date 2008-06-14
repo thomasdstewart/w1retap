@@ -1,32 +1,5 @@
 #!/usr/bin/ruby
 
-# Copyright (c) 2006 Jonathan Hudson <jh+w1retap@daria.co.uk>
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to
-# the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-#
-# Uses the pertd application to display w1retap data on a Pertelian
-# X2040 LCD display.
-# Configured as:
-# log =  w1file=|/usr/local/bin/pert-log.rb
-
 FIFO='/tmp/pertd2.fifo'
 if File.pipe?(FIFO)
   v=Array.new(6)
@@ -46,16 +19,23 @@ if File.pipe?(FIFO)
       v[5] = "%4.0f" % $1.to_f
     end
   end
-  File.open(FIFO,'a+') do |f|
-    f.puts("line1\n0\n==EOD==\nExtr #{v[0]} GHT #{v[1]}\n==EOD==") if(v[0] && v[1])
-    f.puts("line2\n0\n==EOD==\nIntr #{v[2]} Gge #{v[3]}\n==EOD==") if(v[2] && v[3])
-    f.puts("line3\n0\n==EOD==\nSoil #{v[4]} Pres #{v[5]}\n==EOD==") if(v[4] && v[5])
+  ln=''
+  ln << "line1\n0\n==EOD==\nExtr #{v[0]} GHT #{v[1]}\n==EOD==\n" if(v[0] && v[1])
+  ln << "line2\n0\n==EOD==\nIntr #{v[2]} Gge #{v[3]}\n==EOD==\n" if(v[2] && v[3])
+  ln << "line3\n0\n==EOD==\nSoil #{v[4]} Pres #{v[5]}\n==EOD==\n"if(v[4] && v[5])
+#  File.open(FIFO,File::WRONLY|File::NONBLOCK) do |f|
+#    f.write(ln) if ln.size > 0
+#  end
+  if ln.size > 0
+    begin
+      fd=IO.sysopen(FIFO,File::WRONLY|File::NONBLOCK) 
+      IO.open(fd,'w') {|f| f.syswrite(ln) }
+    rescue
     end
   end
-
+end
+  
 #12345678901234567890
-####################################
 #Extr xx.x GHT xx.x	OTMP0 GHT
 #Intr xx.x Gge xx.x	OTMP1 OTMP2
 #Soil xx.x Pres xxxx	STMP1 OPRS
-#Rain from cron script here  ######

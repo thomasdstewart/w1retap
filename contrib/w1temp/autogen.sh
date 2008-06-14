@@ -1,138 +1,22 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
-# bits borrowed from all over
 
-package="w1temp"
-
-olddir=`pwd`
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
+REQUIRED_AUTOMAKE_VERSION=1.8
+PKG_NAME=w1temp
 
-cd "$srcdir"
-DIE=0
-
-for CONFIG_AC in "configure.ac" "configure.in" nope; do
-  test -r $CONFIG_AC && break
-done
-if test "x$CONFIG_AC" = xnope; then
-  echo "No configure script found."
-  exit 1
-fi
-
-echo "checking for autoconf..."
-(autoconf --version) < /dev/null > /dev/null 2>&1 || {
-  echo
-  echo "You must have autoconf installed to compile $package."
-  echo "Download the appropriate package for your system,"    
-  echo "or get the source from one of the GNU ftp sites"    
-  echo "listed in http://www.gnu.org/order/ftp.html"
-  DIE=1
+(test -f $srcdir/configure.ac \
+  && test -f $srcdir/udp-client/w1temp.c) || {
+    echo -n "**Error**: Directory "\`$srcdir\'" does not look like the"
+    echo " top-level $PKG_NAME directory"
+    exit 1
 }
 
-VERSIONGREP="sed -e s/.*[^0-9\.]\([0-9]\.[0-9]\).*/\1/"
-
-# do we need automake?
-(grep "^AM_INIT_AUTOMAKE" "$CONFIG_AC" >/dev/null) && {
-  AM_NEEDED=`fgrep AUTOMAKE_OPTIONS Makefile.am | $VERSIONGREP`
-  if test -z $AM_NEEDED; then
-    echo -n "checking for automake... "
-    AUTOMAKE=automake
-    ACLOCAL=aclocal
-    if ($AUTOMAKE --version < /dev/null > /dev/null 2>&1); then
-      echo "no"
-      AUTOMAKE=
-    else
-      echo "yes"
-    fi
-  echo
-  else
-    echo -n "checking for automake $AM_NEEDED... "
-    for am in automake-$AM_NEEDED automake$AM_NEEDED automake; do
-      ($am --version < /dev/null > /dev/null 2>&1) || continue
-      ver=`$am --version < /dev/null | head -1 | $VERSIONGREP`
-      if test $ver = $AM_NEEDED; then
-        AUTOMAKE=$am
-        echo $AUTOMAKE
-        break
-      fi
-    done
-    test -z $AUTOMAKE &&  echo "no"
-    echo -n "checking for aclocal $AM_NEEDED... "
-    for ac in aclocal-$AM_NEEDED aclocal$AM_NEEDED aclocal; do
-      ($ac --version < /dev/null > /dev/null 2>&1) || continue
-      ver=`$ac --version < /dev/null | head -1 | $VERSIONGREP`
-      if test $ver = $AM_NEEDED; then
-        ACLOCAL=$ac
-        echo $ACLOCAL
-        break
-      fi
-    done
-  test -z $ACLOCAL && echo "no"
-  fi
-  test -z $AUTOMAKE || test -z $ACLOCAL && {
-    echo "WARNING: didn't find a matching automake version."
-    AUTOMAKE=automake
-    ACLOCAL=aclocal
-    if ($AUTOMAKE --version) < /dev/null > /dev/null 2>&1; then
-      echo "Proceeding with the default automake. This may not"
-      echo "work if it's older than $AM_NEEDED."
-    else
-        echo
-        echo "You must have automake installed to compile $package."
-        echo "Download the appropriate package for your distribution,"
-        echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/"
-        exit 1
-    fi
-  }
+which gnome-autogen.sh || {
+    echo "You need to install gnome-common from GNOME CVS"
+    exit 1
 }
 
-(grep "^AM_PROG_LIBTOOL" "$CONFIG_AC" >/dev/null) && {
-  echo -n "checking for libtoolize... "
-  # libtoolize is shipped at glibtoolize on MacOS X
-  for LIBTOOLIZE in libtoolize glibtoolize nope; do
-    ($LIBTOOLIZE --version) < /dev/null > /dev/null 2>&1 && break
-  done
-  if test x$LIBTOOLIZE = xnope; then
-    echo "nope."
-    LIBTOOLIZE=libtoolize
-  else
-    echo $LIBTOOLIZE
-  fi
-  ($LIBTOOLIZE --version) < /dev/null > /dev/null 2>&1 || {
-    echo
-    echo "You must have libtool installed to compile $package."
-    echo "Download the appropriate package for your system,"
-    echo "or get the source from one of the GNU ftp sites"
-    echo "listed in http://www.gnu.org/order/ftp.html"
-    DIE=1
-  }
-}
+USE_GNOME2_MACROS=1 . gnome-autogen.sh
 
-if test "$DIE" -eq 1; then
-  exit 1
-fi
-
-echo "Creating configuration files for $package..."
-
-echo "  $ACLOCAL $ACLOCAL_FLAGS"
-$ACLOCAL $ACLOCAL_FLAGS
-
-#echo "  autoheader"
-#autoheader
-
-echo "  $LIBTOOLIZE --automake"
-$LIBTOOLIZE --automake
-
-echo "  $AUTOMAKE --add-missing $AUTOMAKE_OPTIONS"
-$AUTOMAKE --add-missing $AUTOMAKE_OPTIONS
-
-echo "  autoconf"
-autoconf
-
-cd "$olddir"
-
-conf_flags="--enable-compile-warnings --enable-iso-c"
-
-echo Running $srcdir/configure $conf_flags "$@" ...
-$srcdir/configure $conf_flags "$@" \
-  && echo Now type \`make\' to compile $package || exit 1
