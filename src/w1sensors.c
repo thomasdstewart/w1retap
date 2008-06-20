@@ -809,30 +809,26 @@ void w1_initialize_couplers(w1_devlist_t *w1)
 	    priv = (w1_coupler_private_t*)w->private;
 	    priv->active_lines = COUPLER_UNDEFINED;
 
-            char *tmp, *p1, *p2;
-
-            // b < 2 (vice w->ns) is OK here
-            for(b = 0; b < 2; b++)
+            for(b = 0; b < w->ns; b++)
             {
+//                fprintf(stderr, "%d: ", b);
                 if(w->s[b].abbrv && w->s[b].name)
                 {
-		    tmp = strdup(w->s[b].name);
-		    p1 = tmp;
-                    for(; (p2 = strtok(p1,", |"));p1=NULL)
+//                    fprintf(stderr,"%s %s", w->s[b].abbrv, w->s[b].name);
+                    
+                    if ((w->s[b].abbrv[0] == 'M' || w->s[b].abbrv[0] == 'A')
+                        && (w->s[b].name[0] >= '0' && w->s[b].name[0] <= '9'))
                     {
-                        if(*p2)
-                        {
-  			    clist[nc].coupler_device = w;
-                            strcpy(clist[nc].devid, p2);
-			    if(b == 0)
-			      clist[nc].branch = COUPLER_MAIN_ON;
-			    else
-			      clist[nc].branch = COUPLER_AUX_ON;
-                            nc++;
-                        }
+                        clist[nc].coupler_device = w;
+                        strcpy(clist[nc].devid, w->s[b].name);
+                        if(w->s[b].abbrv[0] == 'M')
+                            clist[nc].branch = COUPLER_MAIN_ON;
+                        else
+                            clist[nc].branch = COUPLER_AUX_ON;
+                        nc++;
                     }
-		    free(tmp);
                 }
+//                fputc('\n', stderr);
             }
         }
     }

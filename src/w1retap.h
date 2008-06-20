@@ -49,7 +49,7 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define TBUF_SZ 32
 #define MAXDLL 16
 #define MAXCPL 64
-#define MAXSENS 8
+#define ALLOCSENS 8
 #define W1_NOP (-1)
 
 typedef struct w1_devlist w1_devlist_t;
@@ -97,7 +97,7 @@ struct w1_device
     short init;
     short ignore;
     enum W1_type stype;
-    w1_sensor_t s[MAXSENS];
+    w1_sensor_t *s;
     unsigned char serno[8];
     w1_coupler_t *coupler;
     w1_params_t *params;

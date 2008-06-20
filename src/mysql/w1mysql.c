@@ -142,8 +142,10 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
                         break;
                 }
             }
-            
+
             nn = w1_get_device_index(devs, ni, row[id], row[it]);
+//           fprintf(stderr, "Search for %s %s %d\n", row[id], row[it],nn);
+
             if (nn == -1)
             {
                 nx = ni;
@@ -320,7 +322,8 @@ void w1_logger(w1_devlist_t *w1, char *params)
 #else
                     char *q;
                     char tval[64];
-
+                    int n;
+                    
                     if(w1->timestamp)
                     {
                         struct tm *tm;
@@ -332,7 +335,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
                         snprintf(tval, sizeof(tval), "%ld", w1->logtime);
                     }
                     nv++;
-                    asprintf(&q,
+                    n = asprintf(&q,
                              "INSERT into readings(date,name,value) VALUES(%s,'%s',%g)",
                              tval, devs->s[j].abbrv, devs->s[j].value);
 		    if(w1->verbose) puts(q);

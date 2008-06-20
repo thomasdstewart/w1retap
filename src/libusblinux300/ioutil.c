@@ -73,7 +73,7 @@ int EnterString(char *msg, char *buf, int min, int max)
    // remember the start length
    deflen = strlen(buf);
    if (deflen < 80)
-      sprintf(defbuf,buf);
+      strcpy(defbuf,buf);
    else
       defbuf[0] = 0;
 

@@ -128,6 +128,16 @@ int  w1_get_device_index(w1_device_t *devs, int ndev, char *serno, char *devtype
     return nn;
 }
 
+static void w1_alloc_sensor(w1_device_t * w1)
+{
+    if((w1->ns % ALLOCSENS) == 0)
+    {
+        w1->s = realloc(w1->s, (w1->ns + ALLOCSENS)*sizeof( w1_sensor_t));
+        memset(w1->s+w1->ns, 0, ALLOCSENS*sizeof( w1_sensor_t));
+    }
+    w1->ns += 1;    
+}
+
 void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
 {
     if(sv)
@@ -142,7 +152,7 @@ void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
                 break;
             case 2:
             case 5:            
-                w1->ns += 1;
+                w1_alloc_sensor(w1);
                 w1->s[w1->ns-1].abbrv = sv;
                 break;
             case 3:
@@ -172,7 +182,7 @@ void w1_set_device_data(w1_device_t * w1, const char *fnam, char *sv)
     }
     else if ((0 == strcmp(fnam, "abbrv1")) || (0 == strcmp(fnam, "abbrv2")))
     {
-        w1->ns += 1;
+        w1_alloc_sensor(w1);
         w1->s[w1->ns-1].abbrv = sv;
     }
     else if ((0 == strcmp(fnam, "name1")) || (0 == strcmp(fnam, "name2")))
@@ -276,6 +286,7 @@ void w1_freeup(w1_devlist_t * w1)
             if(dev->s[i].name) free(dev->s[i].name);
             if(dev->s[i].units) free(dev->s[i].units);
         }
+        if(dev->s) free(dev->s);
         if(dev->coupler) free(dev->coupler);
         if(dev->params) free(dev->params);
 	if(dev->private) free(dev->private);
@@ -328,7 +339,7 @@ void w1_tmpfilelog (w1_devlist_t *w1)
             n += sprintf(line+n,"udate=%ld\ndate=%s\n", w1->logtime, tbuf);
             int fd = open(w1->tmpname, O_WRONLY|O_CREAT|O_TRUNC, 0664);
             flock(fd, LOCK_EX);
-            write(fd,line,n);
+            n=write(fd,line,n);
             flock(fd, LOCK_UN);        
             close(fd);
         }
