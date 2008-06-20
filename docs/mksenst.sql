@@ -7,7 +7,7 @@ CREATE TABLE ratelimit (
 
 
 CREATE TABLE readings (
-    date timestamp with timezone,
+    date timestamp with time zone,
     name text,
     value real
 );

@@ -320,11 +320,12 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
                 {
                     char *rval;
                     char tval[64];
-
+                    int n;
+                    
                     if(devs->stype == W1_COUNTER || devs->stype == W1_WINDVANE)
-                        asprintf(&rval, "%.0f", devs->s[j].value); // do not include any decimal places for integer values
+                        n=asprintf(&rval, "%.0f", devs->s[j].value); // do not include any decimal places for integer values
                     else
-                        asprintf(&rval, "%f", devs->s[j].value);   // include default 6 decimal places
+                        n=asprintf(&rval, "%f", devs->s[j].value);   // include default 6 decimal places
 
                     if(w1->timestamp){
                         struct tm *tm;
@@ -337,7 +338,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
                     if(devs->s[j].abbrv[0] == '>'){
                         // store sensor value in a separate named table
                         char *query;
-                        asprintf(&query, "INSERT INTO %s (date, value) VALUES ('%s', '%s')", &devs->s[j].abbrv[1], tval, rval);
+                        n=asprintf(&query, "INSERT INTO %s (date, value) VALUES ('%s', '%s')", &devs->s[j].abbrv[1], tval, rval);
                         res = PQexec(db, query);
                         handle_result(res);
                         free(query);

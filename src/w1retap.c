@@ -265,7 +265,7 @@ static void w1_show(w1_devlist_t *w1, int forced)
                 fprintf(stderr, "\tVia coupler: %s, %s\n", w1->devs[i].coupler->coupler_device->serial, branch);
             }
 
-            if(w1->devs[i].params)
+            if(w1->devs[i].params && w1->devs[i].stype !=  W1_COUPLER)
             {
                 int j;
                 fputs("\tParameters:", stderr);
@@ -491,7 +491,7 @@ int main(int argc, char **argv)
         // preserve redirected log files unless TTYs
         int iclose;
         iclose = !(isatty(1) && isatty(2));
-        daemon(0,iclose);
+        assert(0 == daemon(0,iclose));
     }
 
     

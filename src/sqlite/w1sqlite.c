@@ -87,7 +87,9 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             {
                 nn = w1_get_device_index(devs, ni, rt[(n+1)*nc + id],
                                          rt[(n+1)*nc + it]);
-                if (nn == -1)
+//            fprintf(stderr, "Search for %s %s %d\n", rt[(n+1)*nc + id],rt[(n+1)*nc + it]  ,nn);
+
+            if (nn == -1)
                 {
                     nx = ni;
                     ni++;
@@ -96,11 +98,14 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
                 {
                     nx = nn;
                 }
+//            fprintf(stderr, "Device %d\n", nx);
+            
                 for(k = 0; k < nc; k++)
                 {
                     char *fnam = rt[k];
                     char *s = rt[(n+1)*nc + k];
                     char *sv = (s && *s) ? strdup(s) : NULL;
+//                    fprintf(stderr,"set entry %d:%d %s %s\n", k, (devs+nx)->ns, fnam,sv);
                     if (fnam && sv)
                         w1_set_device_data(devs+nx, fnam, sv);
                 }
@@ -120,7 +125,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 
     w1->numdev = ni;
     w1->devs=devs;
-    printf("read = %d, found = %d\n", ni, nr);
+//    fprintf(stderr, "read = %d, found = %d\n", ni, nr);
     
     if(sqlite3_get_table (db, "select name,value,rmin,rmax from ratelimit",
                           &rt, &nr, &nc, &err) == SQLITE_OK)

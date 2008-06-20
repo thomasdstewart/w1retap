@@ -1,8 +1,14 @@
+1.2.3	2008-06-20
+	Fixed the (major,segv) bugs introduced by the 1.2.2 multi-sensor
+	re-engineering, when the setup included DS2409 couplers
+	(reported by Mihail Peltekov).
+	Corrected a documentation error (reported by Graeme Gemmill).
+
 1.2.2	2008-06-14
 	Added MS-TH (Honeywell HiH4000 series) humidity (and temp)
 	sensors. A side effect is supporting of the HobbyBoards humidity /
 	temp sensor (for Mihail Peltekov & Dave Johns). 
-	Added DS2760 (HobbyBaords Leaf moisture etc), for Hans Fong.
+	Added DS2760 (HobbyBoards Leaf moisture etc), for Hans Fong.
 	Removed the restriction of two sensors per ID, in a way which
 	should be transparent to existing setups;
 	Update the documentation;
