@@ -19,7 +19,7 @@ Dir.chdir(opt_d) unless opt_d.nil?
 
 rr=[]
 ts = Time.now.to_s
-File.open('/tmp/.wx_static.dat') do |f|
+File.open('wx_static.dat') do |f|
   f.each do |l|
     l.chomp!
     r=l.split(': ')
@@ -76,7 +76,8 @@ if not opt_h.nil?
     ftp.chdir 'wx'
     files = %w{gtemp.png press.png temp.png tide.png wdirn.png wspeed.png
             humid.png thermo.png wdirn.png winddirn.png index.html
-            temps.png rain.png wx_static.xml wx.rss2.xml wx.rss1.xml}
+            temps.png rain.png wx_static.xml wx.rss2.xml wx.rss1.xml
+	    wx_static.dat}
     files.each do |f|
       ftp.put f if File.exists?(f)
     end
