@@ -102,7 +102,8 @@ w1_sensor_t * w1_match_sensor(w1_device_t * dev, const char * s)
     
     for (j = 0; j < dev->ns; j++)
     {
-        if(dev->s[j].abbrv && strcasestr(dev->s[j].name, s))
+        if((dev->s[j].abbrv && (strcasestr(dev->s[j].name, s) ||
+                                strcasecmp(dev->s[j].abbrv,s) == 0)))
         {
             sensor = &dev->s[j];
             break;

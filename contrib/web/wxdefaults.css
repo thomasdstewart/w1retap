@@ -1,4 +1,21 @@
-body { font-family: luxi, "vera sans", sans-serif; }
+body { font-family: "vera sans", sans-serif; 
+  margin:0;
+  padding:0;
+  font-size: 10pt;
+}
+
+p { 
+  font-size: 10pt;
+ }
+
+h6 {
+  font-size: 10pt;
+  margin:0;
+  padding-top: 4px;
+  padding-bottom: 0;
+}
+
+
 tr.titlebar  { background-color: rgb(200, 200, 200); 
       text-align: center}
 #left {float: left; width: 800px; display:table;   }
@@ -8,6 +25,10 @@ img.graph { width: 400px; height: 200px; float: right}
 tr.grey1 {background-color: rgb(240, 240, 240)}
 tr.grey2 {background-color: rgb(253, 253, 253)}
 img.cimag {display:block; padding-bottom:10px;
+  margin-left: auto; margin-right: auto;
+  border: 0;
+}
+img.cximag {padding-bottom:10px;
   margin-left: auto; margin-right: auto;
   border: 0;
 }
@@ -75,11 +96,11 @@ DIV.right {
 }
 
 DIV.rightd {
-    border: none; float: right; margin: 0; 
-    padding: 0; width: 50%; 
-    clear:none;
+     width: 50%; 
+    min-width:120px; max-width:320px;
 }
 
+DIV.content { border: 1px; }
 
 DIV.space-line {
   clear: both; margin: 0; padding: 0; width: auto;
@@ -95,7 +116,16 @@ DIV.table-row {
   padding: 0;  width: 100%;
 }
 
-.indent { margin-left: 5px; margin-right: 5px }
+.indent {
+  font-size: 10pt;
+  margin: 2px;
+  margin-left: 5px; margin-right: 5px;
+   padding-top: 0; padding-bottom: 0;
+
+}
 
 div.bctable {display:block; margin-left: auto; margin-right: auto; 
-  width: 960px; padding: 1em;  }
+  padding: 1em;  }
+
+div.soltable {display:block; margin-left: auto; margin-right: auto; 
+  width: 100%;  }

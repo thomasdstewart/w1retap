@@ -41,28 +41,13 @@ require 'svgthermo.rb'
 require 'wug.rb'
 require 'cwop.rb'
 
+FIFO='/tmp/pertd2.fifo' 
+DIRS=%w/N NE E SE S SW W NW/
 BASEDIR = '/var/www/roo/wx'
 G = -9.80665
 R = 287.04
 HFACT = 1.0
 
-GTEMP_V =  (1 << 0)
-TEMP_V =   (1 << 1)
-HTEMP_V =  (1 << 2)
-BTEMP_V =  (1 << 3)
-RPRESS_V = (1 << 4)
-HUMID_V =  (1 << 5)
-RAIN_V =   (1 << 6)
-ITEMP1_V = (1 << 7)
-ITEMP2_V = (1 << 8)
-STEMP1_V = (1 << 9)
-
-#def pr_msl p0, temp, z
-#  zdiff = (0 - z)
-#  kt = temp +  273.15
-#  x = (G * zdiff / (R * kt))
-#  p0 * Math.exp(x)
-#end
 
 def dewpoint ct, humid
   b = (ct > 0 ) ? 237.3 : 265.5
@@ -87,9 +72,10 @@ opt_W = 'dbi:Pg:docks'
 opt_i = 1200
 opt_u = true
 opt_U = opt_s = opt_f = nil
+opt_t = nil
 opts = OptionParser.new
 
-opts.on("-t",'Test mode') {|val| opt_t = val }
+opts.on("-t",'Test mode') {opt_t = true }
 opts.on("-i")                        {|val| opt_i = val.to_i }
 opts.on("-f")                        {|val| opt_f = val }
 opts.on("-s")                        {|val| opt_s = val }
@@ -128,7 +114,7 @@ f1=File.open('w_3.dat','w')
 luser = opt_U || ENV['USER']
 dbh = DBI.connect(opt_W, luser, '')
 dsource=nil
-smt = dbh.execute "select reportdate, wind_dirn, wind_speed, wind_speed1, tide, pressure, source from observations where reportdate > ? order by reportdate",ithen.to_i
+smt = dbh.execute "select reportdate, wind_dirn, wind_speed, wind_speed1, tide, pressure, source,mtime from observations where reportdate > ? order by reportdate",ithen.to_i
 
 lastdock=nil
 dock = []
@@ -144,8 +130,14 @@ f.close
 f1.close
 
 dodock = 1
+wsok = true
+if(dock[0].to_i > dock[7].to_i + 900)
+  wsok = false
+  lastdock = nil if (ithen.to_i > dock[7].to_i)
+end
+
 if lastdock.nil?
-  ld = dbh.select_one('select max(reportdate) from observations')
+  ld = dbh.select_one('select max(mtime) from observations')
   lastdock = Time.at(ld[0].to_i).strftime("%Y-%m-%d %H:%M")
   dodock = 0
 else
@@ -173,6 +165,11 @@ s.fetch_hash do |r|
 end  
 s.finish
 
+lcdon=lcdoff=nil
+
+lcdon = stn['lcdon'].to_i if stn.has_key?('lcdon')
+lcdoff = stn['lcdoff'].to_i if stn.has_key?('lcdoff')
+
 maxt = tmax = -999
 mint = tmin = 999
 hmax = 0
@@ -191,84 +188,15 @@ stemp1=nil
 d = ''
 h = {}
 val = 0
-va = []
+wxv = Array.new(720)
 
-
-smt = dbh.execute "select date, name, value from readings where date >= ? order by date", ithen
+smt = dbh.execute "select EXTRACT(epoch from date), name, value from readings where date >= ? order by name,date", ithen
 smt.each do |s|
-  begin
-    ast = s[0].to_time
-  rescue
-    require 'parsedate'
-    r=ParseDate.parsedate(s[0])
-    ast = Time.local(*r)
-  end
-  if ltim != ast 
-    d = ltim.strftime("%Y-%m-%d.%H:%M")
-
-    if (val & (GTEMP_V|ITEMP1_V|ITEMP2_V)) != 0
-      if (val & GTEMP_V) == GTEMP_V
-	va[0] = "%.1f" % gtemp
-      else
-	va[0] = 'x'
-      end
-      if (val & ITEMP1_V) == ITEMP1_V
-	itemp1 = "%.1f" % itemp1
-      else
-	itemp1 = 'x'
-      end
-      if (val & ITEMP2_V) == ITEMP2_V
-	itemp2 = "%.1f" % itemp2
-      else
-	itemp2 = 'x'
-      end
-      fh[0].puts [d,va[0],itemp1,itemp2].join("\t")
-    end
-
-    if (val & (TEMP_V|STEMP1_V)) != 0
-      if (val & TEMP_V) == TEMP_V
-	va[1] = "%.1f" % temp
-      else
-	va[1] = 'x'      
-      end
-      if (val & STEMP1_V) == STEMP1_V
-	stemp1 = "%.1f" % stemp1
-      else
-	stemp1 = 'x'
-      end
-      fh[1].puts [d,va[1],stemp1].join("\t")
-    end
-
-    if (val & RPRESS_V) == RPRESS_V
-      fh[2].puts [d,"%.1f" % press].join("\t")
-    else
-      press = ''
-    end 
-
-    if (val & HUMID_V) == HUMID_V
-      fh[3].puts [d,"%.1f" % humid].join("\t")
-    end
-
-    if (val & (TEMP_V|GTEMP_V|HTEMP_V|BTEMP_V)) != 0
-      if ((val & HTEMP_V) == HTEMP_V)
-	va[2] = "%.1f" % htemp 
-      else
-	va[2] = 'x'
-	htemp = ''
-      end
-      if ((val & BTEMP_V) == BTEMP_V)
-	va[3] = "%.1f" % btemp 
-      else
-	va[3] = 'x'
-	btemp = nil
-      end
-      gstr = d+"\t"+ va.join("\t")
-      fh[4].puts gstr
-    end
-    sdate=d if sdate.nil?
-    edate=d
-    ltim = ast
-    val = 0
+  st = s[0].to_i
+  id = (st - ithen.to_i)/120
+  unless wxv[id]
+    wxv[id] = {} 
+    wxv[id][:date] = Time.at(st).strftime("%Y-%m-%d.%H:%M")
   end
 
   case s[1]
@@ -276,123 +204,84 @@ smt.each do |s|
     gtemp = s[2].to_f
     maxt = gtemp if gtemp > maxt
     mint = gtemp if gtemp < mint
-    val |= GTEMP_V
+    wxv[id][:ght] = gtemp
 
   when 'ITMP1'
     itemp1 = s[2].to_f
-    val |= ITEMP1_V
-
-
+    wxv[id][:itmp1] = itemp1
+    
   when 'ITMP2'
     itemp2 = s[2].to_f
-    val |= ITEMP2_V
-
-
-  when 'STMP1'
-    stemp1 = s[2].to_f
-    val |= STEMP1_V
-
+    wxv[id][:itmp2] = itemp2
+    
   when 'OTMP0'
     temp = s[2].to_f
     tmax = temp if temp > tmax
     tmin = temp if temp < tmin
-    val |= TEMP_V
+    wxv[id][:temp] = temp
 
   when 'OTMP1'
     htemp = s[2].to_f
-    val |= HTEMP_V
+    wxv[id][:htemp] = htemp
 
   when 'OTMP2'
     btemp = s[2].to_f
-    val |= BTEMP_V
-
+    wxv[id][:btemp] = btemp
+    
+  when 'STMP1'
+    stemp1 = s[2].to_f
+    wxv[id][:stemp1] = stemp1
+    
   when 'OPRS'
     press = s[2].to_f
-    val |= RPRESS_V
+    wxv[id][:press] = press
 
   when 'OHUM'
-    humid = HFACT * s[2].to_f
+    humid = s[2].to_f
     hmax = humid if humid > hmax
-    val |= HUMID_V
+    wxv[id][:humid] = humid
 
   when 'RGC0'
     if (r0 == 0)
       r0 = s[2].to_i
-      lt0 = ast
+      lt0 =  st
     end
     r1 = s[2].to_i
-    lt1 = ast
-    h[ast]=s[2].to_i
-    val |= RAIN_V
+    lt1 = st
+    h[st]=s[2].to_i
   end
+  sdate=st if sdate.nil?
+  edate=st
 end
-
-d = ast.strftime("%Y-%m-%d.%H:%M")
-
-if (val & (GTEMP_V|ITEMP1_V|ITEMP2_V)) != 0
-  if (val & GTEMP_V) == GTEMP_V
-    va[0] = "%.1f" % gtemp
-  else
-    va[0] = 'x'
-  end
-  if (val & ITEMP1_V) == ITEMP1_V
-    itemp1 = "%.1f" % itemp1
-  else
-    itemp1 = 'x'
-  end
-  if (val & ITEMP2_V) == ITEMP2_V
-    itemp2 = "%.1f" % itemp2
-  else
-    itemp2 = 'x'
-  end
-  fh[0].puts [d,va[0],itemp1,itemp2].join("\t")
-end
-
-if (val & (TEMP_V|STEMP1_V)) != 0
-  if (val & TEMP_V) == TEMP_V
-    va[1] = "%.1f" % temp
-  else
-    va[1] = 'x'      
-  end
-  if (val & STEMP1_V) == STEMP1_V
-    stemp1 = "%.1f" % stemp1
-  else
-    stemp1 = 'x'
-  end
-  fh[1].puts [d,va[1],stemp1].join("\t")
-end
-
-if (val & RPRESS_V) == RPRESS_V
-  fh[2].puts [d,"%.1f" % press].join("\t")
-else
-  press = ''
-end 
-
-if (val & HUMID_V) == HUMID_V
-  fh[3].puts [d,"%.1f" % humid].join("\t")
-end
-
-if (val & (TEMP_V|GTEMP_V|HTEMP_V|BTEMP_V)) != 0
-  if ((val & HTEMP_V) == HTEMP_V)
-    va[2] = "%.1f" % htemp 
-  else
-    va[2] = 'x'
-    htemp = ''
-  end
-  if ((val & BTEMP_V) == BTEMP_V)
-    va[3] = "%.1f" % btemp 
-  else
-    va[3] = 'x'
-    btemp = nil
-  end
-  gstr = d+"\t"+ va.join("\t")
-  fh[4].puts gstr
-end
-sdate=d if sdate.nil?
-edate=d
-ltim = ast
-
 smt.finish
+
+sdate=Time.at(sdate).strftime("%Y-%m-%d.%H:%M")
+edate=Time.at(edate).strftime("%Y-%m-%d.%H:%M")
+
+wxv.each do |hs|
+  next unless hs
+  va = []
+  va[0] = hs[:date]
+
+  hs[:press] && fh[2].puts([hs[:date],"%.1f" % hs[:press]].join("\t")) 
+  hs[:humid] && fh[3].puts([hs[:date],"%.1f" % hs[:humid]].join("\t")) 
+
+  t2 = va[1] = (hs[:temp]) ? "%.1f" % hs[:temp] : 'x'
+  va[2] = (hs[:stemp1]) ? "%.1f" % hs[:stemp1] : 'x'
+  fh[1].puts va.join("\t")
+
+  t1 = va[1] = (hs[:ght]) ? "%.1f" % hs[:ght] : 'x'
+  va[2] = (hs[:itmp1]) ? "%.1f" % hs[:itmp1] : 'x'
+  va[3] = (hs[:itmp2]) ? "%.1f" % hs[:itmp2] : 'x'
+  fh[0].puts va.join("\t")
+
+  va[1] = t1
+  va[2] = t2
+  va[3] = (hs[:htemp]) ? "%.1f" % hs[:htemp] : 'x'
+  va[4] = (hs[:btemp]) ? "%.1f" % hs[:btemp] : 'x'
+  fh[4].puts va.join("\t")
+end
+
 fh.each {|f| f.close}
 d2 = lt1
 
@@ -410,7 +299,7 @@ else
     f.puts "#{edate} 0"
   end
 end
-logdate = d.sub(/\./, ' ')
+logdate = edate.sub(/\./, ' ')
 
 rain = 0
 rain1 = 0
@@ -451,7 +340,7 @@ h.keys.sort.each do |k|
     r1h = h[k]
     lh1 = k
   end
-  d = k.strftime("%Y-%m-%d.%H:%M")
+  d = Time.at(k).strftime("%Y-%m-%d.%H:%M")
   fh.printf "%s %.4f\n", d,rain
 end
 fh.close
@@ -461,6 +350,8 @@ print "Rain 1hr #{rain1}\n" if opt_t
 h.clear
 
 dock[0] = Time.at(dock[0].to_i).strftime("%Y-%m-%d %H:%M") 
+
+lcdstr=''
 use_t = true # Workaround for b0rken SQLite3  DBI
 if (now.min % 10 == 0 or opt_f) and !opt_t
   puts "Latest"
@@ -472,18 +363,27 @@ if (now.min % 10 == 0 or opt_f) and !opt_t
   begin
     dbh.do "delete from latest where udate < ?",ithen.to_i
     dbh.do "insert into latest values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-      d2.to_i, logdate, gtemp, maxt, mint, temp, press, humid, rain1,
+      d2, logdate, gtemp, maxt, mint, temp, press, humid, rain1,
       dewpt, dock[0], dock[2], dock[1], dock[4]
     puts "Latest #{d2}"
     if now.hour == 0 and now.min  == 0
-      dbh.do "insert into daily values (?,?,?,?)", d2.to_i, r1,0,logdate
+      dbh.do "insert into daily values (?,?,?,?)", d2, r1,0,logdate
       if now.day == 1
-	dbh.do "insert into monthly values (?,?,?,?)", d2.to_i,r1,0,logdate
+	dbh.do "insert into monthly values (?,?,?,?)", d2,r1,0,logdate
       end
     end
     dbh.commit if use_t
   rescue
     dbh.rollback if use_t
+  end
+  if now.min == 0
+    unless lcdon.nil? and  lcdoff.nil?
+      if now.hour == lcdon
+	lcdstr="backlight on\n" 
+      elsif now.hour == lcdoff
+	lcdstr="backlight off\n" 
+      end
+    end
   end
 end
 
@@ -492,7 +392,7 @@ hmax *= 1.05
 hmax = 100 if hmax < 1
 hmax = 100 if hmax > 100
 
-cells = RainCalc.raincalc dbh, d2, r1, stn['rfact']
+cells = RainCalc.raincalc dbh, Time.at(d2), r1, stn['rfact']
 dbh.disconnect
 gval = gtemp || -100
 SvgThermo.makeimage gval, 150, 40 
@@ -525,13 +425,24 @@ if (opt_p and opt_s.nil?)
   end
 end
 
+
 %w(thermo winddirn gtemp temp press humid temps wspeed tide wdirn rain).each do |gf|
-  File.rename "_#{gf}.png","#{gf}.png"
+  begin
+    File.rename "_#{gf}.#{itype}","#{gf}.#{itype}"
+  rescue
+  end
 end
+
 
 print "Done Graphs #{(Time.now- t_0)}s\n" if opt_t
 
 if dodock == 0
+  %w(wspeed tide wdirn).each do |gf|
+    begin 
+      File.unlink("#{gf}.#{itype}")
+    rescue
+    end
+  end
   File.symlink("nodock.png", "wspeed.png")
 end
 
@@ -549,10 +460,36 @@ cells.each do |cl|
   nc += 1
 end
 
+sm_req=true
+begin
+  sm_req = false if File.mtime("/tmp/.sm.dat").day == now.day
+rescue
+end
+
+if sm_req
+  system("sun_moon -f /tmp/.sm.dat")
+  if opt_t
+    STDERR.puts "running sun_moon"
+    STDERR.print IO.read("/tmp/.sm.dat")
+  end
+end
+
+nc = 0
+sollist=[]
+File.open('/tmp/.sm.dat') do |f|
+  f.each do |l|
+    l.chomp!
+    k,v=l.split("\t")
+    sollist.push({ 'scol' => ((nc & 1) == 0) ? 'grey1' : 'grey2',
+		  'solnam' => k, 'solval' => v })
+    nc += 1
+  end
+end
+
 raintimes=''
-raintimes = "start: #{rast.strftime("%H:%M")} " if rast != 0
-raintimes += "last: #{radr.strftime("%H:%M")} " if radr != 0
-raintimes += "end: #{raet.strftime("%H:%M")}" if raet != 0
+raintimes = "start: #{Time.at(rast).strftime("%H:%M")} " if rast != 0
+raintimes += "last: #{Time.at(radr).strftime("%H:%M")} " if radr != 0
+raintimes += "end: #{Time.at(raet).strftime("%H:%M")}" if raet != 0
 puts "Raintimes #{raintimes}" if opt_t
 
 wx_notice=''
@@ -598,6 +535,14 @@ if stemp1
   end
 end
 
+wchill=''
+if wsok and dock[2] and temp
+  kws = dock[2]*1.852
+  if kws > 3.0 && temp < 5.0
+    wchill = "(Wind Chill %.1f&deg;C)" % (13.12 + 0.6215 * temp + 
+					 ( 0.3965*temp - 11.37)*(kws**0.16))
+  end
+end
 rain1mm = rain1*25.4
 rain24mm = rain24*25.4
 lastdock << '*' if dsource == 'AVTS'
@@ -625,7 +570,9 @@ tmpl.param({
              'tide' => dock[4],
              'rainlist' => rainlist,
 	     'raintimes' => raintimes,
-	     'wx_notice' => wx_notice
+	     'wx_notice' => wx_notice,
+             'sollist' => sollist,
+	     'wchill' => wchill
            })
 File.open('w.html', 'w') do |f|
   f.print tmpl.output
@@ -633,13 +580,13 @@ end
 File.rename('w.html','index.html')
 
 rstr = ''
-rstr += "@#{radr.strftime("%H:%M")}" if radr != 0 and rain1 > 0
+rstr += "@#{Time.at(radr).strftime("%H:%M")}" if radr != 0 and rain1 > 0
 dwstr = (humid) ? "%.1f" % dewpt : 'N/A'
 
 tmpl.load 'wx.static.tmpl'
 tmpl.param({
-	     'udate' => d2.to_i,
-	     'idate' => d2.strftime("%FT%T%z"),
+	     'udate' => d2,
+	     'idate' => Time.at(d2).strftime("%FT%T%z"),
 	     'temp' => "%.1f" % temp,
 	     'press' => "%.1f" % press,
 	     'humid' => hustr,
@@ -660,8 +607,8 @@ end
 
 tmpl.load('wx.text.tmpl')
 tmpl.param({
-	     'udate' => d2.to_i,
-	     'idate' => d2.strftime("%FT%T%z"),
+	     'udate' => d2,
+	     'idate' => Time.at(d2).strftime("%FT%T%z"),
 	     'temp' => "%.1f" % temp,
 	     'press' => "%.1f" % press,
 	     'humid' => hustr,
@@ -679,19 +626,48 @@ tmpl.param({
 	     'wdir' => dock[1],
 	     'tide' => dock[4]
 	   })
-File.open('/tmp/.wx_static.dat', 'w') do |f|
+File.open('.wx_static.dat', 'w') do |f|
   f.print tmpl.output
 end
+File.rename('.wx_static.dat','wx_static.dat')
 
-if opt_u and (now.min % 10 == 0)
+if File.pipe?(FIFO) 
+  rstr=rstr[1..-1]
+  rtxt=nil
+  rtxt0 = "#{"%0.1f" % rain1mm}/#{rstr}/#{"%.1f" % rain24mm}"
+  if dock[2]
+    ndir = (((dock[1] + 22.5) % 360) / 45).to_i
+    rtxt1 = "#{DIRS[ndir]}#{"%.0f" % dock[2]}"
+    lr = rtxt1.size
+    rtxt = "#{rtxt0.ljust(20-lr)}#{rtxt1}"
+  else
+    rtxt = "#{rtxt0.center(20)}"
+  end
+  l4="line4\n0\n==EOD==\n#{rtxt}\n==EOD==\n"
+  begin
+    fd=IO.sysopen(FIFO,File::WRONLY|File::NONBLOCK)
+    IO.open(fd,'w') {|f| f.syswrite("#{lcdstr}#{l4}") }
+  rescue
+    unless File.exists?('/tmp/pert.fail')
+      IO.popen("mutt -s 'pertd failure' -x jrh@roo",'w') do |p|
+	p.puts("wplot write to pertd failure")
+      end
+    end
+    File.open('/tmp/pert.fail','w') {|f| f.puts('failed')}
+  end
+end
+
+if opt_u and (opt_t or (now.min % 10 == 0))
+  stemp = 
   w = { 'humid' => humid,
     'temp' => temp,
     'dewpt' => dewpt,
     'pres' => press,
     'rain' => rain1,
     'rain24' => rain24,		
-    'udate' => now.to_i } 
+    'udate' => now.to_i,
+    'stemp' => stemp1
+  } 
   Wug.upload(stn, opt_t, w) if stn['wu_user']
-  CWOP.upload(stn, opt_t, w) if stn['cwop_user']
 end 
 
