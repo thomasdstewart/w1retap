@@ -1,3 +1,9 @@
+1.2.4 2008-07-11 
+        Documentation update. Updates user guide and adds w1sensor.rb script
+	to build an initial sensors configuration from w1find. Updates
+	contrib scripts and examples. Relaxed sensor identification (for
+	Mihail Peltekov, even if he doesn't know it:)
+
 1.2.3	2008-06-20
 	Fixed the (major,segv) bugs introduced by the 1.2.2 multi-sensor
 	re-engineering, when the setup included DS2409 couplers

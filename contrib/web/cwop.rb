@@ -23,9 +23,10 @@
 
 require 'dbi'
 require 'socket'
+require 'yaml'
 
 module CWOP
-  HOST = 'rotate.aprs.net'
+  HOST = 'cwop.aprs.net'
 
   def CWOP.CtoF c
     ((9.0/5.0)*c + 32.0).to_i
@@ -53,7 +54,7 @@ module CWOP
     s += stn['software']
 
     if flag.nil?
-      TCPSocket.open(HOST,23) do |skt|
+      TCPSocket.open(HOST,14580) do |skt|
 	skt.puts "user #{stn['cwop_user']} pass -1 vers #{stn['software']}\r"
 	skt.puts "#{s}\r"
       end
@@ -64,15 +65,21 @@ module CWOP
 end
 
 if __FILE__ == $0
+  DFILE = "/tmp/.w.yaml"
   flag = ARGV[0]
   now = Time.now.to_i;
   dbh = DBI.connect('dbi:Pg:sensors', '', '')
   s = dbh.execute 'select * from station'
   stn = s.fetch_hash
   s.finish
-  s = dbh.execute "select * from latest order by udate desc limit 1"
-  w  = s.fetch_hash
-  s.finish
-  flag = true if (now - w['udate']) > 180 
+  if File.exists?(DFILE)
+    w = YAML.load_file(DFILE)
+    File.unlink(DFILE)
+  else
+    s = dbh.execute  "select * from latest order by udate desc limit 1"
+    w  = s.fetch_hash
+    s.finish
+  end
+  flag = true if (now - w['udate']) > 600 
   CWOP.upload stn, flag, w
 end

@@ -37,7 +37,7 @@ void w1_init(w1_devlist_t *w1, char *params)
     SQLRETURN ret; 
     SQLSMALLINT columns; 
     const char *sql =
-        "select * from w1sensors";
+        "select distinct * from w1sensors";
     SQLLEN rows = 0;
     w1_device_t * devs = NULL;
     int n = 0;

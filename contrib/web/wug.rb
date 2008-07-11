@@ -49,7 +49,9 @@ module Wug
     q['weather'] = q['clouds'] = 'NA'
     q['dateutc'] = Time.at(w['udate']).gmtime.strftime("%Y-%m-%d %H:%M")
     q['rainin'] = w['rain']
-    
+    q['dailyrainin'] = w['rain24'] if  w['rain24']
+    q['soiltempf'] = CtoF w['stemp'] if  w['stemp']
+
     url = WURL+'?action=updateraw&ID=' + stn['wu_user'] + '&PASSWORD=' +
       stn['wu_pass']
 
@@ -70,7 +72,7 @@ module Wug
 end
 
 if __FILE__ == $0
-  flag = ARGV[0]
+  flag = (ARGV.size > 0)
   now = Time.now.to_i;
   dbh = DBI.connect('dbi:Pg:sensors', '', '')
   s = dbh.execute 'select * from station'
@@ -80,6 +82,5 @@ if __FILE__ == $0
   w  = s.fetch_hash
   s.finish
   flag = true if (now - w['udate']) > 180 
-  
   Wug.upload stn, flag, w
 end

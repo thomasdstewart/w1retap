@@ -1,0 +1,10 @@
+Examples of 
+
+ log=w1file=|/path/to/script
+
+scripts to update the database with modified or derived values, or display
+data on external device.
+
+pert-log.rb: Display data on a Pertelian USB LCD device (via pertd2);
+
+wetbulb-snow.rb: Derive snow depth and wet bulb values from devices.

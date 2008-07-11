@@ -50,8 +50,7 @@
 		      Soil: <!-- var:stemp -->
 		      <br />
 		      <b>Garden Weather</b><br />
-			Temperature:
-			<!-- var:temp --> [max:&nbsp;<!-- var:tmax -->, min:&nbsp;<!-- var:tmin -->]
+			Temperature: <!-- var:temp --> <!-- var:wchill --> [max:&nbsp;<!-- var:tmax -->, min:&nbsp;<!-- var:tmin -->]
 			  <br />
 			  Pressure:
 			  <!-- var:press --><br />
@@ -185,106 +184,136 @@
     </div>
     <div id="right" class="rightd">
       <div class="content">
-      <p>
-	<img src="stnmap.png" alt="Map" class="cimag"
-	  title= "Netley Marsh weather station location (50.9N,1.5W)" />
-      </p>
-      <p>
+	<p>
+	  <img src="stnmap.png" alt="Map" class="cimag"
+	    title= "Netley Marsh weather station location (50.9N,1.5W)" />
+	</p>
+	<p>
 	  <img src="winddirn.<!-- var:gtype -->" alt="" class="cimag"
             title="Wind Direction on Southampton Water (<!-- var:wdirn -->&deg;)" />
 	</p>
-      <p>
-	The Netley Marsh data is obtained from a number of
-	1-wire weather sensors in our garden. You can find out more
-	information about the <b>hardware and <i>w1retap</i> software</b> used <a
-          href= "tech.html">(Linux, 1-wire, postgresql)</a>, on the
-	<a href="tech.html">technical description page</a>.
-      </p>
-      <p>
-	There are also some pictures of the sensors and 
-	Daria's greenhouse in
-	the <a href="images/">image gallery</a>.
-      </p>
-      <p>Our garden is surrounded by trees, therefore we do not
-	have an anemometer; as we sail at <a
-	href="http://www.weston.org.uk/">Weston Sailing Club</a> on
-	Southampton Water, it is convenient to use the <a href=
-          "http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
-	<a href="http://www.sotonmet.co.uk/wap">WAP</a> feed for wind
-	information. The wind speed is normalised from the value
-	measured at 53m to a more normal 10m for display.
-      </p>
-      <p>
-	In the rainfall table, the <i>Avg. Month mm</i> column is the
-	expected historic rainfall for the month, taken from the
-	<a
-	  href="http://uk.weather.com/weather/climatology/UKXX0138">
-	  Weather Channel climate statistics</a>
-      </p>
-      <p>
-	This site aims to be standards compliant. If it doesn't
-	look right in your browser, that's may be because you're
-	using a somewhat non-compliant and broken browser. You
-	may wish to consider upgrading to a <a
-	  href="http://getfirefox.com/"
-	  title="Get Firefox - The Browser, Reloaded.">
-	  more secure, standards' compliant browser</a>.
-      </p>
-      <p >
-	<a href="http://validator.w3.org/check?uri=referer"><img
-	    src="xhtmlvalid.png" 
-	    alt="Valid XHTML 1.0 Transitional" class="cimag" /> </a>
+	<p>
+	  The Netley Marsh data is obtained from a number of
+	  1-wire weather sensors in our garden. You can find out more
+	  information about the <b>hardware and <i>w1retap</i> software</b> used <a
+	    href= "tech.html">(Linux, 1-wire, postgresql)</a>, on the
+	  <a href="tech.html">technical description page</a>.
+	</p>
+	<p>
+	  There are also some pictures of the sensors and 
+	  Daria's greenhouse in
+	  the <a href="images/">image gallery</a>.
+	</p>
+	<p>Our garden is surrounded by trees, therefore we do not
+	  have an anemometer; <!-- as we sail at <a
+	    href="http://www.weston.org.uk/">Weston Sailing Club</a> on
+	  Southampton Water, --> it is convenient to use the <a href=
+	    "http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
+	  <a href="http://www.sotonmet.co.uk/wap">WAP</a> feed for wind
+	  information. The wind speed is normalised from the value
+	  measured at 53m to a more normal 10m for display.
+	</p>
+	<p>
+	  In the rainfall table, the <i>Avg. Month mm</i> column is the
+	  expected historic rainfall for the month, taken from the
+	  Weather Channel climate statistics.
+	</p>
+	<p>
+	  This site aims to be standards compliant. If it doesn't
+	  look right in your browser, that's may be because you're
+	  using a somewhat non-compliant and broken browser. You
+	  may wish to consider upgrading to a <a
+	    href="http://getfirefox.com/"
+	    title="Get Firefox - The Browser, Reloaded.">
+	    more secure, standards' compliant browser</a>.
+	</p>
+	  <div class="soltable">
+	    <table style="margin:0; width:100%"
+	      cellspacing='0' border='0' summary="SolLun" cellpadding='2'>
+	      <tbody>
+		<tr class="titlebar" >
+		  <th colspan="2">
+		    Sun and Moon Data
+		  </th>
+		</tr>
+		<!-- begin:sollist -->
+		<tr class="<!-- var:scol -->">
+		  <td class='aleft'><!-- var:solnam --></td>
+		  <td class='aright'><!-- var:solval --></td>
+		</tr>
+		<!-- end:sollist -->
+	      </tbody>
+	    </table>
+	      <img
+		src="http://tycho.usno.navy.mil/cgi-bin/phase.gif" 
+		alt="" style="float: right; margin-right: 0;margin-left: auto;"
+		title="Moon state" 
+		/>
+	  </div>
 
-	<a href="wx.rss1.xml"><img src="rss-1.0-icon.png" 
-	    alt="RSS 1.0 Feed" class="cimag"/></a>
-	<a href="wx.rss2.xml"><img src="rss-2.0-icon.png" 
-	    alt="RSS 2.0 Feed"  class="cimag" /></a>
-	<a href="http://www.mozilla.org/products/firefox/">
-	  <img src="firefox80x15.png" alt="Get Firefox" 
-	    class="cimag"/></a>
-	<a href="http://www.ffii.org/">
-	  <img src="no_patents-icon.png" alt="No Software Patents" 
-	    class="cimag"/></a>
-
-	<a href="http://www.ruby-lang.org/en/"><img
-	    src="Ruby-POWERED.png" 
-	    alt="Remember. Understand. Believe. Yield!" class="cimag" /> </a>
-	<!--  
-	<a
-	href="http://geourl.org/near?lat=50.9153&amp;long=-1.53036">
-	  <img src="geourl.png" alt="GeoURL" class="cimag" /> </a>
-        -->
-      </p>
-      <h6>Weather Forecast Links</h6>
-      <p>
-	<a
-	href="http://www.bbc.co.uk/weather/5day.shtml?id=3485&amp;links">
-	  BBC Weather Centre</a>
-	<br/>
+	<h6>Weather Forecast Links</h6>
+	<p>
 	  <a
-	    href="http://uk.weather.com/weather/local/UKXX0138?x=0&amp;y=0">
+	    href="http://www.bbc.co.uk/weather/5day.shtml?id=3485&amp;links">
+	    BBC Weather Centre</a>
+	  <br/>
+            <a
+	      href="http://uk.weather.com/weather/today-Southampton-UKXX0138">
 	    Weather.com</a>
-	  <br />
-	    <a
-	      href="http://www.wunderground.com/global/stations/03865.html">
-	      Wunderground.com</a>
 	    <br />
 	      <a
-	      href="http://www.metoffice.gov.uk/satpics/latest_uk_ir.html">
+		href="http://www.wunderground.com/global/stations/03865.html">
+		Wunderground.com</a>
+	      <br />
+		<a
+		  href="http://www.metoffice.gov.uk/satpics/latest_uk_ir.html">
 		UK Met Office Satellite Images</a>
-      </p>
-      <!-- var:wx_notice -->
-    </div>
+	</p>
+	  <table  summary="hardy heron">
+	    <tr>
+	      <td>
+		<a href="http://validator.w3.org/check?uri=referer"><img
+		    src="xhtmlvalid.png" class="cximag"
+		    alt="Valid XHTML 1.0 Transitional"/> </a>
+		<a href="wx.rss1.xml"><img src="rss-1.0-icon.png" 
+		    class="cximag" alt="RSS 1.0 Feed" /></a>
+	      </td>
+	      <!--
+	      <td rowspan="3">
+		<script src="http://www.ubuntu.com/files/countdown/display.js" type="text/javascript"></script>
+	      </td>
+	      -->
+	    </tr>
+	    <tr><td>
+	    <a href="wx.rss2.xml"><img src="rss-2.0-icon.png" 
+		class="cximag" alt="RSS 2.0 Feed"  /></a>
+	    
+	    <a href="http://www.mozilla.org/products/firefox/">
+	      <img src="firefox80x15.png" alt="Get Firefox" 
+		class="cximag" /></a>
+	    </td></tr>
+	    <tr><td>
+	      <a href="http://www.ffii.org/">
+		<img src="no_patents-icon.png" alt="No Software Patents" 
+		  class="cximag" /></a>
+	      
+	      <a href="http://www.ruby-lang.org/en/"><img
+	    src="Ruby-POWERED.png"  class="cximag"
+		  alt="Remember. Understand. Believe. Yield!" /> </a>
+	    </td></tr>
+	  </table>
+	<!-- var:wx_notice -->
+      </div>
     </div>
     <div class="space-line" />
-    <div class="base">
+      <div class="base">
 	<p>
-	<a style="float: right;" href="http://getfirefox.com/" 
-	  title="Get Firefox - The Browser, Reloaded.">
-	  <img src="getfirefox_small.png" alt="Get Firefox" class="border0"/></a>
+	  <a style="float: right;" href="http://getfirefox.com/" 
+	    title="Get Firefox - The Browser, Reloaded.">
+	    <img src="getfirefox_small.png" alt="Get Firefox" class="border0"/></a>
       <a
-	href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#104;&#43;&#119;&#49;&#114;&#101;&#116;&#97;&#112;&#64;&#100;&#97;&#114;&#105;&#97;&#46;&#99;&#111;&#46;&#117;&#107;">Jonathan Hudson</a>
+	    href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#104;&#43;&#119;&#49;&#114;&#101;&#116;&#97;&#112;&#64;&#100;&#97;&#114;&#105;&#97;&#46;&#99;&#111;&#46;&#117;&#107;">Jonathan Hudson</a>
 	</p>
-    </div>
+      </div>
   </body>
 </html>
