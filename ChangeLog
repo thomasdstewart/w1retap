@@ -1,3 +1,11 @@
+1.2.5 2008-08-10
+	Relaxed the test for the libgio library in the contrib/w1temp
+	configure stuff, as it's new enough not to be univerally
+	available (reported by Stephen Searby).
+
+	Updated the file based loggers CSV and XML in line with other file
+	loggers (and use proper XML escapes).
+
 1.2.4 2008-07-11 
         Documentation update. Updates user guide and adds w1sensor.rb script
 	to build an initial sensors configuration from w1find. Updates
