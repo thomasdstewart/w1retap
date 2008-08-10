@@ -33,25 +33,32 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
     int i;
     char timb[TBUF_SZ];
     w1_device_t *devs;
+    FILE *lfp;
     
-    static FILE *lfp;
-
-    if(lfp == NULL)
+    if(logfile == NULL)
     {
-        lfp = w1_file_open(logfile);
+        lfp = stdout;
+        setvbuf(lfp, (char *)NULL, _IOLBF, 0);
     }
-    
+    else
+    {
+        if(*logfile == '|')
+        {
+            lfp = popen(logfile+1,"w");
+        }
+        else
+        {
+            lfp = fopen(logfile, "a");
+        }
+    }
+  
     if(lfp == NULL)
     {
         return;
     }
     
     logtimes(w1->logtime, timb);
-
-    char *lstr = malloc(4*1024);
-    int np = 0;
-    
-    np = sprintf(lstr, "\"%s\"", timb);
+    fprintf(lfp, "\"%s\"", timb);
     
     for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
@@ -62,20 +69,24 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
             {
                 if(devs->s[j].valid)
                 {
-                    np += sprintf(lstr+np, ",\"%s\",%f,\"%s\"",
-                                  devs->s[j].abbrv, devs->s[j].value,
-                                  (devs->s[j].units) ? (devs->s[j].units) : ""
-                                  );
+                    fprintf(lfp, ",\"%s\",%f,\"%s\"",
+                            devs->s[j].abbrv, devs->s[j].value,
+                            (devs->s[j].units) ? (devs->s[j].units) : ""
+                            );
                 }
             }
         }
     }
-    *(lstr+np)='\n';
-    *(lstr+np+1)='\0';
-    fputs(lstr, lfp);
-    free(lstr);
-    fflush(lfp);
+    fputc('\n',lfp);
+    if(logfile)
+    {
+        if (*logfile == '|')
+        {
+            pclose(lfp);
+        }
+        else
+        {
+            fclose(lfp);
+        }
+    }
 }
-
-
-
