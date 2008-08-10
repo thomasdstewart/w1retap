@@ -26,29 +26,45 @@
 #include <time.h>
 #include <sys/file.h>
 #include "w1retap.h"
+#include <glib.h>
 
 void w1_logger (w1_devlist_t *w1, char *logfile)
 {
     int i;
     char timb[TBUF_SZ];
     w1_device_t *devs;
-    
-    static FILE *lfp;
+    char *mkup;
+    FILE *lfp;
 
-    if(lfp == NULL)
+    if(logfile == NULL)
     {
-        lfp = w1_file_open(logfile);
+        lfp = stdout;
+        setvbuf(lfp, (char *)NULL, _IOLBF, 0);
     }
-    
+    else
+    {
+        if(*logfile == '|')
+        {
+            lfp = popen(logfile+1,"w");
+        }
+        else
+        {
+            lfp = fopen(logfile, "a");
+        }
+    }
+
     if(lfp == NULL)
     {
         return;
     }
     
     logtimes(w1->logtime, timb);
-    fputs("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", lfp);
-    fprintf(lfp, "<report timestamp=\"%s\" unixepoch=\"%ld\">\n",
-                 timb, w1->logtime);
+    fputs("<?xml version=\"1.0\" encoding=\"utf-8\"?>", lfp);
+    mkup=g_markup_printf_escaped(
+        "<report timestamp=\"%s\" unixepoch=\"%ld\">",
+        timb, w1->logtime);
+    fputs(mkup, lfp);
+    g_free(mkup);
     
     for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
@@ -59,18 +75,27 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
             {
                 if(devs->s[j].valid)
                 {
-                    fprintf(lfp,
-                            "  <sensor name=\"%s\" value=\"%.4f\" units=\"%s\"></sensor>\n",
-                            devs->s[j].abbrv, devs->s[j].value,
-                            (devs->s[j].units) ? (devs->s[j].units) : ""
-                            );
+                    mkup = g_markup_printf_escaped(
+                        "<sensor name=\"%s\" value=\"%.4f\" units=\"%s\"></sensor>",
+                        devs->s[j].abbrv, devs->s[j].value,
+                        (devs->s[j].units) ? (devs->s[j].units) : ""
+                        );
+                    fputs(mkup, lfp);
+                    g_free(mkup);
                 }
             }
         }
     }
     fputs("</report>\n", lfp);
-    fflush(lfp);
+    if(logfile)
+    {
+        if (*logfile == '|')
+        {
+            pclose(lfp);
+        }
+        else
+        {
+            fclose(lfp);
+        }
+    }
 }
-
-
-
