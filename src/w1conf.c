@@ -73,6 +73,19 @@ void read_config(w1_devlist_t *w1)
             {
                 w1->pidfile = g_strdup(lbuf);
             }
+            else if(1 == sscanf(buf,"log_time_t = %512[^\n]", lbuf))
+            {
+                w1->log_timet =  (lbuf[0] == 't' || lbuf[0] == 'T' ||
+                                  lbuf[0] == 'y' || lbuf[0] == 'Y' ||
+                                  lbuf[0] == '1');
+            }
+            else if(1 == sscanf(buf,"log_delimiter = %512[^\n]", lbuf))
+            {
+                if(*lbuf == '\\' && *(lbuf+1) == 't')
+                    w1->log_delim[0] = '\t';
+                else
+                    w1->log_delim[0] = *lbuf;
+            }
             else
             {
                 (void)(sscanf(buf,"delay = %d", &w1->delay) ||    

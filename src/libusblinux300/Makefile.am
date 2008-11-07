@@ -2,7 +2,7 @@ EXTRA_DIST=$(wildcard *.c) $(wildcard *.h) makefile.shrlib README ReadMe.txt
 
 AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I . $(GLIB_CFLAGS) $(LIBUSB_CFLAGS)
 
-bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter mweather lcdtest
+bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter mweather lcdtest atodtst
  
 pkglib_LTLIBRARIES = libw1common.la libw1serial.la libw1usb.la
 noinst_LIBRARIES = libowfat.a
@@ -76,4 +76,9 @@ lcdtest_SOURCES = lcdtest.c findtype.c
 lcdtest_DEPENDENCIES = libw1common.la 
 lcdtest_LDADD = -L. -lowfat -lw1common -lm 
 lcdtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+
+atodtst_SOURCES = atodtst.c findtype.c
+atodtst_DEPENDENCIES = libw1common.la 
+atodtst_LDADD = -L. -lowfat -lw1common -lm 
+atodtst_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 

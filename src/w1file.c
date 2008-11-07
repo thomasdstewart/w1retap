@@ -144,10 +144,16 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
             {
                 if(devs->s[j].valid)
                 {
-                    fprintf(lfp, "%s %s %f %s\n",
-                            timb, devs->s[j].abbrv, devs->s[j].value,
-                            (devs->s[j].units) ? (devs->s[j].units) : ""
-                            );
+                    fprintf(lfp, "%s%s%s%s%f%s%s",
+                            timb, w1->log_delim,
+                            devs->s[j].abbrv, w1->log_delim,
+                            devs->s[j].value, w1->log_delim,
+                            (devs->s[j].units) ? (devs->s[j].units) : "");
+                    if(w1->log_timet)
+                    {
+                        fprintf(lfp, "%s%ld", w1->log_delim, w1->logtime);
+                    }
+                    fputc('\n',lfp);
                 }
             }
         }
