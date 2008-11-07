@@ -159,7 +159,11 @@ static void do_init(w1_devlist_t *w1)
 
     if (done_i == 0)
     {
-        fputs("Init fails: No w1_init() in init= loadable library\n", stderr);
+        fputs("Init fails: No w1_init() in init= loadable library\n"
+              "Please check the init= lines in your configuration file\n"
+              "and the manual entry 'Configuring the W1RETAP software'.\n"
+              "This is typically a configuration error.\n",
+              stderr);
         exit(1);
     }
     w1_initialize_couplers(w1);
@@ -426,7 +430,8 @@ int main(int argc, char **argv)
 
     w1->logtmp = 1;
     w1->portnum = -1;
-
+    w1->log_delim[0] = ' ';
+    
     if((p = getenv("W1RCFILE")))
     {
 	w1->rcfile = strdup(p);

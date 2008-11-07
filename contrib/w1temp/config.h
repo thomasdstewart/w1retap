@@ -24,7 +24,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `curl' library (-lcurl). */
-#define HAVE_LIBCURL 1
+/* #undef HAVE_LIBCURL */
 
 /* Define to 1 if you have the `expat' library (-lexpat). */
 #define HAVE_LIBEXPAT 1
@@ -128,6 +128,10 @@
 
 /* Define to 1 if the system has the type `_Bool'. */
 #define HAVE__BOOL 1
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#define LT_OBJDIR ".libs/"
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 /* #undef NO_MINUS_C_MINUS_O */

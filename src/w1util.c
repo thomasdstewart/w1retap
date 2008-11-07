@@ -246,6 +246,10 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_DS2760;
     }
+    else if( MATCHES("DS2450"))
+    {
+        w->stype=W1_DS2450;
+    }
     else if (MATCHES("HB-BARO") || MATCHES("HB_BARO") )
     {
         w->stype=W1_HBBARO;
@@ -253,6 +257,10 @@ void w1_enumdevs(w1_device_t * w)
     else if (MATCHES("HWHIH") || MATCHES("MS-TH") )
     {
         w->stype=W1_HIH;
+    }
+    else if (MATCHES("MS-TC") )
+    {
+        w->stype=W1_MS_TC;
     }
 }
 

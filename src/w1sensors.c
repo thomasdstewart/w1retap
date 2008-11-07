@@ -252,6 +252,54 @@ static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
     return nv;
 }
 
+
+static int w1_read_ds2450(w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+    char msg[48];
+    float advolts[4];
+    uchar ctrl[16];
+
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+
+    w1_set_invalid(w);
+    if(w1_select_device(w1, w))
+    {
+        if (SetupAtoDControl(w1->portnum, w->serno, ctrl, msg))
+        {
+            fprintf(stderr, "A/D settings found\n%s\n", msg);
+        }
+        else
+        {
+            fprintf(stderr, "ERROR, DS2450 set up unsuccessful!\n");
+        }
+
+        DoAtoDConversion(w1->portnum, 0, w->serno);
+        if (ReadAtoDResults(w1->portnum, 0, w->serno, advolts, ctrl))
+        {
+            w1_sensor_t *s;
+            char adname[4] = "ADA";
+            int i;
+            
+            for (i = 0; i < 4; i++)
+            {
+                *(adname+2) = 'A'+ (char)i;
+                if((s = w1_match_sensor(w, adname)) != NULL)
+                {
+                    s->value = advolts[i];
+                    nv += w1_validate(w1, s);
+                    fprintf(stderr, "DS2450 %s %.1f\n", adname, advolts[i]);
+                }
+            }
+         }
+    }
+    return nv;
+}
+
 static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w, ds2438v_t *v)
 {
     int nv = 0;
@@ -627,6 +675,58 @@ static int w1_read_hih (w1_devlist_t *w1, w1_device_t *w)
     return nv;
 }
 
+static int w1_read_current (w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+
+    w1_set_invalid(w);
+    if(w1_select_device(w1, w))
+    {
+        ds2438v_t v = {0};
+        v.req = DS2438_VAD;
+        nv = w1_read_voltages(w1, w, &v);
+        
+        if (v.vad > -1.0)
+        {
+            w1_sensor_t *s;
+            if((s = w1_match_sensor(w, "current")))
+            {
+                if (v.vad >= 0.2)
+                {
+                        /*
+                         * for voltages .2 and up, response is claimed
+                         * to be linear within +/- 3% at a temperature
+                         * of 23C.  .2 volts corresponds to a current
+                         * of 1 Amp.  7.36x -.47 for x > 0.2volts
+                         */
+                    s->value = (v.vad * 7.36)-0.47;                        
+                }                                                      
+                else
+                {
+                        /*
+                         * 9.09x - .8181 for x < 0.2                         
+                         * This is an adjusted slope that will give zero amps
+                         * at the minimum voltage of 0.09 volts and yield 1 amp
+                         * at 0.2 volts where it will meet up with the       
+                         * first equation.                                   
+                         * The readings between 0 and 1 amp may be inaccurate.
+                         */
+                    s->value = (v.vad * 9.09)-0.8181;                      
+                }
+                nv += w1_validate(w1, s);
+            }
+        }
+    }
+    return nv;
+}
+
+
 static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
 {
     float temp,pres;
@@ -817,15 +917,24 @@ void w1_initialize_couplers(w1_devlist_t *w1)
 //                    fprintf(stderr,"%s %s", w->s[b].abbrv, w->s[b].name);
                     
                     if ((w->s[b].abbrv[0] == 'M' || w->s[b].abbrv[0] == 'A')
-                        && (w->s[b].name[0] >= '0' && w->s[b].name[0] <= '9'))
+                        && isxdigit(w->s[b].name[0]))
                     {
-                        clist[nc].coupler_device = w;
-                        strcpy(clist[nc].devid, w->s[b].name);
-                        if(w->s[b].abbrv[0] == 'M')
-                            clist[nc].branch = COUPLER_MAIN_ON;
-                        else
-                            clist[nc].branch = COUPLER_AUX_ON;
-                        nc++;
+                        char *tmp, *p1, *p2;
+                        tmp = strdup(w->s[b].name);
+                        for(p1 = tmp; (p2 = strtok(p1,", |"));p1=NULL)
+                        {
+                            if(*p2)
+                            {
+                                clist[nc].coupler_device = w;
+                                strcpy(clist[nc].devid, p2);
+                                if(w->s[b].abbrv[0] == 'M')
+                                    clist[nc].branch = COUPLER_MAIN_ON;
+                                else
+                                    clist[nc].branch = COUPLER_AUX_ON;
+                                nc++;
+                            }
+                        }
+                        free(tmp);
                     }
                 }
 //                fputc('\n', stderr);
@@ -917,6 +1026,14 @@ int w1_read_all_sensors(w1_devlist_t *w1)
 
                 case W1_DS2760:
                     r = w1_read_ds2760(w1, d);
+                    break;
+
+                case W1_DS2450:
+                    r = w1_read_ds2450(w1, d);
+                    break;
+
+                case W1_MS_TC:
+                    r = w1_read_current(w1, d);
                     break;
                     
                 case W1_INVALID:
