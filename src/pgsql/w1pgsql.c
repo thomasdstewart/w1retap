@@ -265,6 +265,9 @@ void w1_cleanup(void)
 void handle_result(PGresult *res)
 {
     if(res){
+#if defined(TESTBIN)
+        puts(PQresultErrorMessage(res));
+#endif
         ExecStatusType status = PQresultStatus(res);
         if((status == PGRES_NONFATAL_ERROR) || (status == PGRES_FATAL_ERROR)){
             syslog(LOG_ERR, "psql: %s", PQresultErrorMessage(res));
@@ -318,7 +321,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
             {
                 if(devs->s[j].valid) // if there's a valid reading
                 {
-                    char *rval;
+                    char *rval = NULL;
                     char tval[64];
                     int n;
                     
@@ -349,9 +352,8 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
                     pvals[1] = devs->s[j].abbrv;
                     pvals[2] = rval;
                     res = PQexecPrepared(db, stmt, 3, pvals, NULL, NULL, 0);
-                        handle_result(res);
+                    handle_result(res);
                     }
-
                     free(rval);
                 }
             }
@@ -414,13 +416,13 @@ int main(int argc, char **argv)
 
     w1=&w;
     w1_init(w1, auth);
-    /*
     w1->logtime = 0;
+    w1->timestamp = 1;
     w1->devs[0].s[0].valid = 1;
     w1->devs[0].init = 1;
     w1->devs[0].s[0].value = 22.22;
+    w1->devs[0].s[0].abbrv = "TEST";
     w1_logger(w1, auth);    
-*/
-     return 0;
+    return 0;
 }
 #endif

@@ -5,8 +5,8 @@ AC_INIT(configure.ac)
 PACKAGE=w1temp
 VERSION=0.0.5
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-
 AM_CONFIG_HEADER(config.h)
+AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 AC_PROG_CC
@@ -56,6 +56,7 @@ GLIB_CFLAGS=
 GLIB_LIBS=
 GIO_CFLAGS=
 GIO_LIBS=
+DBUS_REQUIRED=0.60
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
 
@@ -63,7 +64,16 @@ if test "$PKG_CONFIG" = "no" ; then
  AC_MSG_ERROR([Sorry, we need pkg-config])
 fi
 
-PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0)
+ACLOCAL_AMFLAGS="\${ACLOCAL_FLAGS}"
+AC_SUBST(ACLOCAL_AMFLAGS)
+
+pixmapsdir="${datadir}/pixmaps"
+AC_SUBST(pixmapsdir)
+AC_DEFINE_DIR(GNOME_PIXMAPSDIR, "${pixmapsdir}", [Gnome Pixmaps Directory])
+
+PKG_CHECK_MODULES(GLIB_MODULE, gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED)
 PKG_CHECK_MODULES(GIO_MODULE, gio-2.0 >= 2.16.0,,false)
 
 GTK_REQUIRED=2.2.0

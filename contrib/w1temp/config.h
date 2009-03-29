@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Gnome Pixmaps Directory */
+#define GNOME_PIXMAPSDIR "/usr/local/share/pixmaps"
+
 /* Define to 1 if you have the `alarm' function. */
 #define HAVE_ALARM 1
 
@@ -24,7 +27,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `curl' library (-lcurl). */
-/* #undef HAVE_LIBCURL */
+#define HAVE_LIBCURL 1
 
 /* Define to 1 if you have the `expat' library (-lexpat). */
 #define HAVE_LIBEXPAT 1
