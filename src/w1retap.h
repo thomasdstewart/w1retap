@@ -51,6 +51,8 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define MAXCPL 64
 #define ALLOCSENS 8
 #define W1_NOP (-1)
+#define W1_MIN_INTVL 10
+#define W1_DEFAULT_INTVL 120
 
 typedef struct w1_devlist w1_devlist_t;
 typedef struct w1_device w1_device_t;
@@ -103,6 +105,7 @@ struct w1_device
     w1_params_t *params;
     void *private;
     int ns;
+    int intvl;
 };
 
 typedef struct
@@ -127,6 +130,7 @@ struct w1_devlist
     int numdev;
     int ndll;
     int delay;
+    int cycle;
     int portnum;
     int altitude;
     char *iface;
@@ -162,9 +166,9 @@ extern void w1_replog(w1_devlist_t *, const char *,...);
 extern void w1_set_device_data(w1_device_t *, const char *, char *);
 extern void w1_set_device_data_index(w1_device_t *, int, char *);
 extern void w1_all_couplers_off(w1_devlist_t *);
-extern int w1_read_all_sensors(w1_devlist_t *);
+extern int w1_read_all_sensors(w1_devlist_t *, time_t);
 extern void w1_initialize_couplers(w1_devlist_t *);
 extern int w1_get_device_index(w1_device_t *, int, char *, char *);
-
+extern void w1_verify_intervals (w1_devlist_t *);
 #endif
 

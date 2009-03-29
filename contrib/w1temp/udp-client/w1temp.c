@@ -30,6 +30,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <unistd.h>
+#include "config.h"
 
 #define INTERVAL (120*1000)
 #define LSIZE 256
@@ -56,6 +58,37 @@ typedef struct MY_STUFF
     short port;    
 } MY_STUFF_t;
 
+static void display_about_dialog (BonoboUIComponent *uic, gpointer data,
+                                  const gchar *verbname)
+{
+    static const gchar *authors[] = {
+        "Jonathan Hudson <jh+w1retap@daria.co.uk>",
+        NULL
+    };
+    
+    gtk_show_about_dialog (NULL,
+                           "program-name", "w1retap applet",
+                           "title", _("About w1retap applet"),
+                           "authors", authors,
+                           "website", "http://www.daria.co.uk/wx",
+                           "copyright", "(C) 2008 Jonathan Hudson",
+                           "comments", "A UDP based applet for w1retap",
+                           NULL);
+}
+
+static const BonoboUIVerb example_menu_verbs [] = {
+    BONOBO_UI_VERB ("w1tempAbout", display_about_dialog),
+    BONOBO_UI_VERB_END
+};
+
+static const char Context_menu_xml [] =
+"<popup name=\"button3\">\n"
+"   <menuitem name=\"About Item\" "
+"             verb=\"w1tempAbout\" "
+"           _label=\"_About...\"\n"
+"          pixtype=\"stock\" "
+"          pixname=\"gnome-stock-about\"/>\n"
+"</popup>\n";
 
 /* Verbatim from netspeed applet, thanks */
 static void
@@ -150,7 +183,6 @@ gboolean read_data(GIOChannel *source, GIOCondition condition,
             }
         }
     }
-    printf("Source %p Cond %d\n", source, condition);
 
     if(len == -1)
     {
@@ -214,7 +246,7 @@ static gint timerfunc (gpointer data)
         }
         m->iopend = 1;
     }
-    g_timeout_add (m->timeout, timerfunc, m);
+    g_timeout_add_seconds (m->timeout, timerfunc, m);
     return FALSE;
 }
 
@@ -232,8 +264,7 @@ static gboolean w1temp_fill (
     FILE *fp;
     char *p;
 
-    m.pixdir = gnome_program_locate_file (NULL, GNOME_FILE_DOMAIN_PIXMAP,
-                        "w1temp/", FALSE, NULL);
+    m.pixdir = GNOME_PIXMAPSDIR"/w1temp/";
 
     if((p = getenv("HOME")))
     {
@@ -268,7 +299,6 @@ static gboolean w1temp_fill (
         }
     }
 
-    m.timeout *= 1000;
     m.image = gtk_image_new ();
 
     char *pixfile = g_build_filename (G_DIR_SEPARATOR_S,
@@ -291,6 +321,10 @@ static gboolean w1temp_fill (
     gtk_box_pack_start(GTK_BOX(hbox1), m.image,  TRUE, TRUE, 0);
     gtk_box_pack_end  (GTK_BOX(hbox1), m.label,  FALSE, FALSE, 0);    
     gtk_container_add (GTK_CONTAINER (applet), hbox1);    
+    panel_applet_setup_menu (PANEL_APPLET (applet),
+                             Context_menu_xml,
+                             example_menu_verbs,
+                             applet);	
     gtk_widget_show_all (GTK_WIDGET (applet));
 
     timerfunc(&m);

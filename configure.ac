@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.2.6,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.2.7,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -26,8 +26,9 @@ AC_ARG_WITH(odbc, AC_HELP_STRING([--without-odbc], [Don't build for ODBC]))
 # Checks for libraries.
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
 # But don't set fscking LIBS ....
-LIBS=
+LIBS= 
 AC_CHECK_LIB([m], [sin], [])
+AC_CHECK_LIB([rt], [clock_nanosleep])
 
 # Checks for header files.
 AC_HEADER_DIRENT

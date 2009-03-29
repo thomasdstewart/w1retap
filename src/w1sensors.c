@@ -970,8 +970,106 @@ void w1_all_couplers_off(w1_devlist_t *w1)
 	w1_set_coupler(w1, w, COUPLER_ALL_OFF);
 }
 
+static int w1_lcm(int a[], int n)
+{
+    int i,j,c,amax;
+    unsigned long prod;
+    int s = -1;
+    
+    amax=a[0];
+    for(i=0;i<n;i++)
+    {
+        if(a[i]>=amax)
+        {
+            amax=a[i];
+        }
+    }
+    
+    for(i=0,prod=1;i<n;i++)
+    {
+        prod=prod*a[i];
+    }
+    
+    for(i=amax;i<=prod;i+=amax)
+    {
+        c=0;
+        for(j=0;j<n;j++)
+        {
+            if(i%a[j]==0)
+            {
+                c+=1;
+            }
+        }
+        
+        if(c==n)
+        {
+            s = i;
+            break;
+        }
+    }
+    return s;
+}
 
-int w1_read_all_sensors(w1_devlist_t *w1)
+
+static int _w1_gcd (int m, int n)
+{
+    if (n == 0) {
+        return m;
+    } else {
+        return _w1_gcd(n, m % n);
+    }
+}
+
+int w1_gcd (int a[], int n)
+{
+    int s = 0;
+    int i;
+    
+    for(i=0; i < n; i++)
+    {
+        s = _w1_gcd(s,a[i]);
+    }
+  return s;
+}
+
+void w1_verify_intervals (w1_devlist_t *w1)
+{
+    int n;
+    int mint = w1->delay;
+    w1_device_t *d;
+    int *intvls;
+
+    intvls = malloc(w1->numdev*sizeof(int));
+    for(d = w1->devs, n = 0; n < w1->numdev; n++, d++)
+    {
+        if(d->intvl)
+        {
+            if(d->intvl < W1_MIN_INTVL)
+                d->intvl = W1_MIN_INTVL;
+            if(d->intvl > w1->delay)
+                d->intvl = w1->delay;
+        }
+        else
+        {
+            d->intvl = w1->delay;
+        }
+        if (d->intvl < mint)
+            mint = d->intvl;
+    }
+    w1->delay = mint;
+    for(d = w1->devs, n = 0; n < w1->numdev; n++, d++)
+    {
+        d->intvl = (d->intvl / w1->delay) * w1->delay;
+        if (d->intvl == 0) d->intvl = w1->delay;
+        intvls[n] = d->intvl;
+    }
+    w1->cycle = w1_lcm(intvls, w1->numdev);
+    w1->delay = w1_gcd(intvls, w1->numdev);
+    free(intvls);
+}
+
+
+int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
 {
     int nv = 0, r;
 
@@ -982,74 +1080,82 @@ int w1_read_all_sensors(w1_devlist_t *w1)
 
         for(d = w1->devs, n = 0; n < w1->numdev; n++, d++)
         {
-            switch(d->stype)
+            int k;
+            for(k = 0; k < d->ns; k++)
             {
-                case W1_TEMP:
-                    r = w1_read_temp(w1, d);
-                    break;
-                    
-                case W1_HUMID:
-                    r = w1_read_humidity(w1, d);
-                    break;
-                    
-                case W1_PRES:
-                    r = w1_read_pressure(w1, d);
-                    break;
-                    
-                case W1_COUNTER:
-                    r = w1_read_counter(w1, d);
-                    break;
-                    
-                case W1_BRAY:
-                    r = w1_read_bray(w1, d);
-                    break;
-
-                case W1_HBBARO:
-                    r = w1_read_hb_pressure(w1, d);
-                    break;
-
-                case W1_SHT11:
-                    r = w1_read_sht11(w1, d);
-                    break;
-                    
-                case W1_WINDVANE:
-                    r = w1_read_windvane(w1, d);
-                    break;
-
-                case W1_DS2438V:
-                    r = w1_read_voltages(w1, d, NULL);
-                    break;
-
-                case W1_HIH:
-                    r = w1_read_hih(w1, d);
-                    break;
-
-                case W1_DS2760:
-                    r = w1_read_ds2760(w1, d);
-                    break;
-
-                case W1_DS2450:
-                    r = w1_read_ds2450(w1, d);
-                    break;
-
-                case W1_MS_TC:
-                    r = w1_read_current(w1, d);
-                    break;
-                    
-                case W1_INVALID:
-                default:
-                    r = -1;
-                    break;
+                d->s[k].valid = 0;
             }
+//            fprintf(stderr, "%d: %ld %d\n", n, secs, d->intvl);
+            if(secs == 0 || d->intvl == 0 || ((secs % d->intvl) == 0))
+            {
+                switch(d->stype)
+                {
+                    case W1_TEMP:
+                        r = w1_read_temp(w1, d);
+                        break;
+                    
+                    case W1_HUMID:
+                        r = w1_read_humidity(w1, d);
+                        break;
+                    
+                    case W1_PRES:
+                        r = w1_read_pressure(w1, d);
+                        break;
+                    
+                    case W1_COUNTER:
+                        r = w1_read_counter(w1, d);
+                        break;
+                        
+                    case W1_BRAY:
+                        r = w1_read_bray(w1, d);
+                        break;
 
-            if(r >= 0){
-                nv += r;
-                if(r == 0)
-                    syslog(LOG_WARNING, "Failed to read sensor %s (type %s)", d->serial, d->devtype);
+                    case W1_HBBARO:
+                        r = w1_read_hb_pressure(w1, d);
+                        break;
+
+                    case W1_SHT11:
+                        r = w1_read_sht11(w1, d);
+                        break;
+                    
+                    case W1_WINDVANE:
+                        r = w1_read_windvane(w1, d);
+                        break;
+
+                    case W1_DS2438V:
+                        r = w1_read_voltages(w1, d, NULL);
+                        break;
+
+                    case W1_HIH:
+                        r = w1_read_hih(w1, d);
+                        break;
+
+                    case W1_DS2760:
+                        r = w1_read_ds2760(w1, d);
+                        break;
+
+                    case W1_DS2450:
+                        r = w1_read_ds2450(w1, d);
+                        break;
+
+                    case W1_MS_TC:
+                        r = w1_read_current(w1, d);
+                        break;
+                    
+                    case W1_INVALID:
+                    default:
+                        r = -1;
+                        break;
+                }
+                
+                if(r >= 0){
+                    nv += r;
+                    if(r == 0)
+                        syslog(LOG_WARNING, "Failed to read sensor %s (type %s)", d->serial, d->devtype);
+                }
             }
         }
-
-	/* Put the bus back in a known state */
+            /* Put the bus back in a known state */
 	w1_all_couplers_off(w1);
     }
     return nv;

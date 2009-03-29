@@ -1,6 +1,6 @@
 <oaf_info>
 <oaf_server iid="OAFIID:w1tempApplet_Factory" type="exe"
-            location="/usr/libexec/w1temp">
+            location="/usr/local/libexec/w1temp">
         <oaf_attribute name="repo_ids" type="stringv">
                 <item value="IDL:Bonobo/GenericFactory:1.0"/>
                 <item value="IDL:Bonobo/Unknown:1.0"/>

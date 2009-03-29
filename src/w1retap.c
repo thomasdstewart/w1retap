@@ -29,9 +29,8 @@
 #include <glib.h>
 #include <assert.h>
 #include <syslog.h>
-
+#include <errno.h>
 #include "ownet.h"
-
 #include "w1retap.h"
 
 enum W1_sigflag
@@ -166,6 +165,7 @@ static void do_init(w1_devlist_t *w1)
               stderr);
         exit(1);
     }
+    w1_verify_intervals (w1);
     w1_initialize_couplers(w1);
 }
 
@@ -260,8 +260,8 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             int j;
             
-            fprintf(stderr, "%s %s\n",
-                    w1->devs[i].serial, w1->devs[i].devtype);
+            fprintf(stderr, "%s %s (%ds)\n",
+                    w1->devs[i].serial, w1->devs[i].devtype, w1->devs[i].intvl);
 
             if(w1->devs[i].coupler)
             {
@@ -353,24 +353,13 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             fprintf (stderr, "Log file is %s\n", w1->tmpname);
         }
-    }
-}
-
-
-static inline void nanosub(struct timespec *a, struct timespec *b,
-                           struct timespec *result)
-{
-    result->tv_sec = a->tv_sec - b->tv_sec;
-    result->tv_nsec = a->tv_nsec - b->tv_nsec;
-    if (result->tv_nsec < 0)
-    {
-        --result->tv_sec;
-        result->tv_nsec += 1000000000;
+        fprintf(stderr,"interval %ds, cycle %ds\n", w1->delay, w1->cycle);
     }
 }
 
 int main(int argc, char **argv)
 {
+    struct timeval now = {0};        
     struct sigaction act ={{0}};
     gboolean immed = 1;
     gboolean showvers=0;
@@ -431,6 +420,7 @@ int main(int argc, char **argv)
     w1->logtmp = 1;
     w1->portnum = -1;
     w1->log_delim[0] = ' ';
+    w1->delay = w1->cycle = W1_DEFAULT_INTVL;
     
     if((p = getenv("W1RCFILE")))
     {
@@ -466,7 +456,7 @@ int main(int argc, char **argv)
     
     if(w1->verbose)
     {
-        fputs("w1retap v" VERSION " (c) 2005-2008 Jonathan Hudson\n", stderr);
+        fputs("w1retap v" VERSION " (c) 2005-2009 Jonathan Hudson\n", stderr);
         if(w1->verbose == 2)
         {
             exit (0);
@@ -486,10 +476,16 @@ int main(int argc, char **argv)
     }
     
     do_init(w1);
+        
     w1->logtime =time(NULL);
     w1_replog (w1, "Startup w1retap v" VERSION);
     
     w1_show(w1, 0);
+
+    if(!w1->doread)
+    {
+        exit(0);
+    }
     
     if(w1->daemonise)
     {
@@ -516,11 +512,9 @@ int main(int argc, char **argv)
     while(1)
     {
         int nv = 0;
-        
         if(immed)
         {
-            nv = w1_read_all_sensors(w1);
-
+            nv = w1_read_all_sensors(w1, now.tv_sec);
             if(nv)
             {
                 for(n = 0; n < w1->ndll; n++)
@@ -531,7 +525,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if(w1->logtmp)
+                if(w1->logtmp && ((now.tv_sec % w1->cycle) == 0))
                 {
                     w1_tmpfilelog (w1);
                 }
@@ -548,15 +542,12 @@ int main(int argc, char **argv)
             
             do
             {
-                struct timeval now;
-                struct timespec then, req, nnow;
-
+                struct timespec req;
                 ns = 0;
-
                 if(sigme & W1_READALL)
                 {
                     sigme &= ~W1_READALL;                    
-                    nv = w1_read_all_sensors(w1);
+                    nv = w1_read_all_sensors(w1, 0);
                     w1_tmpfilelog(w1);
                 }
                 
@@ -575,41 +566,17 @@ int main(int argc, char **argv)
                     w1_show(w1, 1);
                 }
                 gettimeofday(&now, NULL);
-                then.tv_sec = w1->delay * (1 + now.tv_sec / w1->delay);
-                then.tv_nsec = 200*1000*1000; /* ensure tick crossed */
-                nnow.tv_sec = now.tv_sec;
-                nnow.tv_nsec = now.tv_usec * 1000;
-                nanosub(&then, &nnow, &req);
-                ns  = nanosleep(&req, NULL);
+                req.tv_sec = (now.tv_sec / w1->delay)*w1->delay + w1->delay;
+                req.tv_nsec = 0;
+                ns  = clock_nanosleep(CLOCK_REALTIME,TIMER_ABSTIME, &req, NULL);
                 if(ns == 0)
                 {
                     gettimeofday(&now, NULL);
-                    if(now.tv_sec % w1->delay == 0)
-                    {
-                        w1->logtime = now.tv_sec;
-                    }
-                    else
-                    {
-                        w1->logtime = then.tv_sec;
-                        {
-                            FILE *fp = fopen("/tmp/w1retap.tlog", "a");
-                            if(fp)
-                            {
-                                fprintf(fp,
-                                        "Start : %ld %09ld\n"
-                                        "Expect: %ld %09ld\n"
-                                        "Actual: %ld %09ld\n",
-                                        then.tv_sec, then.tv_nsec,
-                                        nnow.tv_sec, nnow.tv_nsec,
-                                        now.tv_sec, now.tv_usec * 1000);
-                                fclose(fp);
-                            }
-                        }
-                    }
+                    w1->logtime = now.tv_sec;
                     if(w1->verbose)
                         fputs(ctime(&now.tv_sec),stderr);
                 }
-            } while (ns != 0);
+            } while (ns == EINTR);
         }
         else
         {

@@ -1,3 +1,9 @@
+1.2.7 2009-03-23
+	Added the ability to have a cycle time per sensor. Please see
+	the documentation to enable this (for David Glasgow).
+	
+	Applet builds on Ubuntu Jaunty.
+
 1.2.6 2008-11-08
 	Added a standalone DS2450 device, for Mihail Peltekov, in order to
 	support Mierij Meteo wind vanes. Updated the manual.

@@ -29,20 +29,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <errno.h>
 #include <sys/time.h>
 #include <curl/curl.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#include "config.h"
-
-#define DBUS_SERVICE_NM      "org.freedesktop.NetworkManager"
-#define DBUS_PATH_NM         "/org/freedesktop/NetworkManager"
-#define DBUS_INTERFACE_NM    "org.freedesktop.NetworkManager"
+#include <expat.h>
 
 #define INTERVAL 120
 #define LSIZE 256
 #define MAXSENS 20
 
-enum NM_STATE {NM_STATE_UNKNOWN=0, NM_STATE_ASLEEP = 1, NM_STATE_CONNECTING = 2,
-               NM_STATE_CONNECTED = 3, NM_STATE_DISCONNECTED = 4 };
+typedef struct
+{
+    char *key;
+    double value;
+    char *units;
+} wdata_t;
 
 typedef struct MY_STUFF
 {
@@ -56,12 +54,14 @@ typedef struct MY_STUFF
     char *ptr;
     size_t len;
     char *url;
+    char *time;
+    int nvals;
+    wdata_t *w;
     int timeout;
     CURL *c;
-    char *pixdir;
     char *key;
     char *auth;
-    guint tid;
+    char *pixdir;
 } MY_STUFF_t;
 
 static void display_about_dialog (BonoboUIComponent *uic, gpointer data,
@@ -78,7 +78,7 @@ static void display_about_dialog (BonoboUIComponent *uic, gpointer data,
                            "authors", authors,
                            "website", "http://www.daria.co.uk/wx",
                            "copyright", "(C) 2008 Jonathan Hudson",
-                           "comments", "A libcurl/dbus based applet for w1retap",
+                           "comments", "A libcurl based applet for w1retap",
                            NULL);
 }
 
@@ -96,6 +96,8 @@ static const char Context_menu_xml [] =
 "          pixname=\"gnome-stock-about\"/>\n"
 "</popup>\n";
 
+
+
 static size_t  wfunc (void  *ptr, size_t size, size_t nmemb, void *stream)
 {
     size_t nb = size*nmemb;
@@ -111,6 +113,51 @@ static size_t  wfunc (void  *ptr, size_t size, size_t nmemb, void *stream)
     }
     return nb;
 }
+
+static void xml_start(void *data, const char *el, const char **attr)
+{
+    int i;
+    MY_STUFF_t *m = data;
+
+    if(0 == strcasecmp(el, "report"))
+    {
+        for (i = 0; attr[i]; i += 2)
+        {
+            if(0 == strcmp(attr[i], "timestamp"))
+            {
+                m->time = g_strdup(attr[i+1]);
+                break;
+            }
+        }
+    }
+    else if(0 == strcasecmp(el, "sensor"))
+    {
+        wdata_t *w = m->w + m->nvals;        
+        
+        for (i = 0; attr[i]; i += 2)
+        {
+            if(0 == strcmp(attr[i], "name"))
+            {
+                w->key = g_strdup (attr[i+1]);
+                *w->key = toupper(*w->key);                
+                continue;
+            }
+            if(0 == strcmp(attr[i], "value"))
+            {
+                w->value = strtod(attr[i+1], NULL);
+                continue;
+            }
+            if(0 == strcmp(attr[i], "units"))
+            {
+                w->units = g_strdup(attr[i+1]);
+                continue;
+            }
+        }
+        m->nvals++;
+    }
+}   
+
+static void xml_end(void *data, const char *el) {}
 
 static void clean_curl(MY_STUFF_t *m)
 {
@@ -141,10 +188,11 @@ static gint timerfunc (gpointer data)
 {
     MY_STUFF_t *m =  (MY_STUFF_t *)data;
     int td;
+    int n = -1;
 
     m->len = 0;    
-    m->ptr = NULL;
-    
+    m->nvals = 0;
+
     if(m->c == NULL)
     {
         init_curl(m);
@@ -156,25 +204,41 @@ static gint timerfunc (gpointer data)
         {
             if(m->len && m->ptr)
             {
+                XML_Parser p = XML_ParserCreate(NULL);
+                XML_SetElementHandler(p, xml_start, xml_end);
+                XML_SetUserData(p, m);
+                XML_Parse(p, m->ptr, m->len, 1);
+                XML_ParserFree(p);
+                
+                char tt[1024];
                 double gtemp = -999;
-                char *p;
-
-                if(*(m->ptr+m->len-1) == '\n')
+                int nc = 0;
+                wdata_t *w = m->w;;
+                int j;
+            
+                for(j = 0; j < m->nvals; j++, w++)
                 {
-                    *(m->ptr+m->len-1) = '\0';
-                }
-                else
-                {
-                    m->ptr = g_realloc(m->ptr, m->len+1);                    
-                    *(m->ptr+m->len) = 0;
-                }
-                if(NULL != (p = strcasestr(m->ptr, m->key)))
-                {
-                    p += 1+strlen(m->key);
-                    gtemp = strtod(p,NULL);
+                    if(w->units)
+                    {
+                        if ((0 == strcasecmp(w->key, m->key)))
+                        {
+                            gtemp = w->value;
+                            n = 0;
+                        }
+                        nc+=sprintf(tt+nc,"%s: %.2f %s\n", w->key, w->value, w->units);
+                        g_free(w->units);
+                        w->units = NULL;
+                        g_free(w->key);
+                        w->key = NULL;
+                    }
                 }
                 
-                gtk_tooltips_set_tip (m->tips, GTK_WIDGET (m->applet), m->ptr, NULL);
+                if(m->time)
+                {
+                    strcpy(tt+nc, m->time);
+                }
+                gtk_tooltips_set_tip (m->tips, GTK_WIDGET (m->applet), tt, NULL);
+            
                 td = (int)(gtemp+0.5);
                 if(td > 39) td = 39;
                 if(td < -5) td = -5;
@@ -190,7 +254,7 @@ static gint timerfunc (gpointer data)
                                              m->pixdir, pixnam, NULL);
                     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (fnam, NULL);
                     g_free(fnam);
-                    free(pixnam);
+                    g_free(pixnam);
                     gtk_image_set_from_pixbuf (GTK_IMAGE (m->image), pixbuf);
                     g_object_unref(pixbuf);
                     m->last = td;
@@ -203,35 +267,18 @@ static gint timerfunc (gpointer data)
         }
     }
     
-    if(m->len == 0) 
+    if(n == -1) 
     {
         strcpy(m->lbl, "?");
     }
 
     gtk_label_set_text (GTK_LABEL(m->label), m->lbl);
     g_free(m->ptr);
-    m->tid = g_timeout_add_seconds (m->timeout, timerfunc, m);
-    printf("New tid %d\n", m->tid);
+    g_free(m->time);
+    m->ptr = NULL;
+    g_timeout_add_seconds (m->timeout, timerfunc, m);
     return FALSE;
 }
-
-static void nm_state_cb (DBusGProxy *proxy, int state, gpointer user_data)
-{
-    MY_STUFF_t *m =  (MY_STUFF_t *)user_data;    
-    g_print("Message received %d\n", state);
-    if (state == NM_STATE_CONNECTED)
-    {
-        if(m->tid)
-        {
-            printf("remove tid %d\n", m->tid);            
-            g_source_remove(m->tid);
-        }
-        printf("Call func\n");
-        m->tid = g_timeout_add_seconds (1, timerfunc, m);
-        printf("new tid %d\n", m->tid);        
-    }
-}
-
 
 /* Verbatim from netspeed applet, thanks */
 static void
@@ -273,31 +320,14 @@ static gboolean w1temp_fill (
     if (strcmp (iid, "OAFIID:w1tempApplet") != 0)
         return FALSE;
 
-    GError *error = NULL;
-    DBusGProxy * obj = NULL;
-    DBusGConnection * bus = NULL;
-
-    static MY_STUFF_t m = {.timeout=120, .last=-999, .key="temperature", .tid=0};
+    static wdata_t wdata[MAXSENS];
+    static MY_STUFF_t m = {.timeout=120, .last=-999,
+                           .w=wdata,.key="temperature"};
     FILE *fp;
     char *p;
 
-    g_type_init ();
-    
-    bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-    if (bus)
-    {
-        obj = dbus_g_proxy_new_for_name (bus, DBUS_SERVICE_NM, DBUS_PATH_NM,
-                                         DBUS_INTERFACE_NM);
-        if(obj)
-        {
-            dbus_g_proxy_add_signal(obj, "StateChanged", 
-                                    G_TYPE_UINT, G_TYPE_INVALID);
-            dbus_g_proxy_connect_signal(obj, "StateChanged",
-                                        G_CALLBACK(nm_state_cb), &m, NULL);
-        }
-    }
-
-    m.pixdir = GNOME_PIXMAPSDIR"/w1temp/";
+    m.pixdir = gnome_program_locate_file (NULL, GNOME_FILE_DOMAIN_PIXMAP,
+                        "w1temp/", FALSE, NULL);
 
     if((p = getenv("HOME")))
     {
@@ -333,7 +363,7 @@ static gboolean w1temp_fill (
 
     if(m.url == NULL)
     {
-        m.url = "http://www-proxy/wx/wx_static.dat";
+        m.url = "http://www-proxy/wx/wx_static.xml";
     }
 
     init_curl (&m);
