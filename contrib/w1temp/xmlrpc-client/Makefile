@@ -38,7 +38,10 @@ subdir = xmlrpc-client
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ac-define-dir.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -80,6 +83,7 @@ ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = ${SHELL} /home/jrh/Projects/w1retap/contrib/w1temp/missing --run aclocal-1.10
+ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 AMTAR = ${SHELL} /home/jrh/Projects/w1retap/contrib/w1temp/missing --run tar
 AR = ar
 AUTOCONF = ${SHELL} /home/jrh/Projects/w1retap/contrib/w1temp/missing --run autoconf
@@ -92,7 +96,7 @@ CFLAGS = -Werror
 CPP = gcc -E
 CPPFLAGS = 
 CURL_CFLAGS = 
-CURL_LIBS = 
+CURL_LIBS = -lcurl -Wl,-Bsymbolic-functions -lidn -lldap -lrt -L/usr/lib -g -O2 -Wl,-Bsymbolic-functions -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lgssapi_krb5 -lz -lgnutls
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -106,12 +110,13 @@ EXEEXT =
 FGREP = /bin/grep -F
 GIO_MODULE_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
 GIO_MODULE_LIBS = -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0  
-GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
-GLIB_LIBS = -Wl,--export-dynamic -lgmodule-2.0 -lglib-2.0  
-GLIB_MODULE_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
-GLIB_MODULE_LIBS = -Wl,--export-dynamic -lgmodule-2.0 -lglib-2.0  
+GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  
+GLIB_LIBS = -Wl,--export-dynamic -L//lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0  
+GLIB_MODULE_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  
+GLIB_MODULE_LIBS = -Wl,--export-dynamic -L//lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0  
 GNOME_APPLETS_CFLAGS = -DORBIT2=1 -pthread -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/libpng12 -I/usr/include/panel-2.0 -I/usr/include/libgnomeui-2.0 -I/usr/include/libbonoboui-2.0 -I/usr/include/libart-2.0 -I/usr/include/gconf/2 -I/usr/include/gnome-keyring-1 -I/usr/include/libgnome-2.0 -I/usr/include/libgnomecanvas-2.0 -I/usr/include/gnome-vfs-2.0 -I/usr/lib/gnome-vfs-2.0/include -I/usr/include/orbit-2.0 -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include -I/usr/include/libbonobo-2.0 -I/usr/include/bonobo-activation-2.0 -I/usr/include/libxml2 -I/usr/include/gail-1.0  
 GNOME_APPLETS_LIBS = -pthread -lpanel-applet-2 -lgnomeui-2 -lSM -lICE -lbonoboui-2 -lgnomevfs-2 -lgconf-2 -lgnomecanvas-2 -lgnome-2 -lpopt -lart_lgpl_2 -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lpangoft2-1.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lgio-2.0 -lcairo -lpango-1.0 -lfreetype -lz -lfontconfig -lbonobo-2 -lbonobo-activation -lgmodule-2.0 -lORBit-2 -lgthread-2.0 -lrt -lgobject-2.0 -lglib-2.0  
+GNOME_PIXMAPSDIR = /usr/local/share/pixmaps
 GREP = /bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
@@ -148,7 +153,7 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = strip
 USE_APPLET = udp-client
-USE_CURLAPP = 
+USE_CURLAPP = curl-client
 USE_GIOAPP = 
 USE_RPCAPP = 
 USE_RPCCGI = 
@@ -198,7 +203,8 @@ mandir = ${datarootdir}/man
 mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /usr
+pixmapsdir = ${datarootdir}/pixmaps
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

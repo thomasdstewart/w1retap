@@ -144,8 +144,6 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             }
 
             nn = w1_get_device_index(devs, ni, row[id], row[it]);
-//           fprintf(stderr, "Search for %s %s %d\n", row[id], row[it],nn);
-
             if (nn == -1)
             {
                 nx = ni;

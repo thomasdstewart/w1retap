@@ -29,7 +29,6 @@
 #include <math.h>
 #include "w1retap.h"
 
-
 char * w1_get_from_home(const char *f)
 {
     char *fname = NULL;
@@ -167,6 +166,9 @@ void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
             case 8:
                 w1->params = w1_dev_params(sv);
                 break;
+            case 9:
+                w1->intvl = strtol(sv,NULL,10);
+                break;
         }
     }
 }
@@ -197,6 +199,10 @@ void w1_set_device_data(w1_device_t * w1, const char *fnam, char *sv)
     else if (0 == strcmp(fnam, "params"))
     {
         w1->params = w1_dev_params(sv);
+    }
+    else if (0 == strcmp(fnam, "interval"))
+    {
+        w1->intvl = strtol(sv,NULL,10);
     }
 }
 

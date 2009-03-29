@@ -867,6 +867,9 @@ CPP
 LIBOBJS
 POW_LIB
 PKG_CONFIG
+ACLOCAL_AMFLAGS
+pixmapsdir
+GNOME_PIXMAPSDIR
 GLIB_MODULE_CFLAGS
 GLIB_MODULE_LIBS
 GIO_MODULE_CFLAGS
@@ -2429,8 +2432,8 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
-
 ac_config_headers="$ac_config_headers config.h"
+
 
 
 # Checks for programs.
@@ -4394,13 +4397,13 @@ if test "${lt_cv_nm_interface+set}" = set; then
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:4397: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:4400: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:4400: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:4403: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:4403: output\"" >&5)
+  (eval echo "\"\$as_me:4406: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -5511,7 +5514,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5514 "configure"' > conftest.$ac_ext
+  echo '#line 5517 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7333,6 +7336,10 @@ _lt_linker_boilerplate=`cat conftest.err`
 $RM -r conftest*
 
 
+## CAVEAT EMPTOR:
+## There is no encapsulation within the following macros, do not change
+## the running order or otherwise move them around unless you know exactly
+## what you are doing...
 if test -n "$compiler"; then
 
 lt_prog_compiler_no_builtin_flag=
@@ -7358,11 +7365,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7361: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7368: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7365: \$? = $ac_status" >&5
+   echo "$as_me:7372: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7682,11 +7689,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7685: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7692: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7689: \$? = $ac_status" >&5
+   echo "$as_me:7696: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7787,11 +7794,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7790: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7797: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7794: \$? = $ac_status" >&5
+   echo "$as_me:7801: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -7842,11 +7849,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7845: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7852: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7849: \$? = $ac_status" >&5
+   echo "$as_me:7856: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10603,7 +10610,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 10606 "configure"
+#line 10613 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10703,7 +10710,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 10706 "configure"
+#line 10713 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13856,6 +13863,7 @@ GLIB_CFLAGS=
 GLIB_LIBS=
 GIO_CFLAGS=
 GIO_LIBS=
+DBUS_REQUIRED=0.60
 
 # Extract the first word of "pkg-config", so it can be a program name with args.
 set dummy pkg-config; ac_word=$2
@@ -13904,6 +13912,25 @@ if test "$PKG_CONFIG" = "no" ; then
 echo "$as_me: error: Sorry, we need pkg-config" >&2;}
    { (exit 1); exit 1; }; }
 fi
+
+ACLOCAL_AMFLAGS="\${ACLOCAL_FLAGS}"
+
+
+pixmapsdir="${datadir}/pixmaps"
+
+
+  test "x$prefix" = xNONE && prefix="$ac_default_prefix"
+  test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+  ac_define_dir=`eval echo $"${pixmapsdir}"`
+  ac_define_dir=`eval echo $ac_define_dir`
+  GNOME_PIXMAPSDIR="$ac_define_dir"
+
+
+cat >>confdefs.h <<_ACEOF
+#define GNOME_PIXMAPSDIR "$ac_define_dir"
+_ACEOF
+
+
 
 
 
@@ -14035,12 +14062,18 @@ if test -n "$PKG_CONFIG"; then
         pkg_cv_GLIB_MODULE_CFLAGS="$GLIB_MODULE_CFLAGS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0
+			        dbus-1 >= \$DBUS_REQUIRED
+				dbus-glib-1 >= \$DBUS_REQUIRED\"") >&5
+  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_GLIB_MODULE_CFLAGS=`$PKG_CONFIG --cflags "gmodule-2.0 >= 2.2.0" 2>/dev/null`
+  pkg_cv_GLIB_MODULE_CFLAGS=`$PKG_CONFIG --cflags "gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -14053,12 +14086,18 @@ if test -n "$PKG_CONFIG"; then
         pkg_cv_GLIB_MODULE_LIBS="$GLIB_MODULE_LIBS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0
+			        dbus-1 >= \$DBUS_REQUIRED
+				dbus-glib-1 >= \$DBUS_REQUIRED\"") >&5
+  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_GLIB_MODULE_LIBS=`$PKG_CONFIG --libs "gmodule-2.0 >= 2.2.0" 2>/dev/null`
+  pkg_cv_GLIB_MODULE_LIBS=`$PKG_CONFIG --libs "gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -14077,14 +14116,20 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0"`
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED"`
         else
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0"`
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GLIB_MODULE_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (gmodule-2.0 >= 2.2.0) were not met:
+	{ { echo "$as_me:$LINENO: error: Package requirements (gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED) were not met:
 
 $GLIB_MODULE_PKG_ERRORS
 
@@ -14095,7 +14140,9 @@ Alternatively, you may set the environment variables GLIB_MODULE_CFLAGS
 and GLIB_MODULE_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 " >&5
-echo "$as_me: error: Package requirements (gmodule-2.0 >= 2.2.0) were not met:
+echo "$as_me: error: Package requirements (gmodule-2.0 >= 2.2.0
+			        dbus-1 >= $DBUS_REQUIRED
+				dbus-glib-1 >= $DBUS_REQUIRED) were not met:
 
 $GLIB_MODULE_PKG_ERRORS
 
@@ -15381,6 +15428,9 @@ CPP!$CPP$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 POW_LIB!$POW_LIB$ac_delim
 PKG_CONFIG!$PKG_CONFIG$ac_delim
+ACLOCAL_AMFLAGS!$ACLOCAL_AMFLAGS$ac_delim
+pixmapsdir!$pixmapsdir$ac_delim
+GNOME_PIXMAPSDIR!$GNOME_PIXMAPSDIR$ac_delim
 GLIB_MODULE_CFLAGS!$GLIB_MODULE_CFLAGS$ac_delim
 GLIB_MODULE_LIBS!$GLIB_MODULE_LIBS$ac_delim
 GIO_MODULE_CFLAGS!$GIO_MODULE_CFLAGS$ac_delim
@@ -15403,7 +15453,7 @@ GLIB_LIBS!$GLIB_LIBS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 28; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 31; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

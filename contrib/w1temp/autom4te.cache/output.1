@@ -867,6 +867,8 @@ CPP
 LIB@&t@OBJS
 POW_LIB
 PKG_CONFIG
+ACLOCAL_AMFLAGS
+pixmapsdir
 GLIB_MODULE_CFLAGS
 GLIB_MODULE_LIBS
 GIO_MODULE_CFLAGS
@@ -7333,6 +7335,10 @@ _lt_linker_boilerplate=`cat conftest.err`
 $RM -r conftest*
 
 
+## CAVEAT EMPTOR:
+## There is no encapsulation within the following macros, do not change
+## the running order or otherwise move them around unless you know exactly
+## what you are doing...
 if test -n "$compiler"; then
   
 lt_prog_compiler_no_builtin_flag=
@@ -13856,6 +13862,7 @@ GLIB_CFLAGS=
 GLIB_LIBS=
 GIO_CFLAGS=
 GIO_LIBS=
+DBUS_REQUIRED=0.60
 
 # Extract the first word of "pkg-config", so it can be a program name with args.
 set dummy pkg-config; ac_word=$2
@@ -13904,6 +13911,13 @@ if test "$PKG_CONFIG" = "no" ; then
 echo "$as_me: error: Sorry, we need pkg-config" >&2;}
    { (exit 1); exit 1; }; }
 fi
+
+ACLOCAL_AMFLAGS="\${ACLOCAL_FLAGS}"
+
+
+pixmapsdir="${datadir}/pixmaps"
+
+AC_DEFINE_DIR(GNOME_PIXMAPSDIR, "${pixmapsdir}", Gnome Pixmaps Directory)
 
 
 
@@ -14035,12 +14049,18 @@ if test -n "$PKG_CONFIG"; then
         pkg_cv_GLIB_MODULE_CFLAGS="$GLIB_MODULE_CFLAGS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= \$DBUS_REQUIRED 
+				dbus-glib-1 >= \$DBUS_REQUIRED\"") >&5
+  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_GLIB_MODULE_CFLAGS=`$PKG_CONFIG --cflags "gmodule-2.0 >= 2.2.0" 2>/dev/null`
+  pkg_cv_GLIB_MODULE_CFLAGS=`$PKG_CONFIG --cflags "gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -14053,12 +14073,18 @@ if test -n "$PKG_CONFIG"; then
         pkg_cv_GLIB_MODULE_LIBS="$GLIB_MODULE_LIBS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= \$DBUS_REQUIRED 
+				dbus-glib-1 >= \$DBUS_REQUIRED\"") >&5
+  ($PKG_CONFIG --exists --print-errors "gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_GLIB_MODULE_LIBS=`$PKG_CONFIG --libs "gmodule-2.0 >= 2.2.0" 2>/dev/null`
+  pkg_cv_GLIB_MODULE_LIBS=`$PKG_CONFIG --libs "gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -14077,14 +14103,20 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0"`
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED"`
         else 
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0"`
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GLIB_MODULE_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (gmodule-2.0 >= 2.2.0) were not met:
+	{ { echo "$as_me:$LINENO: error: Package requirements (gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED) were not met:
 
 $GLIB_MODULE_PKG_ERRORS
 
@@ -14095,7 +14127,9 @@ Alternatively, you may set the environment variables GLIB_MODULE_CFLAGS
 and GLIB_MODULE_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 " >&5
-echo "$as_me: error: Package requirements (gmodule-2.0 >= 2.2.0) were not met:
+echo "$as_me: error: Package requirements (gmodule-2.0 >= 2.2.0 
+			        dbus-1 >= $DBUS_REQUIRED 
+				dbus-glib-1 >= $DBUS_REQUIRED) were not met:
 
 $GLIB_MODULE_PKG_ERRORS
 
@@ -15381,6 +15415,8 @@ CPP!$CPP$ac_delim
 LIB@&t@OBJS!$LIB@&t@OBJS$ac_delim
 POW_LIB!$POW_LIB$ac_delim
 PKG_CONFIG!$PKG_CONFIG$ac_delim
+ACLOCAL_AMFLAGS!$ACLOCAL_AMFLAGS$ac_delim
+pixmapsdir!$pixmapsdir$ac_delim
 GLIB_MODULE_CFLAGS!$GLIB_MODULE_CFLAGS$ac_delim
 GLIB_MODULE_LIBS!$GLIB_MODULE_LIBS$ac_delim
 GIO_MODULE_CFLAGS!$GIO_MODULE_CFLAGS$ac_delim
@@ -15403,7 +15439,7 @@ GLIB_LIBS!$GLIB_LIBS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 28; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 30; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <gio/gio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <config.h>
 
 #define INTERVAL (120*1000)
 #define LSIZE 256
@@ -221,8 +222,7 @@ static gboolean w1temp_fill (
     FILE *fp;
     char *p;
 
-    m.pixdir = gnome_program_locate_file (NULL, GNOME_FILE_DOMAIN_PIXMAP,
-                        "w1temp/", FALSE, NULL);
+    m.pixdir = GNOME_PIXMAPSDIR"/w1temp/";
 
     if((p = getenv("HOME")))
     {

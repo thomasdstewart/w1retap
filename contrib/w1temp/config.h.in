@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Gnome Pixmaps Directory */
+#undef GNOME_PIXMAPSDIR
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
