@@ -118,7 +118,7 @@ int main(int argc, char **argv)
          for (i = 0; i < NumDevices; i++)
          {
 
-            if (ReadTemperature(portnum, FamilySN[i],&current_temp))
+            if (ReadTemperature(portnum, FamilySN[i],&current_temp, 750))
             {
                PrintSerialNum(FamilySN[i]);
                printf(" %5.1fC  %5.1fF \n", current_temp,

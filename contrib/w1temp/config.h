@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Gnome Pixmaps Directory */
-#define GNOME_PIXMAPSDIR "/usr/local/share/pixmaps"
+#define GNOME_PIXMAPSDIR "/usr/share/pixmaps"
 
 /* Define to 1 if you have the `alarm' function. */
 #define HAVE_ALARM 1
@@ -157,16 +157,8 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION ""
 
-/* Define to 1 if the C compiler supports function prototypes. */
-#define PROTOTYPES 1
-
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
-
-/* Define to 1 if the `setvbuf' function takes the buffering type as its
-   second argument and the buffer pointer as the third, as on System V before
-   release 3. */
-/* #undef SETVBUF_REVERSED */
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -179,9 +171,6 @@
 
 /* Version number of package */
 #define VERSION "0.0.5"
-
-/* Define like PROTOTYPES; this can be used by system headers. */
-#define __PROTOTYPES 1
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

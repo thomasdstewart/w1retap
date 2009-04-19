@@ -47,7 +47,7 @@
 //          FALSE(0) could not read the temperature, perhaps device is not
 //                   in contact
 //
-int ReadTemperature(int portnum, uchar *SerialNum, float *Temp)
+int ReadTemperature(int portnum, uchar *SerialNum, float *Temp, int iwait)
 {
    uchar rt=FALSE;
    uchar send_block[30],lastcrc8 = 0;
@@ -66,9 +66,9 @@ int ReadTemperature(int portnum, uchar *SerialNum, float *Temp)
          if (!owWriteBytePower(portnum,0x44))
             return FALSE;
 
-         // sleep for 1 second
-         msDelay(1000);
-
+         // sleep for settle time second
+         msDelay(iwait);
+         
          // turn off the 1-Wire Net strong pull-up
          if (owLevel(portnum,MODE_NORMAL) != MODE_NORMAL)
             return FALSE;

@@ -534,7 +534,7 @@ int ReadWet(int portnum, WeatherStruct *wet, float *temp, int *dir, double *revo
    start_time = msGettick();
 
    // read the temperature and print in F
-   if (ReadTemperature(portnum, &wet->ds1820[0],&current_temp))
+   if (ReadTemperature(portnum, &wet->ds1820[0],&current_temp,1000))
       *temp = current_temp * 9 / 5 + 32;
    else
    {
