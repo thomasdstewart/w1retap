@@ -93,7 +93,8 @@ void read_config(w1_devlist_t *w1)
                        sscanf(buf,"altitude = %d", &w1->altitude) ||
                        sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
                        sscanf(buf,"timestamp = %d", &w1->timestamp) ||
-                       sscanf(buf,"logtemp = %d", &w1->logtmp));
+                       sscanf(buf,"logtemp = %d", &w1->logtmp) ||
+                       sscanf(buf,"temp_scan = %d", &w1->temp_scan));
             }
         }
         fclose(fp);

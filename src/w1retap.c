@@ -364,6 +364,7 @@ int main(int argc, char **argv)
     gboolean immed = 1;
     gboolean showvers=0;
     gboolean once=0;
+    gboolean w1_simul = 0;
     int n;
     char *p;
     GError *error = NULL;
@@ -393,6 +394,8 @@ int main(int argc, char **argv)
          "Value for N for weather vane (0-15)", "VAL"},
         {"version",'V', 0, G_OPTION_ARG_NONE, &showvers,
          "Display version number (and exit)", NULL},
+        {"simulate",'s', 0, G_OPTION_ARG_NONE, &w1_simul,
+        "Simulate readings (for testing, not yet implemented)", NULL},
         {"report-log",'r', 0, G_OPTION_ARG_STRING, &w1->repfile,
          "Report log file", "FILE"},
         {NULL}
@@ -421,6 +424,7 @@ int main(int argc, char **argv)
     w1->portnum = -1;
     w1->log_delim[0] = ' ';
     w1->delay = w1->cycle = W1_DEFAULT_INTVL;
+    w1->temp_scan = 1000;
     
     if((p = getenv("W1RCFILE")))
     {
@@ -457,6 +461,7 @@ int main(int argc, char **argv)
     if(w1->verbose)
     {
         fputs("w1retap v" VERSION " (c) 2005-2009 Jonathan Hudson\n", stderr);
+        fputs("Built: " __DATE__ " " __TIME__  " gcc " __VERSION__ "\n", stderr);        
         if(w1->verbose == 2)
         {
             exit (0);

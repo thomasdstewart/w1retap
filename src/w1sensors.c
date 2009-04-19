@@ -38,6 +38,7 @@
 #include "sht11.h"
 #include "swt1f.h"
 #include "ds2760.h"
+#include "ds192x.h"
 
 #include "w1retap.h"
 
@@ -205,7 +206,7 @@ static int w1_read_temp(w1_devlist_t *w1, w1_device_t *w)
     {
         float temp;
         
-        if (ReadTemperature(w1->portnum, w->serno, &temp))
+        if (ReadTemperature(w1->portnum, w->serno, &temp, w1->temp_scan))
         {
             w->s[0].value = temp;
             w1_validate(w1, &w->s[0]);
@@ -832,6 +833,93 @@ static int w1_read_ds2760 (w1_devlist_t *w1, w1_device_t *w)
     return nv;
 }
 
+static int w1_read_ds1923 (w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+    ds1923_t v = {0};
+    
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    w1_set_invalid(w);
+
+    if(w1_select_device(w1,w))
+    {
+        if(w->params)
+        {
+            v.kill = 1;
+        }
+
+        if(ReadDS1923(w1->portnum, w->serno, &v))
+        {
+            w1_sensor_t *s;
+            if(w1->verbose)
+            {
+                fprintf(stderr,"ReadDS1923: t %f°C rh %f%%\n", v.temp, v.rh);
+                fflush(stderr);
+            }
+            
+            if((s = w1_match_sensor(w, "Temp")))
+            {
+                s->value = v.temp;
+                nv += w1_validate(w1, s);
+            }
+
+            if((s = w1_match_sensor(w, "Humidity")))
+            {
+                s->value = v.rh;
+                nv += w1_validate(w1, s);
+            }
+
+        }
+        else if(w1->verbose)
+        {
+            fputs("ReadDS1923 read failed\n", stderr);
+            fflush(stderr);
+        }
+    }
+    return nv;
+}
+
+static int w1_read_ds1921 (w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+    ds1921_t v = {0};    
+
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    w1_set_invalid(w);
+
+    if(w1_select_device(w1,w))
+    {
+        if(w->params)
+        {
+            v.kill = 1;
+        }
+        
+        if(ReadDS1921(w1->portnum, w->serno, &v))
+        {
+            w1_sensor_t *s;
+            if(w1->verbose)
+            {
+                fprintf(stderr,"ReadDS1921:  %f°C\n", v.temp);
+            }
+            
+            if((s = w1_match_sensor(w, "Temp")))
+            {
+                s->value = v.temp;
+                nv += w1_validate(w1, s);
+            }
+        }
+    }
+    return nv;
+}
+
 
 static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
 {
@@ -1085,7 +1173,6 @@ int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
             {
                 d->s[k].valid = 0;
             }
-//            fprintf(stderr, "%d: %ld %d\n", n, secs, d->intvl);
             if(secs == 0 || d->intvl == 0 || ((secs % d->intvl) == 0))
             {
                 switch(d->stype)
@@ -1141,7 +1228,15 @@ int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
                     case W1_MS_TC:
                         r = w1_read_current(w1, d);
                         break;
-                    
+
+                    case W1_DS1921:
+                        r = w1_read_ds1921(w1, d);
+                        break;
+
+                    case W1_DS1923:
+                        r = w1_read_ds1923(w1, d);
+                        break;
+
                     case W1_INVALID:
                     default:
                         r = -1;

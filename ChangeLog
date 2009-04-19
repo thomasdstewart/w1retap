@@ -1,7 +1,18 @@
+1.2.8 2009-04-10
+	Added support for the DS1921 (Thermochron) and DS1923 (Hygrochron)
+	sensors. Support is limited to reading the instantaneous values of
+	temperature (1921 & 1923) and relative humidity (1923) (for Leland
+	Helgerson).
+
+	w1find supports usb and usb-N (N=adaptor number) as an alias for
+	DS2490-N (which the author can never remember.
+
+	Updated documentation.
+
 1.2.7 2009-03-23
 	Added the ability to have a cycle time per sensor. Please see
 	the documentation to enable this (for David Glasgow).
-	
+
 	Applet builds on Ubuntu Jaunty.
 
 1.2.6 2008-11-08
@@ -47,8 +58,9 @@
 
 1.2.3	2008-06-20
 	Fixed the (major,segv) bugs introduced by the 1.2.2 multi-sensor
-	re-engineering, when the setup included DS2409 couplers
-	(reported by Mihail Peltekov).
+	re-engineering, when the setup included DS2409 couplers (reported
+	by Mihail Peltekov).
+
 	Corrected a documentation error (reported by Graeme Gemmill).
 
 1.2.2	2008-06-14

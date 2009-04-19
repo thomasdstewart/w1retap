@@ -31,7 +31,7 @@
 
 enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
               W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V, W1_HBBARO,
-              W1_HIH, W1_DS2760, W1_DS2450, W1_MS_TC};
+              W1_HIH, W1_DS2760, W1_DS2450, W1_MS_TC, W1_DS1921, W1_DS1923};
 
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
@@ -150,6 +150,7 @@ struct w1_devlist
     char *tmpname;
     char log_delim[2];
     short log_timet;
+    int temp_scan;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);
