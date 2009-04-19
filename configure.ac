@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.2.7,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.2.8,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -16,6 +16,7 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 AC_ARG_WITH(applet, AC_HELP_STRING([--without-applet], [Don't build the applet]))
 AC_ARG_WITH(mysql, AC_HELP_STRING([--without-mysql], [Don't build for MySQL]))

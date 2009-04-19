@@ -64,6 +64,8 @@ int main(int argc, char **argv)
    uchar snum[8];
    int nc = 0;
    uchar cplr[32][8];
+   char *dev = NULL;
+   char xdev[32];
    
    if (argc != 2)
    {
@@ -72,7 +74,27 @@ int main(int argc, char **argv)
       exit(1);
    }
 
-   if((portnum = owAcquireEx(argv[1])) < 0)
+   if (0 == strncmp(argv[1],"usb", 3))
+   {
+       int ndev = 1;
+       if (*(argv[1]+3) == ':' || *(argv[1]+3) == '-')
+       {
+           ndev = strtol(argv[1]+4,NULL,0);
+           if (ndev < 1 || ndev > 16)
+           {
+               ndev = 1;
+           }
+       }
+       sprintf(xdev,"DS2490-%d", ndev);
+       dev = xdev;
+   }
+   else
+   {
+       dev = argv[1];
+   }
+   
+   
+   if((portnum = owAcquireEx(dev)) < 0)
    {
       OWERROR_DUMP(stdout);
       exit(1);

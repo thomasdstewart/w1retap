@@ -17,8 +17,6 @@
  */
 
 #include <stdio.h>
-#include <sql.h>
-#include <sqlext.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
@@ -28,6 +26,8 @@
 #include <time.h>
 #include <sys/file.h>
 #include "w1retap.h"
+#include <sql.h>
+#include <sqlext.h>
 
 void w1_init(w1_devlist_t *w1, char *params)
 {

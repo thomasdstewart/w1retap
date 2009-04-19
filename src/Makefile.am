@@ -8,7 +8,7 @@ pkglib_LTLIBRARIES = libw1file.la  libw1xml.la  libw1csv.la
 
 w1retap_SOURCES = w1retap.c w1conf.c w1util.c w1sensors.c
 AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I libusblinux300 -DMODULE_DIR=\"$(pkglibdir)\" $(GLIB_CFLAGS)
-w1retap_DEPENDENCIES = libw1file.la
+w1retap_DEPENDENCIES = libw1file.la libusblinux300/libowfat.a
 w1retap_LDADD = "-dlopen" libw1file.la  -L./libusblinux300/.libs -L./libusblinux300 -lowfat -lw1common -lm
 w1retap_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 

@@ -252,6 +252,14 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_DS2760;
     }
+    else if( MATCHES("DS1921"))
+    {
+        w->stype=W1_DS1921;
+    }
+    else if( MATCHES("DS1923"))
+    {
+        w->stype=W1_DS1923;
+    }
     else if( MATCHES("DS2450"))
     {
         w->stype=W1_DS2450;

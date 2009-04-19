@@ -30,4 +30,4 @@
 //
 // ---------------------------------------------------------------------------
 
-int ReadTemperature(int,uchar *,float *);
+int ReadTemperature(int,uchar *,float *, int);
