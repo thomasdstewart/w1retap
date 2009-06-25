@@ -1,3 +1,13 @@
+1.2.9 2009-06-25
+	Corrected the check for the return value of clock_nanosleep (bug
+	fix for infinite sleep syndrome).
+	Allowed configuration parameters for the HB-BARO to be in SI units
+	Added some otherwise undocumented configuration parameters (RTFS,
+	but unlikely to be generally useful).
+	Upgraded w1xml to use libxml2 for output.
+
+	Updated the documentation.
+
 1.2.8 2009-04-10
 	Added support for the DS1921 (Thermochron) and DS1923 (Hygrochron)
 	sensors. Support is limited to reading the instantaneous values of
