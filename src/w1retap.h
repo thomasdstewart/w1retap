@@ -151,6 +151,7 @@ struct w1_devlist
     char log_delim[2];
     short log_timet;
     int temp_scan;
+    gboolean release_me;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);

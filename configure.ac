@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.2.8,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.2.9,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -30,6 +30,18 @@ AC_CHECK_LIB([odbc], [SQLAllocHandle])
 LIBS= 
 AC_CHECK_LIB([m], [sin], [])
 AC_CHECK_LIB([rt], [clock_nanosleep])
+
+AC_PATH_PROGS([TOOL_XML2_CONFIG], [xml2-config])
+    AS_IF([test -n "$TOOL_XML2_CONFIG"],
+          [XML2_CFLAGS=`$TOOL_XML2_CONFIG --cflags`
+           XML2_LIBS=`$TOOL_XML2_CONFIG --libs`
+           LIBXML_VERSION=`$TOOL_XML2_CONFIG --version`],
+          [AC_MSG_ERROR([missing program 'xml2-config'; is 'libxml2' or
+'libxml2-devel' installed?])])
+    AC_SUBST([XML2_CFLAGS])
+    AC_SUBST([XML2_LIBS]) 
+
+AC_CHECK_LIB([xml2],[xmlNewTextWriterMemory]) 
 
 # Checks for header files.
 AC_HEADER_DIRENT

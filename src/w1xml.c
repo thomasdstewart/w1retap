@@ -27,14 +27,20 @@
 #include <sys/file.h>
 #include "w1retap.h"
 #include <glib.h>
+#include <libxml/encoding.h>
+#include <libxml/xmlwriter.h>
+
+#define XMLENC "utf-8"
+
 
 void w1_logger (w1_devlist_t *w1, char *logfile)
 {
     int i;
     char timb[TBUF_SZ];
     w1_device_t *devs;
-    char *mkup;
     FILE *lfp;
+    xmlTextWriterPtr writer;
+    xmlBufferPtr buf;
 
     if(logfile == NULL)
     {
@@ -57,45 +63,60 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
     {
         return;
     }
-    
-    logtimes(w1->logtime, timb);
-    fputs("<?xml version=\"1.0\" encoding=\"utf-8\"?>", lfp);
-    mkup=g_markup_printf_escaped(
-        "<report timestamp=\"%s\" unixepoch=\"%ld\">",
-        timb, w1->logtime);
-    fputs(mkup, lfp);
-    g_free(mkup);
-    
-    for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
+
+    buf = xmlBufferCreate();
+    if (buf)
     {
-        if(devs->init)
+        writer = xmlNewTextWriterMemory(buf, 0);
+        if (writer)
         {
-            int j;
-            for (j = 0; j < devs->ns; j++)
+            logtimes(w1->logtime, timb);
+            if(0 == xmlTextWriterStartDocument(writer, NULL, XMLENC, NULL))
             {
-                if(devs->s[j].valid)
+                xmlTextWriterSetIndent (writer, 1);
+                xmlTextWriterStartElement(writer, BAD_CAST "report");
+                xmlTextWriterWriteAttribute(writer, BAD_CAST "timestamp",
+                                            BAD_CAST timb);
+                xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "unixepoch",
+                                                  "%ld", w1->logtime);
+
+                for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
                 {
-                    mkup = g_markup_printf_escaped(
-                        "<sensor name=\"%s\" value=\"%.4f\" units=\"%s\"></sensor>",
-                        devs->s[j].abbrv, devs->s[j].value,
-                        (devs->s[j].units) ? (devs->s[j].units) : ""
-                        );
-                    fputs(mkup, lfp);
-                    g_free(mkup);
+                    if(devs->init)
+                    {
+                        int j;
+                        for (j = 0; j < devs->ns; j++)
+                        {
+                            if(devs->s[j].valid)
+                            {
+                                xmlTextWriterStartElement(writer, BAD_CAST "sensor");
+                                xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
+                                                            BAD_CAST devs->s[j].abbrv);
+                                xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "value",
+                                                                  "%.4f", devs->s[j].value);
+                                xmlTextWriterWriteAttribute(writer, BAD_CAST "units",
+                                                            BAD_CAST ((devs->s[j].units) ?
+                                                                      (devs->s[j].units) : ""));
+                                xmlTextWriterEndElement(writer);
+                            }
+                        }
+                    }
+                }
+                xmlTextWriterEndDocument(writer);
+                fwrite(buf->content, 1, buf->use, lfp);
+                if(logfile)
+                {
+                    if (*logfile == '|')
+                    {
+                        pclose(lfp);
+                    }
+                    else
+                    {
+                        fclose(lfp);
+                    }
                 }
             }
         }
-    }
-    fputs("</report>\n", lfp);
-    if(logfile)
-    {
-        if (*logfile == '|')
-        {
-            pclose(lfp);
-        }
-        else
-        {
-            fclose(lfp);
-        }
+        xmlBufferFree(buf);
     }
 }
