@@ -31,6 +31,10 @@
 #include <syslog.h>
 #include <errno.h>
 #include "ownet.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "w1retap.h"
 
 enum W1_sigflag
@@ -41,6 +45,8 @@ enum W1_sigflag
     W1_SHOWCF = (4)
 };
     
+
+//int lfd = -1;
 
 static volatile enum W1_sigflag sigme;
    
@@ -166,6 +172,20 @@ static void do_init(w1_devlist_t *w1)
         exit(1);
     }
     w1_verify_intervals (w1);
+}
+
+void init_interfaces(w1_devlist_t *w1)
+{
+    if(w1->iface == NULL)
+        w1->iface = strdup("DS2490-1");
+    if(w1->portnum == -1)
+    {
+        if((w1->portnum = owAcquireEx(w1->iface)) < 0)
+        {
+            OWERROR_DUMP(stdout);
+            exit(1);
+        }
+    }
     w1_initialize_couplers(w1);
 }
 
@@ -354,6 +374,7 @@ static void w1_show(w1_devlist_t *w1, int forced)
             fprintf (stderr, "Log file is %s\n", w1->tmpname);
         }
         fprintf(stderr,"interval %ds, cycle %ds\n", w1->delay, w1->cycle);
+        fprintf(stderr,"release i/face %d\n", w1->release_me);
     }
 }
 
@@ -376,6 +397,8 @@ int main(int argc, char **argv)
          "At startup, wait until next interval",NULL},
         {"once-only",'1', 0, G_OPTION_ARG_NONE, &once,
          "Read once and exit",NULL},
+        {"release-interface",'R', 0, G_OPTION_ARG_NONE, &w1->release_me,
+         "Release the 1Wire interface between reads",NULL},
         {"daemonise",'d', 0, G_OPTION_ARG_NONE, &w1->daemonise,
          "Daemonise (background) application", NULL},
         {"no-tmp-log",'T',0, G_OPTION_ARG_NONE, &w1->logtmp,
@@ -450,7 +473,6 @@ int main(int argc, char **argv)
         w1->tmpname = "/tmp/.w1retap.dat";
     }
 
-    
     w1->doread ^= 1;
 
     if(showvers)
@@ -468,29 +490,17 @@ int main(int argc, char **argv)
         }
     }
 
-    if(w1->doread)
-    {
-        if(w1->iface == NULL)
-            w1->iface = strdup("DS2490-1");
-        
-        if((w1->portnum = owAcquireEx(w1->iface)) < 0)
-        {
-            OWERROR_DUMP(stdout);
-            exit(1);
-        }
-    }
-    
     do_init(w1);
-        
-    w1->logtime =time(NULL);
-    w1_replog (w1, "Startup w1retap v" VERSION);
-    
     w1_show(w1, 0);
 
     if(!w1->doread)
     {
         exit(0);
     }
+
+    init_interfaces(w1);
+    w1_replog (w1, "Startup w1retap v" VERSION);
+    w1->logtime =time(NULL);
     
     if(w1->daemonise)
     {
@@ -500,6 +510,15 @@ int main(int argc, char **argv)
         assert(0 == daemon(0,iclose));
     }
 
+#if 0
+    {
+        char filename[256];
+        time_t now;
+        now = time(NULL);
+        sprintf(filename,"/tmp/.w1retap-last-%ld", now);
+        lfd = open(filename, O_CREAT|O_WRONLY, 0644);
+    }
+#endif
     
     if(w1->pidfile)
     {
@@ -511,7 +530,6 @@ int main(int argc, char **argv)
         }
         free(w1->pidfile);
     }
-    
     w1_all_couplers_off(w1);
 
     while(1)
@@ -535,6 +553,11 @@ int main(int argc, char **argv)
                     w1_tmpfilelog (w1);
                 }
             }
+            if(w1->release_me)
+            {
+                owRelease(w1->portnum);
+                w1->portnum = -1;
+            }
         }
 
         if(once)
@@ -549,6 +572,7 @@ int main(int argc, char **argv)
             {
                 struct timespec req;
                 ns = 0;
+
                 if(sigme & W1_READALL)
                 {
                     sigme &= ~W1_READALL;                    
@@ -563,6 +587,7 @@ int main(int argc, char **argv)
                     read_config(w1);
                     do_init(w1);
                     w1_show(w1, 0);
+                    init_interfaces(w1);
                 }
 
                 if(sigme & W1_SHOWCF)
@@ -581,7 +606,7 @@ int main(int argc, char **argv)
                     if(w1->verbose)
                         fputs(ctime(&now.tv_sec),stderr);
                 }
-            } while (ns == EINTR);
+            } while (ns ==  -1 && errno == EINTR);
         }
         else
         {

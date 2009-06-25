@@ -13,10 +13,11 @@ w1retap_LDADD = "-dlopen" libw1file.la  -L./libusblinux300/.libs -L./libusblinux
 w1retap_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 
 libw1file_la_SOURCES = w1file.c
-libw1file_la_LDFLAGS = -module $(GLIB_LIBS) 
+libw1file_la_LDFLAGS = -module $(GLIB_LIBS)
 
 libw1xml_la_SOURCES = w1xml.c
-libw1xml_la_LDFLAGS = -module $(GLIB_LIBS) 
+libw1xml_la_CPPFLAGS = $(AM_CPPFLAGS) $(XML2_CFLAGS)
+libw1xml_la_LDFLAGS = -module $(GLIB_LIBS) $(XML2_LIBS)
 
 libw1csv_la_SOURCES = w1csv.c
 libw1csv_la_LDFLAGS = -module $(GLIB_LIBS) 

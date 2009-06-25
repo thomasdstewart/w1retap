@@ -28,6 +28,8 @@
 #include <math.h>
 #include <assert.h>
 #include <syslog.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "ownet.h"
 #include "temp10.h"
@@ -79,6 +81,7 @@ static float wind_conversion_table[16][4] = {
     {WINDVANE_VCC, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2 },  
     {WINDVANE_GND, WINDVANE_VCC, WINDVANE_VCC, WINDVANE_R2 }}; 
 
+extern int lfd;
 
 static void w1_set_invalid(w1_device_t *w)
 {
@@ -504,7 +507,7 @@ static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
 
         if (v.vad > 0.0)
         {
-            float pres,pimp;
+            float pres;
             double slope,offset;
 
             if(w->params && w->params->num == 2)
@@ -517,14 +520,17 @@ static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
                 slope = HB_SLOPE;
                 offset = HB_OFFSET;
             }
-	    pimp = slope * v.vad + offset;
-            pres = 33.863886 * pimp;
+	    pres = slope * v.vad + offset;
+            if(offset < 100.0)
+            {
+                pres *= 33.863886;
+            }
+            
             if(w1->verbose)
             {
                 fprintf(stderr,"vad %.3f, vdd %.3f, slope %.4f, offset %.4f\n",
                         v.vad, v.vdd, slope, offset);
-                fprintf(stderr,"temp %.2f, pres %.1f hPa (%.3f in)\n",
-                        v.temp, pres, pimp);
+                fprintf(stderr,"temp %.2f, pres %.1f hPa\n", v.temp, pres);
             }
             
             w1_sensor_t *s;
@@ -1166,6 +1172,15 @@ int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
         w1_device_t *d;
         int n;
 
+        if(w1->portnum == -1)
+        {
+            if((w1->portnum = owAcquireEx(w1->iface)) < 0)
+            {
+                OWERROR_DUMP(stdout);
+                exit(1);
+            }
+        }
+        
         for(d = w1->devs, n = 0; n < w1->numdev; n++, d++)
         {
             int k;
@@ -1175,6 +1190,15 @@ int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
             }
             if(secs == 0 || d->intvl == 0 || ((secs % d->intvl) == 0))
             {
+#if 0
+                {
+                    char buf[256];
+                    int nc;
+                    nc = sprintf(buf,"%s %s\n", d->devtype, d->serial);
+                        if(write(lfd, buf, nc) == nc)
+                            fdatasync(lfd);
+                }
+#endif
                 switch(d->stype)
                 {
                     case W1_TEMP:
