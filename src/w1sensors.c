@@ -174,21 +174,20 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
         if (s->ltime > 0 && s->ltime != w1->logtime)
         {
             rate = fabs(s->value - s->lval) * 60.0 /
-                (w1->logtime -s->ltime);
+                (w1->logtime - s->ltime);
             if (rate > s->roc)
             {
-                s->valid = 0;
                 s->value = s->lval;
                 chk = 3;
             }
         }
-        if(s->valid)
-        {
-            s->ltime = w1->logtime;
-            s->lval = s->value;
-        }
     }
-    if(chk != 0)
+    if(chk == 0)
+    {
+        s->ltime = w1->logtime;
+        s->lval = s->value;
+    }
+    else
     {
         w1_replog (w1, "%s %.2f %.2f %.2f %.2f %d %d (%d)",
                    s->abbrv, s->value, act, rate,
