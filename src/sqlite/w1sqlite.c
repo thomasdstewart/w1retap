@@ -206,6 +206,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 
 static sqlite3 *db;
 static sqlite3_stmt *stmt;
+static sqlite3_stmt *stml;
 
 void w1_cleanup(void)
 {
@@ -214,6 +215,11 @@ void w1_cleanup(void)
         if(stmt)
         {
             sqlite3_finalize(stmt);
+            stmt = NULL;
+        }
+        if(stml)
+        {
+            sqlite3_finalize(stml);
             stmt = NULL;
         }
         sqlite3_close(db);
@@ -276,4 +282,31 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
     sqlite3_exec(db,"commit", NULL, NULL,NULL);
 }
 
-
+void w1_report(w1_devlist_t *w1, char *dbnam)
+{
+    if(w1->lastmsg)
+    {
+        if(db == NULL)
+        {
+            db = w1_opendb(dbnam);
+        }
+        if(stml == NULL)
+        {
+            const char *tl;
+            static char s[] = "insert into replog(date,message) values (?,?)";
+            sqlite3_prepare(db, s, sizeof(s)-1, &stml, &tl);
+        }
+        sqlite3_exec(db,"begin", NULL, NULL,NULL);
+        {
+            struct tm *tm;
+            char tval[64];
+            tm = localtime(&w1->logtime);
+            strftime(tval, sizeof(tval), "%F %T%z", tm);
+            sqlite3_bind_text(stml, 1, tval, -1, SQLITE_STATIC);
+        }
+        sqlite3_bind_text(stml, 2, w1->lastmsg, -1, SQLITE_STATIC);
+        sqlite3_step(stml);
+        sqlite3_reset(stml);
+        sqlite3_exec(db,"commit", NULL, NULL,NULL);
+    }
+}

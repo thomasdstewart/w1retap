@@ -119,9 +119,9 @@ FGREP = /bin/grep -F
 GIO_MODULE_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
 GIO_MODULE_LIBS = -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0  
 GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  
-GLIB_LIBS = -Wl,--export-dynamic -L//lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0  
+GLIB_LIBS = -Wl,--export-dynamic -L/lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lpthread -lrt -lgobject-2.0 -lglib-2.0  
 GLIB_MODULE_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  
-GLIB_MODULE_LIBS = -Wl,--export-dynamic -L//lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0  
+GLIB_MODULE_LIBS = -Wl,--export-dynamic -L/lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lpthread -lrt -lgobject-2.0 -lglib-2.0  
 GNOME_APPLETS_CFLAGS = -D_REENTRANT -DORBIT2=1 -pthread -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/directfb -I/usr/include/libpng12 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/panel-2.0 -I/usr/include/gconf/2 -I/usr/include/libbonoboui-2.0 -I/usr/include/orbit-2.0 -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include -I/usr/include/libxml2 -I/usr/include/libbonobo-2.0 -I/usr/include/libgnomecanvas-2.0 -I/usr/include/libgnome-2.0 -I/usr/include/bonobo-activation-2.0 -I/usr/include/gail-1.0 -I/usr/include/libart-2.0 -I/usr/include/gnome-vfs-2.0 -I/usr/lib/gnome-vfs-2.0/include  
 GNOME_APPLETS_LIBS = -pthread -lpanel-applet-2 -lgconf-2 -lbonoboui-2 -lgnomecanvas-2 -lgnome-2 -lpopt -lart_lgpl_2 -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lpangoft2-1.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lgio-2.0 -lcairo -lpango-1.0 -lfreetype -lfontconfig -lbonobo-2 -lbonobo-activation -lgmodule-2.0 -lORBit-2 -lgthread-2.0 -lrt -lgobject-2.0 -lglib-2.0  
 GNOME_PIXMAPSDIR = /usr/share/pixmaps

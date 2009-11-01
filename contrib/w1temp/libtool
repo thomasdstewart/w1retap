@@ -234,7 +234,7 @@ finish_eval=""
 hardcode_into_libs=yes
 
 # Compile-time system search path for libraries.
-sys_lib_search_path_spec="/usr/lib/gcc/x86_64-linux-gnu/4.3.3 /usr/lib /lib"
+sys_lib_search_path_spec="/usr/lib/gcc/x86_64-linux-gnu/4.4.1 /usr/lib /lib /usr/lib/x86_64-linux-gnu"
 
 # Run-time system search path for libraries.
 sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/grass/lib /usr/lib32/alsa-lib /usr/lib/alsa-lib /usr/local/lib /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu "
