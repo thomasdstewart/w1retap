@@ -582,7 +582,7 @@ postuninstall_cmds=''
 finish_cmds='PATH="\$PATH:/sbin" ldconfig -n $libdir'
 finish_eval=''
 hardcode_into_libs='yes'
-sys_lib_search_path_spec='/usr/lib/gcc/x86_64-linux-gnu/4.3.3 /usr/lib /lib'
+sys_lib_search_path_spec='/usr/lib/gcc/x86_64-linux-gnu/4.4.1 /usr/lib /lib /usr/lib/x86_64-linux-gnu'
 sys_lib_dlsearch_path_spec='/lib /usr/lib /usr/lib/grass/lib /usr/lib32/alsa-lib /usr/lib/alsa-lib /usr/local/lib /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu '
 hardcode_action='immediate'
 enable_dlopen='unknown'
@@ -723,7 +723,7 @@ fi
 echo 'BEGIN {' >"$tmp/subs1.awk" &&
 cat >>"$tmp/subs1.awk" <<\_ACAWK &&
 S["LTLIBOBJS"]=""
-S["GLIB_LIBS"]="-Wl,--export-dynamic -L//lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0  "
+S["GLIB_LIBS"]="-Wl,--export-dynamic -L/lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lpthread -lrt -lgobject-2.0 -lglib-2.0  "
 S["GLIB_CFLAGS"]="-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  "
 S["USE_GIOAPP"]=""
 S["USE_RPCCGI"]=""
@@ -746,7 +746,7 @@ S["GNOME_APPLETS_CFLAGS"]="-D_REENTRANT -DORBIT2=1 -pthread -I/usr/include/gtk-2
 "-activation-2.0 -I/usr/include/gail-1.0 -I/usr/include/libart-2.0 -I/usr/include/gnome-vfs-2.0 -I/usr/lib/gnome-vfs-2.0/include  "
 S["GIO_MODULE_LIBS"]="-lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0  "
 S["GIO_MODULE_CFLAGS"]="-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  "
-S["GLIB_MODULE_LIBS"]="-Wl,--export-dynamic -L//lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0  "
+S["GLIB_MODULE_LIBS"]="-Wl,--export-dynamic -L/lib -lgmodule-2.0 -ldbus-glib-1 -ldbus-1 -lpthread -lrt -lgobject-2.0 -lglib-2.0  "
 S["GLIB_MODULE_CFLAGS"]="-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  "
 S["GNOME_PIXMAPSDIR"]="/usr/share/pixmaps"
 S["pixmapsdir"]="${datarootdir}/pixmaps"

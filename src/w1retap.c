@@ -156,7 +156,7 @@ static void do_init(w1_devlist_t *w1)
                                  "w1_report",
                                   (void *)&w1->dlls[n].func)))
             {
-                perror("replogger");
+                fputs("replogger entry point not found\n", stderr);
                 exit(1);
             }
         }
@@ -499,8 +499,8 @@ int main(int argc, char **argv)
     }
 
     init_interfaces(w1);
-    w1_replog (w1, "Startup w1retap v" VERSION);
     w1->logtime =time(NULL);
+    w1_replog (w1, "Startup w1retap v" VERSION);
     
     if(w1->daemonise)
     {

@@ -1,3 +1,7 @@
+1.3.0 2009-11-01
+	Updated the 'ratelimit' logic (reported by Graeme Gemmill).
+	Updated some sqlite functionality (jh)
+
 1.2.9 2009-06-25
 	Corrected the check for the return value of clock_nanosleep (bug
 	fix for infinite sleep syndrome).
