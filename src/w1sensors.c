@@ -238,6 +238,8 @@ static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
         {
             if((w->s[0].valid = ReadCounter(w1->portnum, w->serno, 14, &cnt)))
             {
+                if(w->params && w->params->num >= 1)
+                    cnt += (int)w->params->values[0];
                 w->s[0].value = cnt;
                 nv += w1_validate(w1, &w->s[0]);
             }
@@ -247,6 +249,8 @@ static int w1_read_counter(w1_devlist_t *w1, w1_device_t *w)
         {
             if((w->s[1].valid = ReadCounter(w1->portnum, w->serno, 15, &cnt)))
             {
+                if(w->params && w->params->num > 1)
+                    cnt += (int)w->params->values[1];
                 w->s[1].value = cnt;
                 nv += w1_validate(w1, &w->s[1]);
             }

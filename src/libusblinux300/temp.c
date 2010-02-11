@@ -44,6 +44,8 @@
 // defines
 #define MAXDEVICES         20
 
+// Timeout to read temp values
+#define TEMPMSECS 1000
 // global serial numbers
 uchar FamilySN[MAXDEVICES][8];
 
@@ -118,7 +120,7 @@ int main(int argc, char **argv)
          for (i = 0; i < NumDevices; i++)
          {
 
-            if (ReadTemperature(portnum, FamilySN[i],&current_temp, 750))
+            if (ReadTemperature(portnum, FamilySN[i],&current_temp, TEMPMSECS))
             {
                PrintSerialNum(FamilySN[i]);
                printf(" %5.1fC  %5.1fF \n", current_temp,
