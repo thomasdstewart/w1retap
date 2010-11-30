@@ -1,10 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 libexec_PROGRAMS = w1temp
-INCLUDES = $(GNOME_APPLETS_CFLAGS) $(CURL_FLAGS) -DGNOME_DISABLE_DEPRECATED -Wall
+INCLUDES = $(GLIB_MODULE_CFLAGS) $(GNOME_APPLETS_CFLAGS) $(CURL_FLAGS) -DGNOME_DISABLE_DEPRECATED -Wall
 
 w1temp_SOURCES = w1temp.c
-w1temp_LDADD =  $(GNOME_APPLETS_LIBS) $(CURL_LIBS) -lexpat
+w1temp_LDADD = $(GLIB_MODULE_LIBS) $(GNOME_APPLETS_LIBS) $(CURL_LIBS) -lexpat
 
 serverdir          = $(libdir)/bonobo/servers
 server_in_files    = GNOME_W1tempApplet.server.in

@@ -62,6 +62,7 @@ typedef struct MY_STUFF
     char *key;
     char *auth;
     guint tid;
+    short noproxy;
 } MY_STUFF_t;
 
 static void display_about_dialog (BonoboUIComponent *uic, gpointer data,
@@ -112,6 +113,7 @@ static size_t  wfunc (void  *ptr, size_t size, size_t nmemb, void *stream)
     return nb;
 }
 
+
 static void clean_curl(MY_STUFF_t *m)
 {
     curl_easy_cleanup(m->c);
@@ -125,10 +127,18 @@ static void init_curl(MY_STUFF_t *m)
     atexit(curl_global_cleanup);
     if((m->c = curl_easy_init()) != NULL)
     {
-        curl_easy_setopt(m->c, CURLOPT_URL, m->url);
         curl_easy_setopt(m->c, CURLOPT_WRITEFUNCTION, wfunc);
         curl_easy_setopt(m->c, CURLOPT_WRITEDATA, m);
         curl_easy_setopt(m->c, CURLOPT_FOLLOWLOCATION, 1);
+        curl_easy_setopt(m->c, CURLOPT_NOSIGNAL, 1);
+        curl_easy_setopt(m->c, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_easy_setopt(m->c, CURLOPT_TIMEOUT, 20);
+        
+        if (m->noproxy)
+        {
+            curl_easy_setopt(m->c, CURLOPT_PROXY,"");
+        }
+        
         if(m->auth)
         {
             curl_easy_setopt(m->c, CURLOPT_USERPWD, m->auth);
@@ -152,6 +162,11 @@ static gint timerfunc (gpointer data)
     
     if(m->c)
     {
+        char *turl = NULL;
+        time_t t = time(NULL);
+        asprintf(&turl, m->url, t);
+        curl_easy_setopt(m->c, CURLOPT_URL, turl);        
+        puts(turl);
         if(curl_easy_perform(m->c) == 0)
         {
             if(m->len && m->ptr)
@@ -201,6 +216,7 @@ static gint timerfunc (gpointer data)
         {
             clean_curl(m);
         }
+        free(turl);
     }
     
     if(m->len == 0) 
@@ -211,7 +227,7 @@ static gint timerfunc (gpointer data)
     gtk_label_set_text (GTK_LABEL(m->label), m->lbl);
     g_free(m->ptr);
     m->tid = g_timeout_add_seconds (m->timeout, timerfunc, m);
-    printf("New tid %d\n", m->tid);
+    fprintf(stderr, "New tid %d %d\n", m->tid, m->timeout);
     return FALSE;
 }
 
@@ -277,7 +293,8 @@ static gboolean w1temp_fill (
     DBusGProxy * obj = NULL;
     DBusGConnection * bus = NULL;
 
-    static MY_STUFF_t m = {.timeout=120, .last=-999, .key="temperature", .tid=0};
+    static MY_STUFF_t m = {.timeout=120, .last=-999, .key="temperature",
+                           .noproxy = 0, .tid=0};
     FILE *fp;
     char *p;
 
@@ -325,6 +342,7 @@ static gboolean w1temp_fill (
                 else
                 {
                     sscanf(fbuf, "delay = %d", &m.timeout);
+                    sscanf(fbuf, "noproxy = %hd", &m.noproxy);
                 }
             }
             fclose(fp);

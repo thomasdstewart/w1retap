@@ -459,11 +459,15 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 
             if (w1->altitude)
             {
+                float prtemp;
 		if(w1->verbose)
 		{
 		    fprintf(stderr,"raw %f %f %d\n",pres, v.temp, w1->altitude);
 		}
-                pres = pressure_at_msl(pres, ptemp, w1->altitude);
+
+                prtemp = (w1->pres_reduction_temp == NAN) ? ptemp :
+                    w1->pres_reduction_temp;
+                pres = pressure_at_msl(pres, prtemp, w1->altitude);
 		if(w1->verbose)
 		{
 		    fprintf(stderr,"msl %f \n",pres);
@@ -762,7 +766,10 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
             {
                 if (w1->altitude)
                 {
-                    pres = pressure_at_msl(pres, temp, w1->altitude);
+                    float prtemp;
+                    prtemp = (w1->pres_reduction_temp == NAN) ? temp :
+                        w1->pres_reduction_temp;
+                    pres = pressure_at_msl(pres, prtemp, w1->altitude);
                 }
 
                 w1_sensor_t *s;

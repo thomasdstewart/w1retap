@@ -151,6 +151,7 @@ struct w1_devlist
     char log_delim[2];
     short log_timet;
     int temp_scan;
+    float pres_reduction_temp;
     gboolean release_me;
 };
 

@@ -375,6 +375,10 @@ static void w1_show(w1_devlist_t *w1, int forced)
         }
         fprintf(stderr,"interval %ds, cycle %ds\n", w1->delay, w1->cycle);
         fprintf(stderr,"release i/face %d\n", w1->release_me);
+        if (w1->pres_reduction_temp != NAN)
+        {
+            fprintf(stderr,"Pressure reduction temp %.2f\n", w1->pres_reduction_temp);
+        }
     }
 }
 
@@ -448,6 +452,7 @@ int main(int argc, char **argv)
     w1->log_delim[0] = ' ';
     w1->delay = w1->cycle = W1_DEFAULT_INTVL;
     w1->temp_scan = 1000;
+    w1->pres_reduction_temp = NAN;
     
     if((p = getenv("W1RCFILE")))
     {

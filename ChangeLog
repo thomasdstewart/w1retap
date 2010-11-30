@@ -1,3 +1,19 @@
+1.3.3 2010-11-28
+	Add an option for QNH pressure reduction by using a user defined,
+	fixed temperature, rather than the temperature read at the
+	device. This requires the configuration file to contain the key
+	"pressure_reduction_temp" with a value in °C (15°C for QNH), e.g.
+
+	pressure_reduction_temp = 15
+
+	(for Georges Rosset)
+	
+	Updated the manual.
+
+1.3.2 2010-09-22
+	Provide a sensible error message on failure to load a dynamic
+	library (reported by John D Smith).
+
 1.3.1 2010-02-11
 	Added a "parameter" to the DS2423 counter. This is an offset which
 	is applied to readings (useful if your rain gauge decides by

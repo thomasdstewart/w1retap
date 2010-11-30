@@ -8,6 +8,8 @@ pkglib_LTLIBRARIES = libw1common.la libw1serial.la libw1usb.la
 noinst_LIBRARIES = libowfat.a
 
 libw1common_la_SOURCES = owerr.c ioutil.c crcutil.c acquire.c
+libw1common_la_LIBADD = $(GLIB_LIBS)
+libw1common_la_LDFLAGS = -rdynamic
 
 libw1serial_la_SOURCES = ds2480ut.c linuxlnk.c owllu.c ownetu.c owsesu.c owtrnu.c
 libw1serial_la_LIBADD = -L. -lw1common
