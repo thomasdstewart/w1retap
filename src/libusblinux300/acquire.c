@@ -25,7 +25,12 @@ static void loadiolib(char *port)
     handle =  g_module_open(name, G_MODULE_BIND_LOCAL);
     if(handle == NULL)
     {
-        perror("g_module_open IO");
+        const gchar *gerr;
+        gerr = g_module_error();
+        fprintf(stderr, "Can't open the device library %s\n"
+                "System returned:\n%s\n"
+		"This is typically a build dependency or installation error\n",
+		name, gerr);
         exit(1);
     }
     g_module_symbol (handle, "msDelay_", (void *)&msDelay);

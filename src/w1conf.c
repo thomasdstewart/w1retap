@@ -100,6 +100,8 @@ void read_config(w1_devlist_t *w1)
                        sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
                        sscanf(buf,"timestamp = %d", &w1->timestamp) ||
                        sscanf(buf,"logtemp = %d", &w1->logtmp) ||
+                       sscanf(buf,"pressure_reduction_temp = %f",
+                              &w1->pres_reduction_temp) ||
                        sscanf(buf,"temp_scan = %d", &w1->temp_scan));
             }
         }
