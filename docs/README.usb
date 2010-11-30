@@ -1,10 +1,12 @@
 Permissions and USB Devices
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 ######################## IMPORTANT #########################
 
 This note describes the various Linux schemes to manage permissions of
-USB devices. 
+USB devices. This document has evolved as udev has, so later
+information will be further down the file.
 
 These will be either udev (recent systems) or hotplug (older systems).
 For hotplug, hot foot it to the end of the file.
@@ -80,6 +82,17 @@ ds9490
 
 w1retap runs with these loaded, but reading the sensors very slow. It
 is recommended that they are also removed.
+
+so:
+
+blacklist ds9490
+blacklist wire
+blacklist cn
+install ds9490 /bin/true
+install wire /bin/true
+install cn /bin/true
+
+may help.
 
 Now plugging the adaptor should not cause the module to load.
 
@@ -268,6 +281,22 @@ int main(int argc, char **argv)
     return 0;
 }  
 //-----------------------------------------8<----------------------------
+
+Later stuff (Ubuntu 2010 etc)
+
+$ cat /etc/udev/rules.d/45-w1retap.rules
+# udev rules file for w1retap2
+#
+SUBSYSTEMS=="usb", GOTO="usb_w1_start"
+GOTO="usb_w1_end"
+LABEL="usb_w1_start"
+ATTRS{idVendor}=="04fa", ATTRS{idProduct}=="2490", GROUP="w1retap", MODE="0664"
+LABEL="usb_w1_end"
+$
+
+$ sudo udevadm control --reload-rules
+
+
 
 Using hotplug
 ~~~~~~~~~~~~~
