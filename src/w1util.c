@@ -62,7 +62,8 @@ static w1_params_t * w1_dev_params(char *params)
         if(j)
         {
             sp = strdup(params);
-            p = calloc(1,(sizeof(int) + j* sizeof(double)));
+            // Not sizeof(int) + ... to avoid packing issues (ppc)
+            p = calloc(1,( sizeof(w1_params_t) + j* sizeof(double)));
             p->num = j;
             for(j =0, r = sp; (s = strtok(r,"|: ")); r=NULL,j++)    
             {
@@ -165,9 +166,14 @@ void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
                 break;
             case 8:
                 w1->params = w1_dev_params(sv);
+                free(sv);
                 break;
             case 9:
                 w1->intvl = strtol(sv,NULL,10);
+                free(sv);
+                break;
+            default:
+                free(sv);
                 break;
         }
     }
@@ -199,10 +205,16 @@ void w1_set_device_data(w1_device_t * w1, const char *fnam, char *sv)
     else if (0 == strcmp(fnam, "params"))
     {
         w1->params = w1_dev_params(sv);
+        free(sv);
     }
     else if (0 == strcmp(fnam, "interval"))
     {
         w1->intvl = strtol(sv,NULL,10);
+        free(sv);
+    }
+    else
+    {
+        free(sv);
     }
 }
 
