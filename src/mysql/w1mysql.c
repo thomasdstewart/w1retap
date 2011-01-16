@@ -109,7 +109,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     int ni = 0;
     
     conn = w1_opendb(dbnam);
-    if (!mysql_query(conn, sql))
+    if (conn && !mysql_query(conn, sql))
     {
         res = mysql_store_result(conn);        
         nr = mysql_num_rows(res);
