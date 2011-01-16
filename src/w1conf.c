@@ -53,6 +53,7 @@ void read_config(w1_devlist_t *w1)
         while(fgets(buf, sizeof(buf), fp))
         {
             char lbuf[512];
+            
             if(1 == sscanf(buf,"log = %512[^\n]", lbuf))
             {
                 dll_parse(w1, 'l', lbuf);
@@ -92,6 +93,11 @@ void read_config(w1_devlist_t *w1)
                 else
                     w1->log_delim[0] = *lbuf;
             }
+            else if (1 == sscanf(buf,"pressure_reduction_temp = %512[^\n]", lbuf))
+            {
+                w1->pres_reduction_temp = malloc(sizeof(double));
+                *w1->pres_reduction_temp = strtod(lbuf,NULL);
+            }
             else
             {
                 (void)(sscanf(buf,"delay = %d", &w1->delay) ||    
@@ -100,8 +106,6 @@ void read_config(w1_devlist_t *w1)
                        sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
                        sscanf(buf,"timestamp = %d", &w1->timestamp) ||
                        sscanf(buf,"logtemp = %d", &w1->logtmp) ||
-                       sscanf(buf,"pressure_reduction_temp = %f",
-                              &w1->pres_reduction_temp) ||
                        sscanf(buf,"temp_scan = %d", &w1->temp_scan));
             }
         }

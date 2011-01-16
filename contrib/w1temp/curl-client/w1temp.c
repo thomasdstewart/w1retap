@@ -131,8 +131,8 @@ static void init_curl(MY_STUFF_t *m)
         curl_easy_setopt(m->c, CURLOPT_WRITEDATA, m);
         curl_easy_setopt(m->c, CURLOPT_FOLLOWLOCATION, 1);
         curl_easy_setopt(m->c, CURLOPT_NOSIGNAL, 1);
-        curl_easy_setopt(m->c, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_easy_setopt(m->c, CURLOPT_TIMEOUT, 20);
+        curl_easy_setopt(m->c, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_easy_setopt(m->c, CURLOPT_TIMEOUT, 90);
         
         if (m->noproxy)
         {

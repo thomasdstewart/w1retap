@@ -53,6 +53,7 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define W1_NOP (-1)
 #define W1_MIN_INTVL 10
 #define W1_DEFAULT_INTVL 120
+#define W1_PRT_UNSET (-32678)
 
 typedef struct w1_devlist w1_devlist_t;
 typedef struct w1_device w1_device_t;
@@ -151,7 +152,7 @@ struct w1_devlist
     char log_delim[2];
     short log_timet;
     int temp_scan;
-    float pres_reduction_temp;
+    double *pres_reduction_temp;
     gboolean release_me;
 };
 

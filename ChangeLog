@@ -1,13 +1,17 @@
+1.3.4 2011-01-16
+	Modified the way "pressure_reduction_temp" works to avoid
+	upsetting TAI8570 user who are *not* needing it.
+	(reported by Dave Johns)
+	Fixed ppc structure packing bug
+	Fixed some small memory leaks
+
 1.3.3 2010-11-28
 	Add an option for QNH pressure reduction by using a user defined,
 	fixed temperature, rather than the temperature read at the
 	device. This requires the configuration file to contain the key
 	"pressure_reduction_temp" with a value in °C (15°C for QNH), e.g.
-
 	pressure_reduction_temp = 15
-
 	(for Georges Rosset)
-	
 	Updated the manual.
 
 1.3.2 2010-09-22

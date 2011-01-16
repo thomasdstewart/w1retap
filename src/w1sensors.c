@@ -465,8 +465,7 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 		    fprintf(stderr,"raw %f %f %d\n",pres, v.temp, w1->altitude);
 		}
 
-                prtemp = (w1->pres_reduction_temp == NAN) ? ptemp :
-                    w1->pres_reduction_temp;
+                prtemp = (w1->pres_reduction_temp) ? *w1->pres_reduction_temp : ptemp;
                 pres = pressure_at_msl(pres, prtemp, w1->altitude);
 		if(w1->verbose)
 		{
@@ -492,8 +491,9 @@ static int w1_read_bray (w1_devlist_t *w1, w1_device_t *w)
 }
 
 // Values for MSL
-#define HB_SLOPE (0.6562)
-#define HB_OFFSET (26.0827)
+#define INHGHPA 33.863886
+#define HB_SLOPE (0.6562*INHGHPA)
+#define HB_OFFSET (26.0827*INHGHPA)
 
 static int w1_read_hb_pressure (w1_devlist_t *w1, w1_device_t *w)
 {
@@ -767,8 +767,8 @@ static int w1_read_pressure(w1_devlist_t *w1, w1_device_t *w)
                 if (w1->altitude)
                 {
                     float prtemp;
-                    prtemp = (w1->pres_reduction_temp == NAN) ? temp :
-                        w1->pres_reduction_temp;
+                    prtemp = (w1->pres_reduction_temp) ? 
+                        *w1->pres_reduction_temp : temp ;
                     pres = pressure_at_msl(pres, prtemp, w1->altitude);
                 }
 

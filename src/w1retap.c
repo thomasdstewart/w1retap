@@ -167,8 +167,10 @@ static void do_init(w1_devlist_t *w1)
         fputs("Init fails: No w1_init() in init= loadable library\n"
               "Please check the init= lines in your configuration file\n"
               "and the manual entry 'Configuring the W1RETAP software'.\n"
-              "This is typically a configuration error.\n",
-              stderr);
+              "This is typically a configuration or build error.\n\n"
+              "You should also check that the required data driver is\n"
+              "present under $prefix/lib/w1retap/, for example, for sqlite,\n"
+              "a set of libraries libw1sqlite.so{,.0,.0.0.0} should be present.\n", stderr);
         exit(1);
     }
     w1_verify_intervals (w1);
@@ -375,9 +377,9 @@ static void w1_show(w1_devlist_t *w1, int forced)
         }
         fprintf(stderr,"interval %ds, cycle %ds\n", w1->delay, w1->cycle);
         fprintf(stderr,"release i/face %d\n", w1->release_me);
-        if (w1->pres_reduction_temp != NAN)
+        if (w1->pres_reduction_temp)
         {
-            fprintf(stderr,"Pressure reduction temp %.2f\n", w1->pres_reduction_temp);
+            fprintf(stderr,"Pressure reduction temp %.2f\n", *w1->pres_reduction_temp);
         }
     }
 }
@@ -452,7 +454,7 @@ int main(int argc, char **argv)
     w1->log_delim[0] = ' ';
     w1->delay = w1->cycle = W1_DEFAULT_INTVL;
     w1->temp_scan = 1000;
-    w1->pres_reduction_temp = NAN;
+    w1->pres_reduction_temp = NULL;
     
     if((p = getenv("W1RCFILE")))
     {
