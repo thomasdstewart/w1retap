@@ -1,11 +1,14 @@
 #!/usr/bin/ruby
 
 require 'svg/svg'
-require 'tempfile'
+require 'zlib'
 
 module SvgThermo
-  def SvgThermo.makeimage temp, ph=150, pw=40
-    svg = SVG.new('2in', '8in', '0 0 200 800')
+  def SvgThermo.makeimage temp, ph=150, pw=40, noc=false
+    svg = SVG.new('40px', '150px', '0 0 200 800') 
+    svg << SVG::Rect.new(0, 0, 200, 800) {
+    self.style = SVG::Style.new(:fill => '#ffffeb', :fill_opacity => 1)}
+    
     svg << SVG::Rect.new(58,2, 96, 680, 5, 5) {
       self.style = SVG::Style.new(:fill => 'white', :fill_opacity => 1,
 				  :stroke => 'black', :stroke_width=>4) }
@@ -33,9 +36,11 @@ module SvgThermo
       x2 = 104+wid/2
       
       if wid == 98
-	svg << SVG::Text.new(x1+4, y - 2, j.to_s)  {
-	  self.style = SVG::Style.new(:font_size => 36, 
-				      :font_family => 'Arial')}
+        unless j == 40
+          svg << SVG::Text.new(x1+14, y - 2, j.to_s)  {
+            self.style = SVG::Style.new(:font_size => '24pt', 
+                                        :font_family => 'sans-serif')}
+        end
 	lw = 2
       else
 	lw = 1
@@ -44,12 +49,11 @@ module SvgThermo
 	self.style = SVG::Style.new(:stroke_width => lw ) }
     end 
     svg << grp
-
-    tf = Tempfile.new('thermo')
-    tf.open
-    tf.print svg.to_s
-    tf.close
-    system "rsvg -h #{ph} -w #{pw} #{tf.path} _thermo.png"
+    unless noc
+      Zlib::GzipWriter.open('_thermo.svgz') {|gz| gz.write svg.to_s }
+    else
+      File.open('_thermo.svg','w') {|f| f.write svg.to_s }
+    end
   end
 end
 
