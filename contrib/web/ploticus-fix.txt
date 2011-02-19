@@ -1,0 +1,9 @@
+svg.c, line 200
+if(*svg_font_name == 0) strcpy( svg_font_name, "Helvetica" );
+
+----------------------------------------------------------
+
+200c200
+< strcpy( svg_font_name, "Helvetica" );
+---
+> if(*svg_font_name == 0) strcpy( svg_font_name, "Helvetica" );

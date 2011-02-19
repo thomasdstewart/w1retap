@@ -152,6 +152,8 @@ static int w1_select_device(w1_devlist_t *w1, w1_device_t *w)
 
 static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
 {
+    static char *restxt[] = {"OK","RATE","MIN","undef","MAX"};
+
     int chk = 0;
     float act =  s->value;
     float rate = 0;
@@ -161,27 +163,32 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
     if((s->flags & W1_RMIN) && (s->value < s->rmin))
     {
         s->value = (s->ltime) ? s->lval : s->rmin;
-        chk = 1;
+        chk = W1_RMIN;
     }
     if((s->flags & W1_RMAX) && (s->value > s->rmax))
     {
         s->value = (s->ltime) ? s->lval : s->rmax;
-        chk = 2;
+        chk = W1_RMAX;
     }
 
     if(chk == 0 && (s->flags & W1_ROC))
     {
-        if (s->ltime > 0 && s->ltime != w1->logtime)
+        if (!(w1->allow_escape == 1 && (s->reason & (W1_RMIN|W1_RMAX)) != 0))
         {
-            rate = fabs(s->value - s->lval) * 60.0 /
-                (w1->logtime - s->ltime);
-            if (rate > s->roc)
+            if (s->ltime > 0 && s->ltime != w1->logtime)
             {
-                s->value = s->lval;
-                chk = 3;
+                rate = fabs(s->value - s->lval) * 60.0 /
+                    (w1->logtime - s->ltime);
+                if (rate > s->roc)
+                {
+                    s->value = s->lval;
+                    chk = W1_ROC;
+                }
             }
         }
     }
+
+    s->reason = chk;
     if(chk == 0)
     {
         s->ltime = w1->logtime;
@@ -189,9 +196,10 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
     }
     else
     {
-        w1_replog (w1, "%s %.2f %.2f %.2f %.2f %d %d (%d)",
+        w1_replog (w1, "%s result=%.2f actual=%.2f rate=%.2f prev=%.2f "
+                   "prevtime_t=%d logtime_t=%d reason=%s",
                    s->abbrv, s->value, act, rate,
-                   s->lval, s->ltime, w1->logtime, chk);
+                   s->lval, s->ltime, w1->logtime, restxt[chk]);
     }
     return (int)s->valid;
 }
@@ -617,7 +625,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
         }
 
         humid = (((v.vad/v.vdd) - (0.8/v.vdd))/0.0062)/
-            (1.0546 - 0.00216 * v.temp);
+                      (1.0546 - 0.00216 * v.temp);
 
         w1_sensor_t *s;
         if((s = w1_match_sensor(w, "Temp")))
@@ -660,7 +668,7 @@ static int w1_read_hih (w1_devlist_t *w1, w1_device_t *w)
 
         // Shamelessly researched from owfs; ow_2438.c
         humid = (v.vad/v.vdd-(0.8/v.vdd)) /
-            (0.0062*(1.0305+0.000044*temp+0.0000011*v.temp*v.temp));
+                      (0.0062*(1.0305+0.000044*temp+0.0000011*v.temp*v.temp));
 
         if (w1->verbose)
         {

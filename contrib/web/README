@@ -4,7 +4,7 @@ by w1retap.
 The wplot.rb script is run by the author as a 'cron' job every 5
 minutes. It produces the <http://www.daria.co.uk/wx/> web page (and
 local pages at home), as well as a Wunderground feed, files for an RRS
-feed and the wx_static.xml file used by the w1temp GNOME applet.
+feed and the wx_static.dat file used by the w1temp GNOME applet.
 
 wplot.rb is responsbile for normalisation of the data recorded by
 w1retap, e.g. pressure to mean sea level, calculating rain fall from raw
@@ -15,7 +15,7 @@ wplot.rb uses ploticus to draw graphs.
 wxfeeds.rb creates the RSS feed from data produced by wplot.rb, and
 updates data to an ISP.
 
-wug.rb is a standalone Wunderground.com uploader (wplot.rb can also dp
+wug.rb is a standalone Wunderground.com uploader (wplot.rb can also do
 this).
 
 All these scripts require that the stations table is populated:
@@ -69,29 +69,10 @@ e.g.:
 
 These scripts are licenced under the MIT Licence.
 
-The older perl stuff is in the old/ directory; it is no longer
-maintained.
-
 The Ruby scripts require some modules that are not part of a standard
 Ruby installation; if not provided by your OS distribution: 
 
 ruby-svg-1.0.3 <http://raa.ruby-lang.org/project/ruby-svg/>
 html-template-0.16 <http://raa.ruby-lang.org/project/html-template/>
 
-and, if you use SQLite (the author has migrated to postgreSQL), then
-you need the ruby-dbi SQLite3 module. This is not so easy, as SQLite3
-is not mature in Ruby-DBI. Try the following:
 
-1) From a Debian mirror, download:
- 
- libdbi-ruby_0.0.23.orig.tar.gz
- libdbi-ruby_0.0.23-3.diff.gz
-
-2) Unpack the tar.gz and apply the patch
-
-3) change line 221 of ruby-dbi-all/lib/dbd_sqlite3/SQLite3.rb to
-
-       DBI.const_get('SQL_'+type_name.upcase)
-
-4) Build and install according to the instructions at
-   ruby-dbi-all/doc/index.rd

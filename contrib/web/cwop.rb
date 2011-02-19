@@ -21,13 +21,13 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'dbi'
 require 'socket'
-require 'yaml'
 
 module CWOP
   HOST = 'cwop.aprs.net'
-
+  PORT = 14580
+  PORT1 = 23
+  
   def CWOP.CtoF c
     ((9.0/5.0)*c + 32.0).to_i
   end
@@ -41,23 +41,29 @@ module CWOP
   end
 
   def CWOP.upload stn, flag, w
-    s = "#{stn['cwop_user']}>APRS,TCPXX*:"
-    s += Time.at(w['udate']).gmtime.strftime("@%d%H%Mz")
-    s += fixll("%02d%05.2f", 'NS', stn['stnlat']) + '/' +
-      fixll("%03d%05.2f", 'EW', stn['stnlong'])
-    s += '_.../...g...'
-    s += "t%03d" % CtoF(w['temp'])
-    s += (w['rain']) ? "r%03d" % (w['rain']*100.0).to_i : ''
-    s += (w['rain24']) ?"p%03d" % (w['rain24']*100.0).to_i : ''
-    s += (w['humid']) ? ("h%02d" % (w['humid'].to_i % 100)) : ''
-    s += "b%05d" % (w['pres']*10.0).to_i
-    s += stn['software']
+    s = "#{stn[:cwop_user]}>APRS,TCPXX*:"
+    s << Time.at(w[:udate]).gmtime.strftime("@%d%H%Mz")
+    s << fixll("%02d%05.2f", 'NS', stn[:stnlat]) + '/' +
+      fixll("%03d%05.2f", 'EW', stn[:stnlong])
+    s << '_.../...g...'
+    s << "t%03d" % CtoF(w[:temp])
+    s << ((w[:rain]) ? "r%03d" % (w[:rain]*100.0).to_i : '')
+    s << ((w[:rain24]) ? "p%03d" % (w[:rain24]*100.0).to_i : '')
+    s << ((w[:humid]) ? ("h%02d" % (w[:humid].to_i % 100)) : '')
+    s << "b%05d" % (w[:pres]*10.0).to_i
+    s << stn[:software]
 
-    if flag.nil?
-      TCPSocket.open(HOST,14580) do |skt|
-	skt.puts "user #{stn['cwop_user']} pass -1 vers #{stn['software']}\r"
+    unless flag
+      TCPSocket.open(HOST,PORT) do |skt|
+	skt.puts "user #{stn[:cwop_user]} pass -1 vers #{stn[:software]}\r"
 	skt.puts "#{s}\r"
-      end
+	if File.exists?("/tmp/cwop.log")
+	  File.open("/tmp/cwop.log",'a') do |f|
+	    f.puts "user #{stn[:cwop_user]} pass -1 vers #{stn[:software]}\r"
+	    f.puts "#{s}\r"
+	  end
+	end
+    end
     else
       puts s
     end
@@ -65,21 +71,26 @@ module CWOP
 end
 
 if __FILE__ == $0
-  DFILE = "/tmp/.w.yaml"
-  flag = ARGV[0]
-  now = Time.now.to_i;
-  dbh = DBI.connect('dbi:Pg:sensors', '', '')
-  s = dbh.execute 'select * from station'
-  stn = s.fetch_hash
-  s.finish
-  if File.exists?(DFILE)
-    w = YAML.load_file(DFILE)
-    File.unlink(DFILE)
-  else
-    s = dbh.execute  "select * from latest order by udate desc limit 1"
-    w  = s.fetch_hash
-    s.finish
+  require 'rubygems'
+  require 'sequel'
+  require 'optparse'
+
+  opt_s = 'postgres:///sensors'
+  flag = nil
+
+  ARGV.options do |opts|
+    opts.on('-t','--test', 'Test mode') {flag = true }
+    opts.on("-s", "--sensor_db Sequel_DBname", String) {|o| opt_s = o }
+    begin
+      opts.parse!
+    rescue
+      puts opts ; exit
+    end
   end
-  flag = true if (now - w['udate']) > 600 
+
+  now = Time.now.to_i;
+  dbh = Sequel.connect(opt_s)
+  stn = dbh[:station].first
+  w = dbh["select * from latest order by udate desc limit 1"].first
   CWOP.upload stn, flag, w
 end

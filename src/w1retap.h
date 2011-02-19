@@ -79,6 +79,7 @@ typedef struct
     double roc;
     double lval;
     time_t ltime;
+    short  reason;    
 } w1_sensor_t;
 
 typedef struct
@@ -153,6 +154,7 @@ struct w1_devlist
     short log_timet;
     int temp_scan;
     double *pres_reduction_temp;
+    short allow_escape;
     gboolean release_me;
 };
 

@@ -2,19 +2,23 @@
 
 <report unixepoch="<!-- var:udate -->" timestamp="<!-- var:idate -->">
   <station place="Netley Marsh">
-    <sensor name="temperature" value="<!-- var:temp -->" units="°C"></sensor>
-    <sensor name="pressure" value="<!-- var:press -->" units="hPa"></sensor>
-    <sensor name="humidity" value="<!-- var:humid -->" units="%"></sensor>
-    <sensor name="rainfall" value="<!-- var:rain -->" units="mm/hr <!-- var:rstr -->"></sensor>
-    <sensor name="dewpoint" value="<!-- var:dewpt -->" units="°C"></sensor>
-    <sensor name="greenhouse" value="<!-- var:gtemp -->" units="°C"></sensor>
-    <sensor name="propagator1" value="<!-- var:itemp1 -->"
-    units="°C"></sensor>
-    <sensor name="propagator2" value="<!-- var:itemp2 -->" units="°C"></sensor>
+    <sensor name="temperature" value="<!-- var:temp -->" units="°C"/>
+    <sensor name="pressure" value="<!-- var:press -->" units="hPa"/>
+    <sensor name="humidity" value="<!-- var:humid -->" units="%"/>
+    <sensor name="rainfall" value="<!-- var:rain -->" units="mm/hr <!-- var:rstr -->"/>
+    <sensor name="dewpoint" value="<!-- var:dewpt -->" units="°C"/>
+    <sensor name="greenhouse" value="<!-- var:gtemp -->" units="°C"/>
+    <sensor name="interior" value="<!-- var:htemp -->" units="°C"/>
+    <sensor name="garage" value="<!-- var:btemp -->" units="°C"/>
+    <sensor name="soil" value="<!-- var:stemp -->" units="°C"/>
+    <sensor name="propagator1" value="<!-- var:itemp1 -->" units="°C"/>
+    <sensor name="propagator2" value="<!-- var:itemp2 -->" units="°C"/>
+    <sensor name="cold frame" value="<!-- var:ctemp1 -->" units="°C"/>
+    <sensor name='solar' value="<!-- var:solar -->" units=" W/m^2"/>
   </station>
   <station place="Southampton Docks">
-    <sensor name="windspeed" value="<!-- var:wspd -->" units="knots"></sensor>
-    <sensor name="direction" value="<!-- var:wdir -->" units="degrees"></sensor>
-    <sensor name="tide" value="<!-- var:tide -->" units="metres"></sensor>
+    <sensor name="windspeed" value="<!-- var:wspd -->" units="knots"/>
+    <sensor name="direction" value="<!-- var:wdir -->" units="degrees"/>
+    <sensor name="tide" value="<!-- var:tide -->" units="metres"/>
   </station>
 </report>

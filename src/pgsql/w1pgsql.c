@@ -301,7 +301,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         char *tstr = (w1->timestamp) ? "timestamp with time zone" : "integer";
         snprintf(stmtstr, sizeof(stmtsrr),STMTSTR,tstr,valtype);
         res = PQexec(db, stmtstr);
-#elif PGV == 8
+#elif PGV >= 8
         res = PQprepare(db, stmt,
                         "insert into readings (date,name,value) values ($1,$2,$3)", 0, NULL);
 #else
@@ -378,7 +378,7 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
 #warning "Pg Version 7"
             res = PQexec(db, "prepare insrl(timestamp with time zone,text) as "
                    "insert into replog values ($1,$2)");
-#elif PGV == 8
+#elif PGV >= 8
             res = PQprepare(db, stml,
                             "insert into replog(date,message) values ($1,$2)", 0, NULL);
 #else

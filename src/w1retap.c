@@ -375,11 +375,15 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             fprintf (stderr, "Log file is %s\n", w1->tmpname);
         }
-        fprintf(stderr,"interval %ds, cycle %ds\n", w1->delay, w1->cycle);
-        fprintf(stderr,"release i/face %d\n", w1->release_me);
+        fprintf(stderr,"Interval %ds, cycle %ds\n", w1->delay, w1->cycle);
+        fprintf(stderr,"Release i/face %d\n", w1->release_me);
         if (w1->pres_reduction_temp)
         {
             fprintf(stderr,"Pressure reduction temp %.2f\n", *w1->pres_reduction_temp);
+        }
+        if(w1->allow_escape)
+        {
+            fputs ("Allowing rate limit escapes\n", stderr);
         }
     }
 }
@@ -388,7 +392,7 @@ int main(int argc, char **argv)
 {
     struct timeval now = {0};        
     struct sigaction act ={{0}};
-    gboolean immed = 1;
+    gboolean immed = 0;
     gboolean showvers=0;
     gboolean once=0;
     gboolean w1_simul = 0;
@@ -429,6 +433,7 @@ int main(int argc, char **argv)
          "Report log file", "FILE"},
         {NULL}
     };
+
 
     openlog("w1retap", LOG_PID, LOG_USER);
 
@@ -475,6 +480,8 @@ int main(int argc, char **argv)
         } 
     }
 
+    immed ^= 1; // weird JH logic ...
+    
     if(w1->tmpname == NULL)
     {
         w1->tmpname = "/tmp/.w1retap.dat";
@@ -489,7 +496,7 @@ int main(int argc, char **argv)
     
     if(w1->verbose)
     {
-        fputs("w1retap v" VERSION " (c) 2005-2009 Jonathan Hudson\n", stderr);
+        fputs("w1retap v" VERSION " (c) 2005-2011 Jonathan Hudson\n", stderr);
         fputs("Built: " __DATE__ " " __TIME__  " gcc " __VERSION__ "\n", stderr);        
         if(w1->verbose == 2)
         {
@@ -542,8 +549,10 @@ int main(int argc, char **argv)
     while(1)
     {
         int nv = 0;
-        if(immed)
+        if (immed)
         {
+            if(w1->verbose)
+                fputs("reading ...\n", stderr);
             nv = w1_read_all_sensors(w1, now.tv_sec);
             if(nv)
             {
@@ -579,7 +588,6 @@ int main(int argc, char **argv)
             {
                 struct timespec req;
                 ns = 0;
-
                 if(sigme & W1_READALL)
                 {
                     sigme &= ~W1_READALL;                    
@@ -602,6 +610,10 @@ int main(int argc, char **argv)
                     sigme &= ~W1_SHOWCF;
                     w1_show(w1, 1);
                 }
+
+                if(w1->verbose)
+                    fputs("Waiting ... ", stderr);
+                
                 gettimeofday(&now, NULL);
                 req.tv_sec = (now.tv_sec / w1->delay)*w1->delay + w1->delay;
                 req.tv_nsec = 0;

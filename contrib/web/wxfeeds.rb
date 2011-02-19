@@ -1,10 +1,11 @@
 #!/usr/bin/ruby
 
+require 'rubygems'
 require 'optparse'
-#require 'dbi'
 require 'rss/2.0'
 require 'rss/1.0'
 require 'net/ftp'
+require 'timeout'
 
 opt_s = 'dbi:Pg:sensors'
 opt_h = opt_d = nil
@@ -29,38 +30,52 @@ File.open('wx_static.dat') do |f|
   end
 end
 
+sfx = (test ?>, 'gtemp.svgz', 'gtemp.png') ? 'svgz' : 'png'
+
 rss = []
+files = %W{gtemp.#{sfx} press.#{sfx} temp.#{sfx} tide.#{sfx} wdirn.#{sfx}
+ wspeed.#{sfx} humid.#{sfx} thermo.#{sfx} wdirn.#{sfx} winddirn.#{sfx}
+ solar.#{sfx} index.html temps.#{sfx} rain.#{sfx} wx_static.xml wx_static.dat }
+
 t = Time.now
-[ 1, 2 ].each do |v|
-  rss[v] = RSS::Rss.new("#{v}.0")
-  chan = RSS::Rss::Channel.new
-  chan.description = "Jonathan and Daria's Weather"
-  chan.link = "http://www.daria.co.uk/wx/"
-  chan.title = "Jonathan and Daria's Weather Station"
-  chan.copyright = '(c) 2005 jh+weather@daria.co.uk'
-  chan.pubDate = t
-  chan.language = 'en'
-  rss[v].channel = chan
-  rss[v].encoding = 'utf-8'
-end
+if t.min == 1 || t.min == 31
 
-item = RSS::Rss::Channel::Item.new
-item.title = "Weather in Netley Marsh #{ts}"
-c= '<table>'
-rr.each { |r| c << "<tr><td>#{r[0]}:</td><td>#{r[1]}</td></tr>" }
-c << '</table>'
-item.description = c
-item.pubDate = t
-item.link = "http://www.daria.co.uk/wx/"
-rss[1].channel.items << item
-rss[2].channel.items << item
+  files << 'moon.png' if t.min == 1
+  
+  [ 1, 2 ].each do |v|
+    rss[v] = RSS::Rss.new("#{v}.0")
+    chan = RSS::Rss::Channel.new
+    chan.description = "Jonathan and Daria's Weather"
+    chan.link = "http://www.daria.co.uk/wx/"
+    chan.title = "Jonathan and Daria's Weather Station"
+    chan.copyright = '(c) 2005 jh+weather@daria.co.uk'
+    chan.pubDate = t
+    chan.language = 'en'
+    rss[v].channel = chan
+    rss[v].encoding = 'utf-8'
+  end
 
-File.open('wx.rss1.xml','w') do |f|
-  f.puts rss[1].to_s
-end
+  item = RSS::Rss::Channel::Item.new
+  item.title = "Weather in Netley Marsh #{ts}"
+  c= '<table>'
+  rr.each { |r| c << "<tr><td>#{r[0]}:</td><td>#{r[1]}</td></tr>" }
+  c << '</table>'
+  item.description = c
+  item.pubDate = t
+  item.link = "http://www.daria.co.uk/wx/"
+  rss[1].channel.items << item
+  rss[2].channel.items << item
 
-File.open('wx.rss2.xml','w') do |f|
-  f.puts rss[2].to_s
+  File.open('wx.rss1.xml','w') do |f|
+    f.puts rss[1].to_s
+  end
+
+  File.open('wx.rss2.xml','w') do |f|
+    f.puts rss[2].to_s
+  end
+
+  files << 'wx.rss2.xml' << 'wx.rss1.xml'
+
 end
 
 if not opt_h.nil?
@@ -70,16 +85,15 @@ if not opt_h.nil?
     (user,pass) = a[0].match(/login\s(\S+)\spassword\s(\S+)/)[1..2]
   rescue
   end
-  Net::FTP.open(opt_h) do |ftp|
-    ftp.passive = ftp.binary = true
-    ftp.login user,pass
-    ftp.chdir 'wx'
-    files = %w{gtemp.png press.png temp.png tide.png wdirn.png wspeed.png
-            humid.png thermo.png wdirn.png winddirn.png index.html
-            temps.png rain.png wx_static.xml wx.rss2.xml wx.rss1.xml
-	    wx_static.dat}
-    files.each do |f|
-      ftp.put f if File.exists?(f)
+
+  Timeout.timeout(300) do
+    Net::FTP.open(opt_h) do |ftp|
+      ftp.passive = ftp.binary = true
+      ftp.login user,pass
+      ftp.chdir 'wx'
+      files.each do |f|
+	ftp.put f if File.exists?(f)
+      end
     end
   end
 end
