@@ -80,6 +80,12 @@ void read_config(w1_devlist_t *w1)
                                   lbuf[0] == 'y' || lbuf[0] == 'Y' ||
                                   lbuf[0] == '1');
             }
+            else if(1 == sscanf(buf,"allow_rate_escape = %512[^\n]", lbuf))
+            {
+                w1->allow_escape =  (lbuf[0] == 't' || lbuf[0] == 'T' ||
+                                  lbuf[0] == 'y' || lbuf[0] == 'Y' ||
+                                  lbuf[0] == '1');
+            }
             else if(1 == sscanf(buf,"release_if = %512[^\n]", lbuf))
             {
                 w1->release_me =  (lbuf[0] == 't' || lbuf[0] == 'T' ||

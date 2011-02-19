@@ -21,7 +21,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'dbi'
 require 'uri'
 require 'net/http'
 
@@ -41,22 +40,22 @@ module Wug
 
   def Wug.upload stn, flag, w
     q = {}
-    q['humidity'] = (w['humid']) ? ("%.1f" % w['humid']) : 'N/A'
-    q['tempf'] = CtoF w['temp']
-    q['dewptf'] = (w['dewpt']) ? CtoF(w['dewpt']) : 'N/A'
-    q['baromin'] = mbtoin(w['pres'])
-    q['softwaretype'] = stn['software']
+    q['humidity'] = (w[:humid]) ? ("%.1f" % w[:humid]) : 'N/A'
+    q['tempf'] = CtoF w[:temp]
+    q['dewptf'] = (w[:dewpt]) ? CtoF(w[:dewpt]) : 'N/A'
+    q['baromin'] = mbtoin(w[:pres])
+    q['softwaretype'] = stn[:software]
     q['weather'] = q['clouds'] = 'NA'
-    q['dateutc'] = Time.at(w['udate']).gmtime.strftime("%Y-%m-%d %H:%M")
-    q['rainin'] = w['rain']
-    q['dailyrainin'] = w['rain24'] if  w['rain24']
-    q['soiltempf'] = CtoF w['stemp'] if  w['stemp']
+    q['dateutc'] = Time.at(w[:udate]).gmtime.strftime("%Y-%m-%d %H:%M")
+    q['rainin'] = w[:rain]
+    q['dailyrainin'] = w[:rain24] if  w[:rain24]
+    q['soiltempf'] = CtoF w[:stemp] if  w[:stemp]
+    q['solarradiation'] = w[:solar] if w[:solar]
 
-    url = WURL+'?action=updateraw&ID=' + stn['wu_user'] + '&PASSWORD=' +
-      stn['wu_pass']
+    url = WURL << '?action=updateraw&ID=' << stn[:wu_user] << '&PASSWORD=' << stn[:wu_pass]
 
     q.keys.sort.each do |s|
-      url += '&' + s + '=' + q[s].to_s
+      url << '&' << s << '=' << q[s].to_s
     end
 
     uri = URI.escape('http://'+WHOST+url)
@@ -72,15 +71,12 @@ module Wug
 end
 
 if __FILE__ == $0
+#  require 'rubygems'
+  require 'sequel'
   flag = (ARGV.size > 0)
   now = Time.now.to_i;
-  dbh = DBI.connect('dbi:Pg:sensors', '', '')
-  s = dbh.execute 'select * from station'
-  stn = s.fetch_hash
-  s.finish
-  s = dbh.execute "select * from latest order by udate desc limit 1"
-  w  = s.fetch_hash
-  s.finish
-  flag = true if (now - w['udate']) > 180 
+  dbh = Sequel.connect('postgres:///sensors')
+  stn = dbh[:station].first
+  w = dbh["select * from latest order by udate desc limit 1"].first
   Wug.upload stn, flag, w
 end

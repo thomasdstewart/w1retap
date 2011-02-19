@@ -6,6 +6,7 @@ body { font-family: "vera sans", sans-serif;
 
 p { 
   font-size: 10pt;
+  font-family: "vera sans", sans-serif; 
  }
 
 h6 {
@@ -84,6 +85,7 @@ img.sflogo {border:0; width: 125px; height: 37px; }
 .homebg {background-color: rgb(255, 255, 235)}
 .dockbg {background-color: rgb(235, 255, 255)}
 
+
 DIV.left {
   border: none; float: left; margin: 0; padding: 0; width: 50%;
     clear:none;
@@ -100,7 +102,7 @@ DIV.rightd {
     min-width:120px; max-width:320px;
 }
 
-DIV.content { border: 1px; }
+DIV.content { border: 0px; }
 
 DIV.space-line {
   clear: both; margin: 0; padding: 0; width: auto;
