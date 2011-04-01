@@ -56,7 +56,7 @@ SMALLINT USBVpp[MAX_PORTNUM];
 //
 SMALLINT DS2490Detect(usb_dev_handle *hDevice)
 {
-   SMALLINT present,vpp,ret;
+   SMALLINT present,vpp;
    SETUP_PACKET setup;
 
    // reset the DS2490
@@ -69,7 +69,7 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
    setup.Length = 0;
    setup.DataOut = FALSE;
    // call the libusb driver
-   ret = usb_control_msg(hDevice,
+   usb_control_msg(hDevice,
                          setup.RequestTypeReservedBits,
                          setup.Request,
                          setup.Value,
@@ -86,7 +86,7 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
    setup.Length = 0;
    setup.DataOut = FALSE;
    // call the libusb driver
-   ret = usb_control_msg(hDevice, 
+   usb_control_msg(hDevice, 
                          setup.RequestTypeReservedBits, 
 			 setup.Request, 
 			 setup.Value, 
@@ -103,7 +103,7 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
    setup.Length = 0x00;
    setup.DataOut = FALSE;
    // call the libusb driver
-   ret = usb_control_msg(hDevice, 
+   usb_control_msg(hDevice, 
                          setup.RequestTypeReservedBits, 
 			 setup.Request, 
 			 setup.Value, 

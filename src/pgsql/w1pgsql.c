@@ -317,13 +317,13 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
         if(devs->init) // if the device is initialised
         {
             int j;
+            int n;
             for (j = 0; j < devs->ns; j++) // for each sensor
             {
                 if(devs->s[j].valid) // if there's a valid reading
                 {
                     char *rval = NULL;
                     char tval[64];
-                    int n;
                     
                     if(devs->stype == W1_COUNTER || devs->stype == W1_WINDVANE)
                         n=asprintf(&rval, "%.0f", devs->s[j].value); // do not include any decimal places for integer values
@@ -356,6 +356,7 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
                     }
                     free(rval);
                 }
+                n=n; // just so we compile with 4.5 and 4.6, alas
             }
         }
     }

@@ -54,6 +54,8 @@ w1devs_t devlist[] = {
     {"2502-E48 2502-UNW","48 bit node address chip",0x89},
     {"2505-UNW","16k add-only uniqueware",0x8B},
     {"2506-UNW","64k add-only uniqueware",0x8F},
+    {"HB1WT","Hobbyboards with temperature",0xEE},
+    {"HB1W","Hobbyboards without temperature",0xEF},    
     {"LCD","LCD (Swart)",0xFF},
     {NULL,NULL,0}
 };
