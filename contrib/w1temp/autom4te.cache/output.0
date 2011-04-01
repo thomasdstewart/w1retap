@@ -762,6 +762,8 @@ GIO_MODULE_LIBS
 GIO_MODULE_CFLAGS
 GLIB_MODULE_LIBS
 GLIB_MODULE_CFLAGS
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
 GNOME_PIXMAPSDIR
 pixmapsdir
 ACLOCAL_AMFLAGS
@@ -897,6 +899,8 @@ LIBS
 CPPFLAGS
 CPP
 PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
 GLIB_MODULE_CFLAGS
 GLIB_MODULE_LIBS
 GIO_MODULE_CFLAGS
@@ -1549,6 +1553,10 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH 
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR 
+              path overriding pkg-config's built-in search path
   GLIB_MODULE_CFLAGS 
               C compiler flags for GLIB_MODULE, overriding pkg-config
   GLIB_MODULE_LIBS 
@@ -12003,6 +12011,10 @@ _ACEOF
 
 
 
+
+
+
+
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -12115,18 +12127,16 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
-		
 fi
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for GLIB_MODULE" >&5
 $as_echo_n "checking for GLIB_MODULE... " >&6; }
 
-if test -n "$PKG_CONFIG"; then
-    if test -n "$GLIB_MODULE_CFLAGS"; then
-        pkg_cv_GLIB_MODULE_CFLAGS="$GLIB_MODULE_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$GLIB_MODULE_CFLAGS"; then
+    pkg_cv_GLIB_MODULE_CFLAGS="$GLIB_MODULE_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0 
 			        dbus-1 >= \$DBUS_REQUIRED 
 				dbus-glib-1 >= \$DBUS_REQUIRED\""; } >&5
@@ -12142,15 +12152,13 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$GLIB_MODULE_LIBS"; then
-        pkg_cv_GLIB_MODULE_LIBS="$GLIB_MODULE_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$GLIB_MODULE_LIBS"; then
+    pkg_cv_GLIB_MODULE_LIBS="$GLIB_MODULE_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gmodule-2.0 >= 2.2.0 
 			        dbus-1 >= \$DBUS_REQUIRED 
 				dbus-glib-1 >= \$DBUS_REQUIRED\""; } >&5
@@ -12166,14 +12174,15 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
 
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
         
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -12181,13 +12190,13 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0 
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gmodule-2.0 >= 2.2.0 
 			        dbus-1 >= $DBUS_REQUIRED 
-				dbus-glib-1 >= $DBUS_REQUIRED"`
+				dbus-glib-1 >= $DBUS_REQUIRED" 2>&1`
         else 
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gmodule-2.0 >= 2.2.0 
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --print-errors "gmodule-2.0 >= 2.2.0 
 			        dbus-1 >= $DBUS_REQUIRED 
-				dbus-glib-1 >= $DBUS_REQUIRED"`
+				dbus-glib-1 >= $DBUS_REQUIRED" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GLIB_MODULE_PKG_ERRORS" >&5
@@ -12203,9 +12212,10 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables GLIB_MODULE_CFLAGS
 and GLIB_MODULE_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" "$LINENO" 5 
+See the pkg-config man page for more details." "$LINENO" 5         
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
@@ -12217,24 +12227,23 @@ and GLIB_MODULE_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 
 To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5 ; }        
 else
 	GLIB_MODULE_CFLAGS=$pkg_cv_GLIB_MODULE_CFLAGS
 	GLIB_MODULE_LIBS=$pkg_cv_GLIB_MODULE_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+	
 fi
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for GIO_MODULE" >&5
 $as_echo_n "checking for GIO_MODULE... " >&6; }
 
-if test -n "$PKG_CONFIG"; then
-    if test -n "$GIO_MODULE_CFLAGS"; then
-        pkg_cv_GIO_MODULE_CFLAGS="$GIO_MODULE_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$GIO_MODULE_CFLAGS"; then
+    pkg_cv_GIO_MODULE_CFLAGS="$GIO_MODULE_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gio-2.0 >= 2.16.0\""; } >&5
   ($PKG_CONFIG --exists --print-errors "gio-2.0 >= 2.16.0") 2>&5
   ac_status=$?
@@ -12244,15 +12253,13 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$GIO_MODULE_LIBS"; then
-        pkg_cv_GIO_MODULE_LIBS="$GIO_MODULE_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$GIO_MODULE_LIBS"; then
+    pkg_cv_GIO_MODULE_LIBS="$GIO_MODULE_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gio-2.0 >= 2.16.0\""; } >&5
   ($PKG_CONFIG --exists --print-errors "gio-2.0 >= 2.16.0") 2>&5
   ac_status=$?
@@ -12262,14 +12269,15 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
 
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
         
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -12277,24 +12285,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gio-2.0 >= 2.16.0"`
+	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gio-2.0 >= 2.16.0" 2>&1`
         else 
-	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gio-2.0 >= 2.16.0"`
+	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --print-errors "gio-2.0 >= 2.16.0" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GIO_MODULE_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-                false
+	false
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	false
 else
 	GIO_MODULE_CFLAGS=$pkg_cv_GIO_MODULE_CFLAGS
 	GIO_MODULE_LIBS=$pkg_cv_GIO_MODULE_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+	
 fi
 
 GTK_REQUIRED=2.2.0
@@ -12304,11 +12312,10 @@ pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for GNOME_APPLETS" >&5
 $as_echo_n "checking for GNOME_APPLETS... " >&6; }
 
-if test -n "$PKG_CONFIG"; then
-    if test -n "$GNOME_APPLETS_CFLAGS"; then
-        pkg_cv_GNOME_APPLETS_CFLAGS="$GNOME_APPLETS_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$GNOME_APPLETS_CFLAGS"; then
+    pkg_cv_GNOME_APPLETS_CFLAGS="$GNOME_APPLETS_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtk+-2.0 >= \$GTK_REQUIRED libpanelapplet-2.0 >= \$LIBPANEL_REQUIRED\""; } >&5
   ($PKG_CONFIG --exists --print-errors "gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED") 2>&5
   ac_status=$?
@@ -12318,15 +12325,13 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$GNOME_APPLETS_LIBS"; then
-        pkg_cv_GNOME_APPLETS_LIBS="$GNOME_APPLETS_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$GNOME_APPLETS_LIBS"; then
+    pkg_cv_GNOME_APPLETS_LIBS="$GNOME_APPLETS_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtk+-2.0 >= \$GTK_REQUIRED libpanelapplet-2.0 >= \$LIBPANEL_REQUIRED\""; } >&5
   ($PKG_CONFIG --exists --print-errors "gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED") 2>&5
   ac_status=$?
@@ -12336,14 +12341,15 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
 
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
         
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -12351,24 +12357,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED"`
+	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED" 2>&1`
         else 
-	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED"`
+	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --print-errors "gtk+-2.0 >= $GTK_REQUIRED libpanelapplet-2.0 >= $LIBPANEL_REQUIRED" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GNOME_APPLETS_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-                false
+	false
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	false
 else
 	GNOME_APPLETS_CFLAGS=$pkg_cv_GNOME_APPLETS_CFLAGS
 	GNOME_APPLETS_LIBS=$pkg_cv_GNOME_APPLETS_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+	
 fi
 if test -z "$GNOME_APPLETS_PKG_ERRORS" ; then
  USE_APPLET=udp-client

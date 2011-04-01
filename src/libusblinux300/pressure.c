@@ -322,11 +322,10 @@ static char *ReadSensorValueStr (int portnum, char *cmd, char *Lect)
         return FALSE;
     if (WritePressureSensor (portnum, cmd))
     {
-        bool t;
         if (!OpenPIOS_A (portnum))
             return FALSE;
         strcpy (Lect, ReadPressureSensor (portnum, (byte) 16));
-        t = OpenPIOS_B (portnum);
+       OpenPIOS_B (portnum);
     }
     else
     {

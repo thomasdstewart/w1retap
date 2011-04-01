@@ -676,7 +676,6 @@ void InterpretStatus(MissionStatus *mstatus)
    
 #ifndef __MC68K__
    time_t tint; 
-   time_t temp;
    struct tm *tstruct; 
 #endif
 
@@ -799,7 +798,7 @@ void InterpretStatus(MissionStatus *mstatus)
 #ifdef __MC68K__
    mstatus->download_time = TimGetSeconds();
 #else
-   temp = time(&tint);
+   time(&tint);
    tstruct = localtime(&tint); 
    td.day = tstruct->tm_mday;
    td.month = tstruct->tm_mon + 1;  // (1.01)
@@ -821,7 +820,6 @@ void FormatMission(MissionStatus *mstatus)
 {
    int i;
    time_t tint; 
-   time_t temp;
 #ifndef __MC68K__
    struct tm *tstruct;
 #else
@@ -835,7 +833,7 @@ void FormatMission(MissionStatus *mstatus)
 #ifdef __MC68K__
    tint = TimGetSeconds();
 #else
-   temp = time(&tint);
+   time(&tint);
 #endif
    tint++;  // add 1 second
    
@@ -907,7 +905,6 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
    timedate td;
 #ifndef __MC68K__
    time_t tint; 
-   time_t temp;
    struct tm *tstruct;
 #else 
    DateTimePtr tstruct = NULL;	
@@ -991,7 +988,7 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
 
 #ifndef __MC68K__
    // current PC time
-   temp = time(&tint);
+   time(&tint);
    tstruct = localtime(&tint);
  
    cnt += sprintf(&str[cnt],"Current PC Time: %02d/%02d/%04d  %02d:%02d:%02d\n",

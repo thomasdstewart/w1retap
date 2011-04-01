@@ -41,7 +41,8 @@ bin_PROGRAMS = w1find$(EXEEXT) braybaro$(EXEEXT) temp$(EXEEXT) \
 	gethumd$(EXEEXT) humids$(EXEEXT) setds2409$(EXEEXT) \
 	coupler$(EXEEXT) counter$(EXEEXT) mweather$(EXEEXT) \
 	lcdtest$(EXEEXT) atodtst$(EXEEXT) humalog$(EXEEXT) \
-	thermoms$(EXEEXT) thermodl$(EXEEXT) ds192xtest$(EXEEXT)
+	thermoms$(EXEEXT) thermodl$(EXEEXT) ds192xtest$(EXEEXT) \
+	hbuvtest$(EXEEXT) temptest$(EXEEXT)
 subdir = src/libusblinux300
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -66,7 +67,8 @@ am_libowfat_a_OBJECTS = mbappreg.$(OBJEXT) mbeprom.$(OBJEXT) \
 	atod26.$(OBJEXT) screenio.$(OBJEXT) cnt1d.$(OBJEXT) \
 	swt12.$(OBJEXT) pressure.$(OBJEXT) sht11_humid.$(OBJEXT) \
 	swt1f.$(OBJEXT) atod20.$(OBJEXT) ds2408lcd.$(OBJEXT) \
-	ds2760.$(OBJEXT) humutil.$(OBJEXT) ds192x.$(OBJEXT)
+	ds2760.$(OBJEXT) humutil.$(OBJEXT) ds192x.$(OBJEXT) \
+	hbuv.$(OBJEXT)
 libowfat_a_OBJECTS = $(am_libowfat_a_OBJECTS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -136,6 +138,11 @@ gethumd_OBJECTS = $(am_gethumd_OBJECTS)
 gethumd_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(gethumd_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_hbuvtest_OBJECTS = hbuvtest.$(OBJEXT)
+hbuvtest_OBJECTS = $(am_hbuvtest_OBJECTS)
+hbuvtest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(hbuvtest_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_humalog_OBJECTS = humalog.$(OBJEXT) findtype.$(OBJEXT)
 humalog_OBJECTS = $(am_humalog_OBJECTS)
 humalog_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -166,6 +173,11 @@ am_temp_OBJECTS = temp.$(OBJEXT) findtype.$(OBJEXT)
 temp_OBJECTS = $(am_temp_OBJECTS)
 temp_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(temp_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_temptest_OBJECTS = temptest.$(OBJEXT)
+temptest_OBJECTS = $(am_temptest_OBJECTS)
+temptest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(temptest_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_thermodl_OBJECTS = thermodl.$(OBJEXT) findtype.$(OBJEXT) \
 	thermo21.$(OBJEXT)
@@ -201,16 +213,18 @@ SOURCES = $(libowfat_a_SOURCES) $(libw1common_la_SOURCES) \
 	$(libw1serial_la_SOURCES) $(libw1usb_la_SOURCES) \
 	$(atodtst_SOURCES) $(braybaro_SOURCES) $(counter_SOURCES) \
 	$(coupler_SOURCES) $(ds192xtest_SOURCES) $(gethumd_SOURCES) \
-	$(humalog_SOURCES) $(humids_SOURCES) $(lcdtest_SOURCES) \
-	$(mweather_SOURCES) $(setds2409_SOURCES) $(temp_SOURCES) \
-	$(thermodl_SOURCES) $(thermoms_SOURCES) $(w1find_SOURCES)
+	$(hbuvtest_SOURCES) $(humalog_SOURCES) $(humids_SOURCES) \
+	$(lcdtest_SOURCES) $(mweather_SOURCES) $(setds2409_SOURCES) \
+	$(temp_SOURCES) $(temptest_SOURCES) $(thermodl_SOURCES) \
+	$(thermoms_SOURCES) $(w1find_SOURCES)
 DIST_SOURCES = $(libowfat_a_SOURCES) $(libw1common_la_SOURCES) \
 	$(libw1serial_la_SOURCES) $(libw1usb_la_SOURCES) \
 	$(atodtst_SOURCES) $(braybaro_SOURCES) $(counter_SOURCES) \
 	$(coupler_SOURCES) $(ds192xtest_SOURCES) $(gethumd_SOURCES) \
-	$(humalog_SOURCES) $(humids_SOURCES) $(lcdtest_SOURCES) \
-	$(mweather_SOURCES) $(setds2409_SOURCES) $(temp_SOURCES) \
-	$(thermodl_SOURCES) $(thermoms_SOURCES) $(w1find_SOURCES)
+	$(hbuvtest_SOURCES) $(humalog_SOURCES) $(humids_SOURCES) \
+	$(lcdtest_SOURCES) $(mweather_SOURCES) $(setds2409_SOURCES) \
+	$(temp_SOURCES) $(temptest_SOURCES) $(thermodl_SOURCES) \
+	$(thermoms_SOURCES) $(w1find_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -380,7 +394,7 @@ libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \
 	temp10.c atod26.c screenio.c		     \
 	cnt1d.c swt12.c pressure.c sht11_humid.c \
 	swt1f.c atod20.c ds2408lcd.c ds2760.c humutil.c \
-	ds192x.c
+	ds192x.c hbuv.c
 
 w1find_SOURCES = w1find.c findtype.c
 w1find_DEPENDENCIES = libw1common.la
@@ -443,6 +457,14 @@ ds192xtest_DEPENDENCIES = libw1common.la
 ds192xtest_LDADD = -L. -lowfat -lw1common -lm 
 ds192xtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 ds192xtest_CPPFLAGS = -DTESTMAIN=1 
+hbuvtest_SOURCES = hbuvtest.c 
+hbuvtest_DEPENDENCIES = libw1common.la 
+hbuvtest_LDADD = -L. -lowfat -lw1common -lm 
+hbuvtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+temptest_SOURCES = temptest.c 
+temptest_DEPENDENCIES = libw1common.la 
+temptest_LDADD = -L. -lowfat -lw1common -lm 
+temptest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
 all: all-am
 
 .SUFFIXES:
@@ -582,6 +604,9 @@ ds192xtest$(EXEEXT): $(ds192xtest_OBJECTS) $(ds192xtest_DEPENDENCIES)
 gethumd$(EXEEXT): $(gethumd_OBJECTS) $(gethumd_DEPENDENCIES) 
 	@rm -f gethumd$(EXEEXT)
 	$(gethumd_LINK) $(gethumd_OBJECTS) $(gethumd_LDADD) $(LIBS)
+hbuvtest$(EXEEXT): $(hbuvtest_OBJECTS) $(hbuvtest_DEPENDENCIES) 
+	@rm -f hbuvtest$(EXEEXT)
+	$(hbuvtest_LINK) $(hbuvtest_OBJECTS) $(hbuvtest_LDADD) $(LIBS)
 humalog$(EXEEXT): $(humalog_OBJECTS) $(humalog_DEPENDENCIES) 
 	@rm -f humalog$(EXEEXT)
 	$(humalog_LINK) $(humalog_OBJECTS) $(humalog_LDADD) $(LIBS)
@@ -600,6 +625,9 @@ setds2409$(EXEEXT): $(setds2409_OBJECTS) $(setds2409_DEPENDENCIES)
 temp$(EXEEXT): $(temp_OBJECTS) $(temp_DEPENDENCIES) 
 	@rm -f temp$(EXEEXT)
 	$(temp_LINK) $(temp_OBJECTS) $(temp_LDADD) $(LIBS)
+temptest$(EXEEXT): $(temptest_OBJECTS) $(temptest_DEPENDENCIES) 
+	@rm -f temptest$(EXEEXT)
+	$(temptest_LINK) $(temptest_OBJECTS) $(temptest_LDADD) $(LIBS)
 thermodl$(EXEEXT): $(thermodl_OBJECTS) $(thermodl_DEPENDENCIES) 
 	@rm -f thermodl$(EXEEXT)
 	$(thermodl_LINK) $(thermodl_OBJECTS) $(thermodl_LDADD) $(LIBS)
@@ -632,6 +660,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ds2760.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/findtype.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethumd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hbuv.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hbuvtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/humalog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/humid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/humutil.Po@am__quote@
@@ -676,6 +706,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swt1f.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/temp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/temp10.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/temptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thermo21.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thermodl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thermoms.Po@am__quote@

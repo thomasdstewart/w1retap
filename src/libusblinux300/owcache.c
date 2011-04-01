@@ -93,7 +93,6 @@ uchar FindNew(uchar hashnum)
    static uchar spot = 0;  // spot pointer
    uchar t = 0xFF;     
    uchar oldest,i;   
-   uchar freepg;
             
    // if current spot is empty then use that 
    if (BitMap[spot] == 0xFF)
@@ -110,7 +109,7 @@ uchar FindNew(uchar hashnum)
       // check to see if spot is void
       if (tm > Space[spot].Tstamp)
       {
-         freepg = FreePage(spot);
+         FreePage(spot);
          t = spot;
       }           
       else
@@ -125,7 +124,7 @@ uchar FindNew(uchar hashnum)
             }
             else if (tm > Space[i].Tstamp) // check for expired
             {
-               freepg = FreePage((uchar)i);
+               FreePage((uchar)i);
                t = i;
                break;
             }
@@ -140,7 +139,7 @@ uchar FindNew(uchar hashnum)
          if (i == DEPTH)
          {
             // free the current spot            
-            freepg = FreePage(oldest);
+            FreePage(oldest);
             t = oldest;   
          }
       }

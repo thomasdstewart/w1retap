@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Gnome Pixmaps Directory */
-#define GNOME_PIXMAPSDIR "/usr/local/share/pixmaps"
+#define GNOME_PIXMAPSDIR "/usr/share/pixmaps"
 
 /* Define to 1 if you have the `alarm' function. */
 #define HAVE_ALARM 1
