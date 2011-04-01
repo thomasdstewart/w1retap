@@ -288,6 +288,10 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_MS_TC;
     }
+    else if (MATCHES("HB_UV") || MATCHES("HB-UV"))
+    {
+        w->stype=W1_HBUV;
+    }
 }
 
 

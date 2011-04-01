@@ -46,13 +46,11 @@ int main(int argc, char **argv)
 {
    uchar SwitchSN[MAXDEVICES][8];  //the serial numbers for the devices
    short i,j;                      //loop counters
-   int num;                        //for the number of DS2409s
    int NumDevices=0;               //used for the number of devices on the branch
    uchar BranchSN[20][8];          //used for the devices on the main and aux.
                                    //branch
    uchar a[3];                     //used for storing info data on the read/write
    char out[240];                  //used for output of the info data
-   int charnum;                    //for the number of charactes in a string
    int portnum=0;
 
    // check for required port name
@@ -72,7 +70,7 @@ int main(int argc, char **argv)
    }
 
    // this is to get the number of the devices and the serial numbers
-	num = FindDevices(portnum, &SwitchSN[0], SWITCH_FAMILY, MAXDEVICES);
+   FindDevices(portnum, &SwitchSN[0], SWITCH_FAMILY, MAXDEVICES);
 
    // this is the main branch device list
    NumDevices = FindBranchDevice(portnum, SwitchSN[0], &BranchSN[0], MAXDEVICES, TRUE);
@@ -120,7 +118,7 @@ int main(int argc, char **argv)
    if(SetSwitch1F(portnum, SwitchSN[0], STATUS_RW, 1, a, TRUE))
    {
       printf("Status read write worked and the results are below\n");
-      charnum = SwitchStateToString1F((short) a[1], out);
+      SwitchStateToString1F((short) a[1], out);
       printf("res: %s", out);
    }
    else

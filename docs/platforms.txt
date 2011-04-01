@@ -1,0 +1,18 @@
+w1retap is designed to build and run on POSIX systems. This means it
+should build and run on Linux with minimal effort, and on other Unix
+like systems with a little work.
+
+Linux:
+
+Ubuntu 10.10, Ubuntu 11.04 ia-32,  x86_64 and ppc
+Fedora 14 x86_64
+Arch (current) ia-32
+
+FreeBSD:
+
+You need to install a libusb.pc in
+/usr/local/libdata/pkgconfig/libusb.pc
+Then it should build.
+
+
+

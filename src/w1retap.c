@@ -49,6 +49,20 @@ enum W1_sigflag
 //int lfd = -1;
 
 static volatile enum W1_sigflag sigme;
+
+#ifndef HAVE_CLOCK_NANOSLEEP 
+static inline void nanosub(struct timespec *a, struct timespec *b,
+                           struct timespec *result)
+{
+  result->tv_sec = a->tv_sec - b->tv_sec;
+  result->tv_nsec = a->tv_nsec - b->tv_nsec;
+  if (result->tv_nsec < 0)
+    {
+      --result->tv_sec;
+      result->tv_nsec += 1000000000;
+    }
+}
+#endif
    
 static void sig_hup(int x)
 {
@@ -613,11 +627,20 @@ int main(int argc, char **argv)
 
                 if(w1->verbose)
                     fputs("Waiting ... ", stderr);
-                
-                gettimeofday(&now, NULL);
+		gettimeofday(&now, NULL);
+#ifdef HAVE_CLOCK_NANOSLEEP 
                 req.tv_sec = (now.tv_sec / w1->delay)*w1->delay + w1->delay;
                 req.tv_nsec = 0;
                 ns  = clock_nanosleep(CLOCK_REALTIME,TIMER_ABSTIME, &req, NULL);
+#else                
+		struct timespec then, nnow;
+                then.tv_sec = w1->delay * (1 + now.tv_sec / w1->delay);
+                then.tv_nsec = 200*1000*1000; /* ensure tick crossed */
+                nnow.tv_sec = now.tv_sec;
+                nnow.tv_nsec = now.tv_usec * 1000;
+                nanosub(&then, &nnow, &req);
+                ns  = nanosleep(&req, NULL);
+#endif
                 if(ns == 0)
                 {
                     gettimeofday(&now, NULL);

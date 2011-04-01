@@ -41,7 +41,7 @@
 #include "swt1f.h"
 #include "ds2760.h"
 #include "ds192x.h"
-
+#include "hbuv.h"
 #include "w1retap.h"
 
 // Table from DalSemi application note 755A (page four): http://pdfserv.maxim-ic.com/en/an/app755A.pdf
@@ -944,6 +944,43 @@ static int w1_read_ds1921 (w1_devlist_t *w1, w1_device_t *w)
     return nv;
 }
 
+static int w1_read_hbuv (w1_devlist_t *w1, w1_device_t *w)
+{
+    int nv = 0;
+    hbuv_t hb={0};
+
+    if(w->init == 0)
+    {
+        w1_make_serial(w->serial, w->serno);
+        w->init = 1;
+    }
+    w1_set_invalid(w);
+    if(w1_select_device(w1,w))
+    {
+        int r;
+        r = HBUV_read_data(w1->portnum, w->serno, &hb);
+        if(r)
+        {
+            w1_sensor_t *s;
+            if((s = w1_match_sensor(w, "Temp")))
+            {
+                s->value = hb.raw_temp * 0.5;
+                nv += w1_validate(w1, s);
+            }
+
+            if((s = w1_match_sensor(w, "uv")) || 
+               (s = w1_match_sensor(w, "ultra")) ||
+               (s = w1_match_sensor(w, "violet")) )
+            {
+                s->value = hb.raw_uvi * 0.1;
+                nv += w1_validate(w1, s);
+            }
+        }
+    }
+    return nv;
+}
+                           
+
 
 static int w1_read_windvane(w1_devlist_t *w1, w1_device_t *w)
 {
@@ -1277,6 +1314,10 @@ int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
 
                     case W1_DS1923:
                         r = w1_read_ds1923(w1, d);
+                        break;
+
+                    case W1_HBUV:
+                        r = w1_read_hbuv(w1, d);
                         break;
 
                     case W1_INVALID:

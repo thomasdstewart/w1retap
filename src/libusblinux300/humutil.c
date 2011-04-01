@@ -749,7 +749,6 @@ SMALLINT loadMissionResults(int portnum, uchar *SNum, configLog config)
    int temperatureLogSize = 0;
    // default size of the log, could be different if using an odd
    // sample size combination.
-   int logSize;
    // check for rollover
 
    FILE * fidTemp;
@@ -859,19 +858,15 @@ SMALLINT loadMissionResults(int portnum, uchar *SNum, configLog config)
    {
       case 1:
          maxSamples = 8192;
-         logSize = MISSION_LOG_SIZE;
          break;
       case 2:
          maxSamples = 4096;
-         logSize = MISSION_LOG_SIZE;
          break;
       case 3:
          maxSamples = 2560;
-         logSize = ODD_MISSION_LOG_SIZE;
          break;
       case 4:
          maxSamples = 2048;
-         logSize = MISSION_LOG_SIZE;
          break;
       default:
       case 0:
