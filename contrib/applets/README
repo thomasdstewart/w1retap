@@ -1,0 +1,52 @@
+This folder consists of some simple GNOME applets (and an Indicator
+App for Ubuntu 11.04 or later).
+
+The Gnome3 applet will migrate to vala (vice C) once the vala bindings
+catch up.
+
+All the applets use a common settings file (~/.config/w1retap/applet),
+which has the form:
+
+[Config]
+url=http://roo/wx/wx_static.dat
+delay=120
+key=temperature
+browse-url=http://roo/wx/
+
+where:
+
+url: Is the URL to get a simple text file of format
+     Key: value
+
+delay: Is the cycle time to poll the url for text file
+
+key: Is the key that references a temperature that provides the text
+and icon.
+
+browse: Is the url to browse the full data web page 
+
+e.g.
+
+Temperature: 15.9 °C
+Pressure: 1017.5 hPa
+Humidity: 55.2 %
+Rainfall: 0.0mm /hr  [0.0mm]
+Dewpoint: 6.9 °C
+Greenhouse: 16.0 °C
+Propagator1: N/A °C
+Propagator2: N/A °C
+Front Garden: 16.5 °C
+Soil: 13.2 °C
+Garage: 20.6 °C
+House: 21.8 °C
+CPU: 47.0 °C
+Solar: 1 W/m^2
+Windspeed: 9.6 knots
+Direction: 133 degrees
+Tide: 1.9 metres
+Date: 2011-05-05T20:10:00+0100
+
+Requirements:
+
+vala 0.12 or later
+installed development packages.

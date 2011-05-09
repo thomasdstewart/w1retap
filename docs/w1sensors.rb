@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+# -*- coding: utf-8 -*-
 
 require 'optparse'
 
@@ -21,14 +22,15 @@ require 'optparse'
 ##
 
 # Create an initial w1retap configuration from w1find
-
+# 
+# ***** you may need to modify this for your own schema *****
 
 class MakeSensors
 
   def initialize
     @fn=STDOUT.fileno
     @fbase=nil
-
+    @idx = 0
     ARGV.options do |opt|
       opt.banner = %Q(#{File.basename($0)} [options] [file|stdin]
 e.g. w1find DS2490-1 | w1sensors.rb -o /tmp/w1_sensors-setup.sql
@@ -44,23 +46,24 @@ e.g. w1find DS2490-1 | w1sensors.rb -o /tmp/w1_sensors-setup.sql
     end
   end
 
-  def output arry
-    arry.fill(nil,arry.length..8)
+  def output f,arry,err=nil
+    arry.fill(nil,arry.length..9)
     str = case @fbase
 	  when false,nil
+	    @idx += 1
 	    arry.collect! {|x| x.nil? ? 'NULL' : "'#{x}'" }
-	    "INSERT into w1sensors values (#{arry.join(',')});"
+	    "#{err}INSERT into w1sensors values (#{@idx},#{arry.join(',')});"
 	  when true
 	    arry.join('|')
 	  end
-    @f.puts str
+    f.puts str
   end
 
   def buildconfig
     last=nil
     no=1
     cl=nil
-    File.open(@fn,'w') do |@f|
+    File.open(@fn,'w') do |f|
       ARGF.each do |l|
 	if m=l.match(/\((.*?)\)\s+(\S+)\s+(\S+?):/)
 	  slot=m[1]
@@ -72,38 +75,42 @@ e.g. w1find DS2490-1 | w1sensors.rb -o /tmp/w1_sensors-setup.sql
 	  when '2409'
 	    cl=id
 	  when '18S20','18B20'
-	    output [id,'DS1820',"TMP_#{no}","Temperature ##{no}",'°C']
+	    output f, [id,'DS1820',"TMP_#{no}","Temperature ##{no}",'°C']
 	  when '2423'
-	    output [id,'TAI8575',"CountA_#{no}","CounterA ##{no}",
+	    output f, [id,'TAI8575',"CountA_#{no}","CounterA ##{no}",
 	      'pulses',"CountB_#{no}","CounterB ##{no}",'pulses']
 	  when '2438'
-	    output [id,'DS2438',"VDD_#{no}", "VDD #{no}",'V',"TMP_#{no}",
+	    output f, [id,'DS2438',"VDD_#{no}", "VDD #{no}",'V',"TMP_#{no}",
 	      "Temperature ##{no}",'°C']
-	    output [id,'DS2438',"VAD_#{no}", "VAD #{no}",'V',"Vsens_#{no}",
+	    output f, [id,'DS2438',"VAD_#{no}", "VAD #{no}",'V',"Vsens_#{no}",
 	      "Vsens ##{no}",'mV']
-	when '2406'
-	  if last=='2406'
-	    last=nil
-	  else
-	    output [id,'TAI8570',"Pressure_#{no}", "Pressure #{no}",'hPa',
-	      "TMP_#{no}","Temperature ##{no}",'°C']
-	  end
-	when '2450'
-	  output [id,'TAI8515',"WDIR_#{no}","Wind Direction #{no}", '']
-	when '2760'
-	  output [id,'DS2760', "MS_Volts_#{no}","Moisture Voltage #{no}",'V',
-	    "MS_Current_#{no}","Moisture Current #{no}",'A']
-	  output [id,'DS2760', "MS_Temp_#{no}","Moisture Temperature #{no}",
-	    '°C',"MS_Accum_#{no}","Moisture Accumulator #{no}",'Ahrs']
+	  when '2406'
+	    if last=='2406'
+	      last=nil
+	    else
+	      output f, [id,'TAI8570',"Pressure_#{no}", "Pressure #{no}",'hPa',
+		"TMP_#{no}","Temperature ##{no}",'°C']
+	    end
+	  when '2450'
+	    output f, [id,'TAI8515',"WDIR_#{no}","Wind Direction #{no}", '']
+	  when '2760'
+	    output f, [id,'DS2760', "MS_Volts_#{no}","Moisture Voltage #{no}",'V',
+	      "MS_Current_#{no}","Moisture Current #{no}",'A']
+	    output f, [id,'DS2760', "MS_Temp_#{no}","Moisture Temperature #{no}",
+	      '°C',"MS_Accum_#{no}","Moisture Accumulator #{no}",'Ahrs']
+	  when 'HB1WT'
+	    output f, [id,'HB???',"HB?? #{no}","Hobbyboards with temperature #{no}", '']
 	  else
 	    STDERR.puts "?? #{l}"
+	    typ = l.chomp.split(':')
+	    output f, [id, dev,"UNK #{no}","UNKNOWN: #{typ[1]} #{no}", ''],'-- '
 	  end
 	  if(cl)
 	    case slot
 	    when /Main/
-	      output [cl,'DS2409','MAIN',id]
+	      output f, [cl,'DS2409','MAIN',id]
 	    when /Aux/
-	      output [cl,'DS2409',nil,nil,nil,'AUX',id]
+	      output f, [cl,'DS2409',nil,nil,nil,'AUX',id]
 	    end
 	  end
 	  last=dev

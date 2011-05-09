@@ -188,6 +188,7 @@ static void do_init(w1_devlist_t *w1)
         exit(1);
     }
     w1_verify_intervals (w1);
+    w1_initialize_couplers(w1);
 }
 
 void init_interfaces(w1_devlist_t *w1)
@@ -202,7 +203,7 @@ void init_interfaces(w1_devlist_t *w1)
             exit(1);
         }
     }
-    w1_initialize_couplers(w1);
+//    w1_initialize_couplers(w1);
 }
 
 void dll_parse(w1_devlist_t *w1, int typ, char *params)

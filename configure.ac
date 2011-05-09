@@ -1,12 +1,12 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.3.6,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.3.7,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_SYSTEM
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([dist-bzip2 tar-pax no-dist-gzip])
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 
@@ -18,11 +18,11 @@ AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
-AC_ARG_WITH(applet, AC_HELP_STRING([--without-applet], [Don't build the applet]))
 AC_ARG_WITH(mysql, AC_HELP_STRING([--without-mysql], [Don't build for MySQL]))
 AC_ARG_WITH(postgres, AC_HELP_STRING([--without-postgres], [Don't build for PostgreSQL]))
 AC_ARG_WITH(sqlite, AC_HELP_STRING([--without-sqlite], [Don't build for SQLite]))
 AC_ARG_WITH(odbc, AC_HELP_STRING([--without-odbc], [Don't build for ODBC]))
+AC_ARG_WITH(libxml, AC_HELP_STRING([--without-libxml], [Don't build for libXML]))
 
 # Checks for libraries.
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
@@ -30,18 +30,6 @@ AC_CHECK_LIB([odbc], [SQLAllocHandle])
 LIBS= 
 AC_CHECK_LIB([m], [sin], [])
 AC_CHECK_LIB([rt], [clock_nanosleep])
-
-AC_PATH_PROGS([TOOL_XML2_CONFIG], [xml2-config])
-    AS_IF([test -n "$TOOL_XML2_CONFIG"],
-          [XML2_CFLAGS=`$TOOL_XML2_CONFIG --cflags`
-           XML2_LIBS=`$TOOL_XML2_CONFIG --libs`
-           LIBXML_VERSION=`$TOOL_XML2_CONFIG --version`],
-          [AC_MSG_ERROR([missing program 'xml2-config'; is 'libxml2' or
-'libxml2-devel' installed?])])
-    AC_SUBST([XML2_CFLAGS])
-    AC_SUBST([XML2_LIBS]) 
-
-AC_CHECK_LIB([xml2],[xmlNewTextWriterMemory]) 
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -78,7 +66,6 @@ GLIB_LIBS=
 
 PKG_CHECK_MODULES(SQLITE,sqlite3,[],[USE_SQLITE=])
 
-
 if test "x${SQLITE_LIBS}" = "x" ; then 
    with_sqlite="no"
 fi
@@ -97,6 +84,20 @@ fi
 if test "$with_odbc" != "no"; then
  USE_ODBC=odbc
 fi
+
+if test "$with_libxml" = "no" ; then
+ : #AC_MSG_RESULT([not checking for libXML]) 
+else
+AC_PATH_PROGS([TOOL_XML2_CONFIG], [xml2-config])
+    AS_IF([test -n "$TOOL_XML2_CONFIG"],
+          [XML2_CFLAGS=`$TOOL_XML2_CONFIG --cflags`
+           XML2_LIBS=`$TOOL_XML2_CONFIG --libs`
+           LIBXML_VERSION=`$TOOL_XML2_CONFIG --version`])
+AC_CHECK_LIB([xml2],[xmlNewTextWriterMemory]) 
+AC_SUBST([XML2_CFLAGS])
+AC_SUBST([XML2_LIBS]) 
+fi
+
 
 AC_PATH_PROG(MYSQL_CONFIG, mysql_config, no)
 if test "$MYSQL_CONFIG" = "no" -o  "$with_mysql" = "no" ; then
@@ -171,18 +172,6 @@ AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 AC_MSG_RESULT(perhaps)
 
-if test "$with_applet" != "no" ; then
- GTK_REQUIRED=2.2.0
- LIBPANEL_REQUIRED=2.6.0
- PKG_CHECK_MODULES(GNOME_APPLETS, gtk+-2.0 >= $GTK_REQUIRED
-libpanelapplet-2.0 >= $LIBPANEL_REQUIRED,USE_APPLET="w1temp",USE_APPLET="")
- if test -n "$USE_APPLET" ; then
-  USE_APPLET=w1temp
-  AC_CONFIG_SUBDIRS(contrib/w1temp)
- fi
-fi
-
-AC_SUBST(USE_APPLET)	
 PKG_CHECK_MODULES(LIBUSB, libusb)
 AC_SUBST(LIBUSB_CFLAGS)
 AC_SUBST(LIBUSB_LIBS)
@@ -195,7 +184,6 @@ src/sqlite/Makefile
 src/mysql/Makefile
 src/pgsql/Makefile
 src/odbc/Makefile
-contrib/Makefile
 )
 
 echo
