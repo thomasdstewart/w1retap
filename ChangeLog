@@ -1,3 +1,13 @@
+1.3.7 2011-05-08
+	Fixed bug whereby defined but empty coupler branches caused
+	sensors not to be read (reported by Dave Johns).
+	Made building with libxml2 optional (suggested by Koos van den
+	Hout). w1retap also builds if libxml2 is not installed.
+	Updated documentation and contrib/ examples, including the
+	w1sensors.rb script that helps build configurations.
+	Rationalised the gnome applets and added an appindicator for
+	Ubuntu 11.04 (for Daria).
+
 1.3.6 2011-04-01
 	Add support for the HobbyBoards UV sensor (for Dave Johns, who
 	loaned a sensor for development).

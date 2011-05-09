@@ -1,0 +1,16 @@
+[Applet Factory]
+Id=w1tempAppletFactory
+Location=@LOCATION@/w1temp
+Name=w1temp Factory
+Description=Factory for the w1temp stuff
+
+[w1tempApplet]
+Name=w1temp applet
+Description=Shows w1temp data
+Icon=gnome-panel-window-menu
+BonoboId=OAFIID:GNOME_w1tempApplet
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=gnome-panel
+X-GNOME-Bugzilla-Component=w1temp
+X-GNOME-Bugzilla-Version=@VERSION@
+X-GNOME-Bugzilla-OtherBinaries=w1temp

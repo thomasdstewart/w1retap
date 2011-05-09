@@ -27,6 +27,9 @@
 #include <sys/file.h>
 #include "w1retap.h"
 #include <glib.h>
+
+#ifdef HAVE_LIBXML2
+
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
 
@@ -120,3 +123,71 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
         xmlBufferFree(buf);
     }
 }
+#else
+void w1_logger (w1_devlist_t *w1, char *logfile)
+{
+    int i;
+    char timb[TBUF_SZ];
+    w1_device_t *devs;
+    FILE *lfp;
+
+
+    if(logfile == NULL)
+    {
+        lfp = stdout;
+        setvbuf(lfp, (char *)NULL, _IOLBF, 0);
+    }
+    else
+    {
+        if(*logfile == '|')
+        {
+            lfp = popen(logfile+1,"w");
+        }
+        else
+        {
+            lfp = fopen(logfile, "a");
+        }
+    }
+
+    if(lfp == NULL)
+    {
+        return;
+    }
+    
+    logtimes(w1->logtime, timb);
+    fputs("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", lfp);
+    fprintf(lfp, "<report timestamp=\"%s\" unixepoch=\"%ld\" sane=\"no\">\n",
+                 timb, w1->logtime);
+    
+    for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
+    {
+        if(devs->init)
+        {
+            int j;
+            for (j = 0; j < 2; j++)
+            {
+                if(devs->s[j].valid)
+                {
+                    fprintf(lfp,
+                            "  <sensor name=\"%s\" value=\"%.4f\" units=\"%s\"></sensor>\n",
+                            devs->s[j].abbrv, devs->s[j].value,
+                            (devs->s[j].units) ? (devs->s[j].units) : ""
+                            );
+                }
+            }
+        }
+    }
+    fputs("</report>\n", lfp);
+    if(logfile)
+    {
+        if (*logfile == '|')
+        {
+            pclose(lfp);
+        }
+        else
+        {
+            fclose(lfp);
+        }
+    }
+}
+#endif

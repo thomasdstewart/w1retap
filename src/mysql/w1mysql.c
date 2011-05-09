@@ -320,7 +320,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
 #else
                     char *q;
                     char tval[64];
-                    int n;
+                    int n=0;
                     
                     if(w1->timestamp)
                     {
@@ -346,6 +346,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
                             syslog(LOG_ERR, "MySQL error %s", mse);
                         }
                     }
+		    n=n; // gcc 4.6, alas
                     free(q);
 #endif
                 }

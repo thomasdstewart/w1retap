@@ -1053,6 +1053,8 @@ void w1_initialize_couplers(w1_devlist_t *w1)
     {
         if (w->stype == W1_COUPLER && nc < MAXCPL)
         {
+            char *inuse = calloc(w->ns, sizeof(char));
+            int empty = 0;
             w1_make_serial(w->serial, w->serno);
 	    w->private = calloc(1, sizeof(w1_coupler_private_t));
 	    priv = (w1_coupler_private_t*)w->private;
@@ -1060,11 +1062,10 @@ void w1_initialize_couplers(w1_devlist_t *w1)
 
             for(b = 0; b < w->ns; b++)
             {
-//                fprintf(stderr, "%d: ", b);
+//                fprintf(stderr, "%d/%d: ", b,w->ns);
                 if(w->s[b].abbrv && w->s[b].name)
                 {
-//                    fprintf(stderr,"%s %s", w->s[b].abbrv, w->s[b].name);
-                    
+//                    fprintf(stderr,"%4s %s", w->s[b].abbrv, w->s[b].name);
                     if ((w->s[b].abbrv[0] == 'M' || w->s[b].abbrv[0] == 'A')
                         && isxdigit(w->s[b].name[0]))
                     {
@@ -1084,10 +1085,39 @@ void w1_initialize_couplers(w1_devlist_t *w1)
                             }
                         }
                         free(tmp);
+                        inuse[b] = 1;
                     }
+                    else
+                    {
+                        empty++;
+                    }
+                }
+                else
+                {
+                    empty++;
                 }
 //                fputc('\n', stderr);
             }
+            if(empty)
+            {
+                int i,j;
+                w1_sensor_t *temps = calloc(w->ns - empty, sizeof( w1_sensor_t));
+                for (i = 0, j= 0; i < w->ns; i++)
+                {
+                    if(inuse[i] == 1)
+                    {
+                        memcpy(temps+j, w->s+i, sizeof( w1_sensor_t));
+                        j++;
+                    }
+                }
+                void * old = w->s;
+                w->s = temps;
+                w->ns -= empty;
+                free(old);
+                fprintf(stderr, "(notice) freed up empty branch for %s\n",
+                        w->serial);
+            }
+            free(inuse);
         }
     }
     
