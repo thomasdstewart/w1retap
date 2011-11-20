@@ -258,7 +258,7 @@ void w1_logger (w1_devlist_t *w1, char *params)
                     SQLSMALLINT ValueType;
                     SQLSMALLINT ParameterType;
                     SQLPOINTER ParameterValuePtr;
-                    int res;
+                    int res =0;
                     
                     if(w1->timestamp)
                     {

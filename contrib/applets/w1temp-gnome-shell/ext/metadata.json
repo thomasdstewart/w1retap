@@ -1,0 +1,10 @@
+{ 
+   "shell-version": [ "3.2", "3.2.1" ],
+   "uuid": "w1temp@daria.co.uk",
+   "name": "w1temp",
+   "description": "Provide w1temp information",
+   "url": "http://www.daria.co.uk/wx/",
+   "original-authors": "Jonathan Hudson",
+   "encoding": "utf-8",
+   "locale": "en_GB.UTF-8"
+}

@@ -4,6 +4,17 @@ using Soup;
 
 const string UIBASEPATH = "/usr/share/w1temp/";
 
+enum w1state { WAITING=0, FETCHING}
+// Combines 0.8 and 0.9 APIs ...
+enum nmstate {UNKNOWN=0, ASLEEP=1, CONNECTING=2, CONNECTED=3, DISCONNECTED=4,
+              NM_STATE_ASLEEP           = 10,
+              NM_STATE_DISCONNECTED     = 20,
+              NM_STATE_DISCONNECTING    = 30,
+              NM_STATE_CONNECTING       = 40,
+              NM_STATE_CONNECTED_LOCAL  = 50,
+              NM_STATE_CONNECTED_SITE   = 60,
+              NM_STATE_CONNECTED_GLOBAL = 70}
+
 [DBus (name = "org.freedesktop.NetworkManager")]
 interface NetworkManager : GLib.Object {
     public signal void StateChanged (uint32 state);
@@ -14,7 +25,7 @@ class Prefs
 {
     private bool keep = false;
     public Prefs() {}
-    public bool run (ref string url, ref string burl, ref int delay)
+    public bool run (ref string _url, ref string _burl, ref int _delay)
     {
         try {
             var builder = new Builder ();
@@ -26,26 +37,17 @@ class Prefs
             var entry2 = builder.get_object ("entry2") as Entry;
             var entry3 = builder.get_object ("entry3") as Entry;            
             button.clicked.connect(() => { keep = true; });
-            entry1.text = url;
-            entry3.text = burl;
-            entry2.text = delay.to_string();
+            entry1.text = _url;
+            entry3.text = _burl;
+            entry2.text = _delay.to_string();
             dialog.run ();
             if(keep)
             {
-                string _url = entry1.text;
-                string _burl = entry3.text;
-                int _delay = int.parse(entry2.text);
-                if (_delay < 120) _delay = 120;                
-                if (delay == _delay && url == _url && burl == _burl)
-                {
-                    keep = false;
-                }
-                else
-                {
-                    url = _url;
-                    burl = _burl;
-                    delay = _delay;
-                }
+                _url = entry1.text;
+                _burl = entry3.text;
+                _delay = int.parse(entry2.text);
+                if(_delay < 5)
+                    _delay = 5;
             }
             dialog.destroy();            
         } catch (Error e) {
@@ -60,14 +62,42 @@ public class MainApplet : Panel.Applet {
     private Soup.Message message;
     private Soup.Session session;
     private NetworkManager nm;
-    private uint32 nm_state = 0;
-    private int sstate = 0;
-    private string url="";
-    private int delay = 300;
-    private string key = "temperature";
-    private string burl = "http://roo/wx/";
+    private uint32 nm_state = nmstate.UNKNOWN;
+    private int sstate = w1state.WAITING;
+    private string url {get; set; default="";}
+    private int delay {get; set; default=300;}
+    private int fdelay=2;
+    private string key {get; set; default="temperature";}
+    private string burl {get; set; default="http://roo/wx/";} 
     private Gtk.Label label;
     private Gtk.Image image;
+    private bool logme = false;
+    private GLib.Settings settings;
+    private string logfile=null;
+    private uint tid;
+    
+    private string getlog()
+    {
+        if (logfile == null)
+        {
+            var u = Environment.get_user_name();
+            var d = Environment.get_variable("DISPLAY");
+            var n = d.index_of(":");
+            var dn = d.slice(n+1, d.length);
+            logfile="/tmp/.w1temp-%s-%s".printf(u,dn);
+        }
+        return logfile;
+    }
+
+    private void log_msg(string txt)
+    {
+        var fp = FileStream.open(getlog(),"a");
+        if(fp != null)
+        {
+            var dt = new DateTime.now_local().to_string();
+            fp.printf("%s : %s\n", dt, txt);
+        }
+    }
     
     private void start_nm_dbus()
     {
@@ -75,60 +105,43 @@ public class MainApplet : Panel.Applet {
             nm = Bus.get_proxy_sync (BusType.SYSTEM,
                                      "org.freedesktop.NetworkManager",
                                      "/org/freedesktop/NetworkManager");
-            nm.StateChanged.connect ((state) => {
+            nm.StateChanged.connect ((state) =>
+                {
                     nm_state = state;
-                    if (nm_state == 3)
+                    if(tid > 0) {Source.remove(tid);}
+                    if (nm_state == nmstate.CONNECTED ||
+                        nm_state == nmstate.NM_STATE_CONNECTED_GLOBAL)
                     {
-                        if(sstate == 1)
+                        if(sstate == w1state.FETCHING)
                         {
                             session.cancel_message(message, 503);
-                            sstate = 0;
+                            sstate = w1state.WAITING;
                         }
-                        start_get_data();
+                        fdelay = 2;                        
+                        start_get_data(); 
                     }
+                    if(logme)
+                        log_msg("nm_state %ld".printf(nm_state));
                 });
         } catch (IOError e) {
             stderr.printf ("%s\n", e.message);
+            if(logme)
+                log_msg(e.message);
         }
         nm_state = nm.State;
+        if(logme)
+            log_msg("nm_startup %ld".printf(nm_state));
+
     }
    private void get_config()
     {
-        var kf = new KeyFile();
-        string kfile = Path.build_filename(Environment.get_home_dir(),
-                                           ".config/w1retap/applet");
-        try {
-            kf.load_from_file(kfile, KeyFileFlags.NONE);
-        } catch (Error e)  { stderr.printf(e.message); }
-        try {
-            url = kf.get_string("Config","url"); 
-        } catch (KeyFileError k) { kf.set_string("Config","url", url); }
-        try {
-            burl = kf.get_string("Config","browse-url");
-        } catch (KeyFileError k) { kf.set_string("Config","browse-url", burl); }
-        
-        try {        
-            delay = kf.get_integer("Config","delay");
-        } catch (KeyFileError k) {kf.set_integer("Config","delay", delay); }
-        try {
-            key = kf.get_string("Config","key");
-        } catch (KeyFileError k) { kf.set_string("Config","key", key); }
-    }
-
-    private void save_config()
-    {
-        try
-        {
-            var kf= new KeyFile();
-            string kfile = Path.build_filename(Environment.get_home_dir(),
-                                               ".config/w1retap/applet");
-            kf.set_string("Config","url",url);
-            kf.set_integer("Config","delay",delay);
-            kf.set_string("Config","key",key);
-            kf.set_string("Config","browse-url", burl); 
-            var s = kf.to_data();
-            FileUtils.set_contents(kfile, s);
-        } catch  (Error e) { stdout.printf("Save prefs %s\n", e.message); }
+        url = settings.get_string ("url");
+        burl = settings.get_string("browse-url");
+        key = settings.get_string("key");
+        delay = settings.get_int ("delay");
+        if(delay < 5)
+            delay = 5;
+        logme = settings.get_boolean ("log-errors");
     }
 
     private string icon_file_name (double temp, string ext="png")
@@ -205,9 +218,11 @@ public class MainApplet : Panel.Applet {
         
         setup_menu (menu_def, verbs, null);
         change_background.connect (on_change_background);
+        settings = new GLib.Settings ("org.w1retap.w1temp");
+        settings.changed.connect (() => { get_config(); } );
         get_config();
         start_nm_dbus();
-        Idle.add(() => {start_get_data(); return false;});
+        Idle.add(start_get_data);
         show_all();
     }
  
@@ -215,16 +230,18 @@ public class MainApplet : Panel.Applet {
                                           void* user_data, string cname) {
         var ap = (MainApplet)user_data;
         ap.get_config();
-        if (ap.nm_state == 3)
+        ap.ltemp = -1001;
+        if(ap.tid > 0) {Source.remove(ap.tid);}
+        if(ap.sstate == w1state.FETCHING)
         {
-            if(ap.sstate == 1)
-            {
-                ap.session.cancel_message(ap.message, 503);
-                ap.sstate = 0;
-            }
-            ap.ltemp = -1001;
+            ap.session.cancel_message(ap.message, 503);
+            ap.sstate = w1state.WAITING;
+        }
+        else if (ap.nm_state == nmstate.CONNECTED ||
+                 ap.nm_state == nmstate.NM_STATE_CONNECTED_GLOBAL)
+        {
             ap.start_get_data();
-        } 
+        }
     }
     
     private static void on_prefs_clicked (BonoboUI.Component component,
@@ -255,8 +272,10 @@ public class MainApplet : Panel.Applet {
                 Path.build_filename(UIBASEPATH, "pixmaps", fn), 16,64);
             dialog.set_logo (img);
         } catch { }
- 
-        dialog.set_version("0.0");
+
+
+        string vers = (ap.ltemp > -100) ? "%.1f".printf(ap.ltemp) : "0.0";
+        dialog.set_version(vers);
         dialog.set_comments("w1retap indicator app");
         dialog.set_copyright("(c) 2011 Jonathan Hudson");
         dialog.set_website("http://www.daria.co.uk/wx/");
@@ -278,35 +297,49 @@ public class MainApplet : Panel.Applet {
         image.show();
     }
     
-    private void start_get_data()
+    private bool start_get_data()
     {
-        session = new Soup.SessionAsync ();
-        session.timeout = 60;
-        string xurl;
-        xurl =  @"$url".printf(time_t());
-        message = new Soup.Message ("GET", xurl);
-        sstate = 1;
-        session.queue_message (message, end_session);
+        tid=0;
+        if (nm_state == nmstate.CONNECTED ||
+            nm_state == nmstate.NM_STATE_CONNECTED_GLOBAL)
+        {
+            session = new Soup.SessionAsync ();
+            session.timeout = (delay * 3) / 4;
+            string xurl;
+            xurl =  @"$url".printf(time_t());
+            message = new Soup.Message ("GET", xurl);
+            sstate = w1state.FETCHING;
+            session.queue_message (message, end_session);
+        }
+        return false;
     }
 
    private void end_session(Soup.Session sess, Soup.Message mess)
     {
-        sstate = 0;
-        if (mess.status_code == 200) // SOUP_STATUS_OK
+        int timer=delay;
+        var status = "";
+        var builder = new StringBuilder ();
+        sstate = w1state.WAITING;
+        if (mess.status_code == Soup.KnownStatusCode.OK) // SOUP_STATUS_OK
         {
-                // remove final \n
-            string res = ((string) mess.response_body.data)[0:-1];
             try
             {
-                var re = new Regex(@"$key:\\s(\\S+)", RegexCompileFlags.CASELESS);
-                var temp = -999.0;
-                MatchInfo mi;
-                if (re.match(res, 0, out mi))
-                {
-                    temp = double.parse(mi.fetch(1));
+                var jsp = new Json.Parser ();
+                jsp.load_from_data ((string) mess.response_body.flatten().data, -1);
+                var root_object = jsp.get_root().get_array();
+                var temp = -999.9;
+                foreach (var node in root_object.get_elements ()) {
+                    var obj = node.get_object ();
+                    var k = obj.get_string_member ("name");
+                    var v = obj.get_string_member ("value");
+                    var u = obj.get_string_member ("units");
+                    builder.append("%s: %s %s\n".printf(k,v,u));
+                    if(0 == k.ascii_casecmp("temperature"))
+                    {
+                        temp= double.parse(v);
+                    }
                 }
-                tooltip_text = res;
-                
+                tooltip_text = builder.str.chomp();
                 if (temp != ltemp)
                 {
                     set_temp_icon(temp);
@@ -314,26 +347,59 @@ public class MainApplet : Panel.Applet {
                     show_all();
                     ltemp = temp;
                 }
-            } catch {}
+            } catch (Error e)
+            {
+                tooltip_text = "Failed %s\n".printf(e.message);
+            }
+            fdelay = 2;
         }
         else
         {
             label.set_text("???");
+            timer = fdelay;
+            status = " [%d]".printf(timer);
             ltemp = -1001;
-            tooltip_text = "%s : %ld: %s".printf(
+            var txt = "%s%s : %ld: %s".printf(
                 new DateTime.now_local().to_string(),
-                mess.status_code,
-                mess.reason_phrase);
+                status, mess.status_code, mess.reason_phrase);
+            tooltip_text = txt;
+            if(fdelay < delay)
+                fdelay = fdelay + fdelay/2;
         }
-        Timeout.add_seconds(delay, () => { start_get_data(); return false; });
+        tid = Timeout.add_seconds(timer, start_get_data);
+        if(logme)
+        {
+            var txt = "status %ld%s - %s".printf(
+                mess.status_code, status, mess.reason_phrase);
+            log_msg(txt);
+        }
     }
 
     private void w1temp_prefs()
     {
         var p = new Prefs();
-        if (p.run(ref url, ref burl, ref delay))
+        var _url=url;
+        var _burl=burl;
+        var _delay=delay;
+        var res = p.run(ref _url, ref _burl, ref _delay);
+        if (res)
         {
-            save_config();
+            if (_delay < 120) _delay = 120;                
+            if (delay != _delay) 
+            {
+                delay = _delay;
+                settings.set ("delay","u", delay);
+            }
+            if (url != _url)
+            {
+                url = _url;
+                settings.set_string ("url", url);
+            }
+            if (burl != _burl)
+            {
+                burl = _burl;
+                settings.set_string("browse-url", burl);
+            }
         }
     }
 

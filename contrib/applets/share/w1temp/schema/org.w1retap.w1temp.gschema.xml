@@ -1,0 +1,45 @@
+<schemalist>
+  <schema id="org.w1retap.w1temp" path="/org/w1retap/w1temp/" gettext-domain="w1temp">
+
+    <key name="url" type="s">
+      <default>"http://jrh.sdf-eu.org/wx/wx_static.json"</default>
+      <summary>Data URL (15 min. update)</summary>
+      <description>
+        Data URL
+      </description>
+    </key>
+
+    <key name="browse-url" type="s">
+      <default>"http://www.daria.co.uk/wx/"</default>
+      <summary>Browse URL</summary>
+      <description>
+        Browse URL
+      </description>
+    </key>
+
+    <key name="key" type="s">
+      <default>"temperature"</default>
+      <summary>Key for temperature</summary>
+      <description>
+        Key for temperature
+      </description>
+    </key>
+
+    <key name="delay" type="i">
+      <default>120</default>
+      <summary>Cycle Time</summary>
+      <description>
+	Cycle Time
+      </description>
+    </key>
+
+    <key name="log-errors" type="b">
+      <default>false</default>
+      <summary>/tmp/.w1temp-$USER-$DISPLAY ?</summary>
+      <description>
+        Log to /tmp/.w1temp-$USER-$DISPLAY ?
+      </description>
+    </key>
+
+  </schema>
+</schemalist>
