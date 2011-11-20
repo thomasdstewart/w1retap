@@ -1,12 +1,12 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.3.8,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.3.9,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_SYSTEM
 
-AM_INIT_AUTOMAKE([dist-bzip2 tar-pax no-dist-gzip])
+AM_INIT_AUTOMAKE([dist-xz tar-pax no-dist-gzip])
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 

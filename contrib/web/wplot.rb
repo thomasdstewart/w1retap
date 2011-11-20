@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2006 Jonathan Hudson <jh+w1retap@daria.co.uk>
 #
@@ -39,9 +40,10 @@ require 'raincalc.rb'
 require 'svgwind.rb'
 require 'svgthermo.rb'
 require 'wug.rb'
+require 'wow.rb'
 require 'cwop.rb'
-require 'inotify'
-require 'timeout'
+require 'json/pure'
+require "sleepy_penguin/sp"
 
 FIFO='/tmp/pertd2.fifo' 
 DIRS=%w/N NE E SE S SW W NW/
@@ -49,7 +51,7 @@ BASEDIR = '/var/www/roo/wx'
 G = -9.80665
 R = 287.04
 HFACT = 1.0
-UPDATEWAIT = 30
+UPDATEWAIT = (30*1000)
 PLOTTER='pl'
 
 # See http://www.cocoontech.com/index.php?showtopic=6452&hl=solar
@@ -137,22 +139,17 @@ iithen = ithen.to_i
 
 if (now.min % 10) == 0 and !opt_t
   if File.exists? "/tmp/.w1retap.dat"
-    i = Inotify.new
-    i.add_watch("/tmp/.w1retap.dat",  Inotify::CLOSE_WRITE)
-    begin
-      status = Timeout::timeout(UPDATEWAIT) {
-	i.each_event { |ev| break }
-      }
-    rescue Timeout::Error
-    ensure
-      i.close
-    end
+    ino = SP::Inotify.new
+    ino.add_watch("/tmp/.w1retap.dat",SP::Inotify::CLOSE_WRITE|SP::Inotify::DELETE_SELF )
+    ep = SP::Epoll.new(nil)
+    ep.set(ino,:IN)
+    ep.wait(1, UPDATEWAIT) {|flags,io|}
   end
 end
 
 luser = opt_U || ENV['USER']
 dbh = Sequel.connect(opt_S)
-dsource=nil
+dsource='N/A'
 lastdock=nil
 dock = {}
 docks=[]
@@ -173,8 +170,8 @@ File.open('w0.dat','w') do |f|
   docks.each do |d|
     lastdock = Time.at(d[:reportdate]).strftime("%Y-%m-%d.%H:%M")    
     f.printf("%s\t%.1f\t%.1f\t%.1f\t%s\n", lastdock, 
-	     d[:wind_dirn].to_f, 0.8 * d[:wind_speed].to_f, 
-	     0.8 * d[:wind_speed1].to_f, d[:tide])
+	     d[:wind_dirn].to_f, d[:wind_speed].to_f, 
+	     d[:wind_speed1].to_f, d[:tide])
   end
   if docks.size > 0
     dock=docks[-1]
@@ -202,8 +199,8 @@ if lastdock.nil?
   dock[:tide] = nil
 else
   lastdock.sub!(/\./, ' ')
-  dock[:wind_speed] = 0.8 * dock[:wind_speed].to_f
-  dock[:wind_speed1] = 0.8 * dock[:wind_speed1].to_f
+  dock[:wind_speed] = dock[:wind_speed].to_f
+  dock[:wind_speed1] = dock[:wind_speed1].to_f
 end
 
 fh = []
@@ -467,6 +464,8 @@ hmax = 100 if hmax > 100
 
 cells = RainCalc.raincalc dbh, Time.at(d2), r1, rfacts
 cpuc = dbh["select value from readings where name = 'CPU' order by date desc Limit 1"].first[:value]
+fans=dbh["select value from readings where name = 'FAN' order by date desc Limit 1"].first[:value]
+
 dbh.disconnect
 
 # This is no longer the greenhouse temp!
@@ -506,9 +505,9 @@ solmax = case now.month
 	 when 1,2,11,12
 	   200
 	 when 3,4,9,10
-	   500
+	   300
 	 when 5,6,7,8
-	   800
+	   500
 	 end
 
 solmax = smax *1.2 if smax > solmax
@@ -683,8 +682,7 @@ end
 
 rain1mm = rain1*25.4
 rain24mm = rain24*25.4
-lastdock << '*' if dsource == 'AVTS'
-#istamp = (opt_s) ? itype :  "#{itype}?stamp=#{now.to_i}"
+
 xstamp = "?stamp=#{now.to_i}"
 istamp = "#{itype}#{xstamp}"
 
@@ -731,6 +729,7 @@ tmpl.param({
              'wspeed' => wspd_s,
              'wgust' => gust_s,
              'tide' => tide_s,
+	     'dsource' => dsource,
              'rainlist' => rainlist,
 	     'raintimes' => raintimes,
 	     'wx_notice' => wx_notice,
@@ -744,60 +743,64 @@ end
 File.rename('w.html','index.html')
 
 rstr = ''
-rstr += "@#{Time.at(radr).strftime("%H:%M")}" if radr != 0 and rain1 > 0
+rstr << "@#{Time.at(radr).strftime("%H:%M")} " if radr != 0 and rain1 > 0
+rstr << "[%.1fmm]" % rain24mm
 dwstr = (humid) ? "%.1f" % dewpt : 'N/A'
+tstr = "%.1f" % temp
+r1str = "%.1f" % rain1mm
+htempS = "%.1f" % htemp
+btempS = (btemp) ? "%.1f" % btemp : 'N/A'
+tsS = Time.at(d2).strftime("%FT%T%z")
+pstr = "%.1f" % press
+hostd="%.1f°C / %.0f" % [cpuc,fans]
 
-tmpl.load 'wx.static.tmpl'
-tmpl.param({
-	     'udate' => d2,
-	     'idate' => Time.at(d2).strftime("%FT%T%z"),
-	     'temp' => "%.1f" % temp,
-	     'press' => "%.1f" % press,
-	     'humid' => hustr,
-	     'rain' => "%.1fmm" % [rain1mm],
-	     'rstr' => rstr,
-	     'dewpt' =>  dwstr,
-	     'gtemp' => gtempS,
-	     'itemp1' =>  itemp1S,
-	     'itemp2' =>  itemp2S,
-	     'ctemp1' =>  ctemp1S,
-	     'stemp' => stemp1S,
-	     'htemp' => "%.1f" % htemp,
-	     'btemp' => (btemp) ? "%.1f" % btemp : 'N/A',
-	     'wspd' => wspd_s,
-	     'wdir' => wdir_s,
-	     'tide' => tide_s,
-	     'solar' => solstr
-	   })
-
-File.open('wx_static.xml', 'w') do |f|
-  f.print tmpl.output
+File.open('.wx_static.json', 'w') do |f|
+  f.puts [ {"name" => "Temperature", "value" => tstr, "units" => "°C"},
+    { "name" => "Pressure", "value" => pstr, "units" => "hPa"},
+    { "name" => "Humidity", "value" => hustr, "units" => "%"},
+    { "name" => "Rainfall", "value" => r1str, "units" => "mm/hr #{rstr}"},
+    { "name" => "Dewpoint", "value" => dwstr, "units" => "°C"},
+    { "name" => "Greenhouse", "value" => gtempS, "units" => "°C"},
+    { "name" => "Interior", "value" => htempS, "units" => "°C"},
+    { "name" => "Garage", "value" => btempS, "units" => "°C"},
+    { "name" => "Soil", "value" => stemp1S, "units" => "°C"},
+    { "name" => "Propagator1", "value" => itemp1S, "units" => "°C"},
+    { "name" => "Propagator2", "value" => itemp2S, "units" => "°C"},
+    { "name" => "Front Garden", "value" => ctemp1S, "units" => "°C"},
+    { "name" => 'Solar', "value" => solstr, "units" => " W/m^2"},
+    { "name" => "Dock Source", "value" => dsource, "units" => ""},
+    { "name" => "Windspeed", "value" => wspd_s, "units" => "knots"},
+    { "name" => "Direction", "value" => wdir_s, "units" => "degrees"},
+    { "name" => "Tide", "value" => tide_s, "units" => "metres"},
+    { "name" => "Host", "value" => hostd, "units" => "rpm"},
+    { "name" => "Timestamp", "value" => tsS, "units" => ""} ].to_json
 end
+File.rename('.wx_static.json','wx_static.json')
 
 puts "cpu #{cpuc}" if opt_t
 tmpl.load('wx.text.tmpl')
 tmpl.param({
 	     'udate' => d2,
-	     'idate' => Time.at(d2).strftime("%FT%T%z"),
-	     'temp' => "%.1f" % temp,
-	     'press' => "%.1f" % press,
+	     'idate' => tsS,
+	     'temp' => tstr,
+	     'press' => pstr,
 	     'humid' => hustr,
-	     'rain' => "%.1fmm" % rain1mm,
+	     'rain' => r1str,
 	     'rstr' => rstr,
-	     'r24' => "[%.1fmm]" % rain24mm,
 	     'dewpt' => dwstr,
 	     'gtemp' => gtempS,
 	     'itemp1' => itemp1S,
 	     'itemp2' => itemp2S,
 	     'ctemp1' => ctemp1S,
 	     'stemp' => stemp1S,
-	     'htemp' => "%.1f" % htemp,
-	     'btemp' => (btemp) ? "%.1f" % btemp : 'N/A',
+	     'htemp' => htempS,
+	     'btemp' => btempS,
 	     'wspd' => wspd_s,
 	     'wdir' => wdir_s,
 	     'tide' => tide_s,
 	     'solar' => solstr,
-             'cpu' => cpuc
+             'hostd' => hostd,
+	     'dsource' => dsource
 	   })
 
   File.open('.wx_static.dat', 'w') do |f|
@@ -806,11 +809,11 @@ tmpl.param({
   File.rename('.wx_static.dat','wx_static.dat')
 
 if File.pipe?(FIFO) 
-  rstr=rstr[1..-1]
   rtxt=nil
   rtxt1 = '---'
-  rtxt0 = "#{"%0.1f" % rain1mm}/#{rstr}/#{"%.1f" % rain24mm}"
-  if dock[:wind_speed]
+  raintxt = rstr.gsub(/[\[\]\@m]/,'')
+  rtxt0 = "#{r1str} #{raintxt}".gsub(' ','/')
+   if dock[:wind_speed]
     ndir = (((dock[:wind_dirn].to_f + 22.5) % 360) / 45).to_i
     rtxt1 = "#{DIRS[ndir]}#{"%.0f" % dock[:wind_speed]}"
   end
@@ -830,12 +833,6 @@ if File.pipe?(FIFO)
   end
 end
 
-#File.open('/tmp/wug.log','w') do |f|
-#  f.puts "opt_u #{opt_u}"
-#  f.puts "opt_t #{opt_t}"
-#  f.puts "now.min #{now.min}"  
-#end
-
 if opt_u and ((now.min % 10 == 0) or opt_t)
   w = { :humid => humid,
     :temp => temp,
@@ -847,6 +844,9 @@ if opt_u and ((now.min % 10 == 0) or opt_t)
     :stemp => stemp1,
     :solar => solar
   } 
+  puts 'Wug'
   Wug.upload(stn, opt_t, w) if stn[:wu_user]
+  puts 'Wow'
+  Wow.upload(stn, opt_t, w) if stn[:wowid]  
 end 
 
