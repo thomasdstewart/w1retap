@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.3.7,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.3.8,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -144,7 +144,7 @@ else
  CPPFLAGS="$save_flags"
 fi
 
-CPPFLAGS="$save_flags -Werror"
+CPPFLAGS="$save_flags -Werror -Wno-unused-but-set-variable -Wno-unused-result"
 
 AC_SUBST(MYSQL_LIBS)
 AC_SUBST(MYSQL_CFLAGS)

@@ -1,10 +1,6 @@
-This folder consists of some simple GNOME applets (and an Indicator
-App for Ubuntu 11.04 or later).
+This folder consists of some simple GNOME applets.
 
-The Gnome3 applet will migrate to vala (vice C) once the vala bindings
-catch up.
-
-All the applets use a common settings file (~/.config/w1retap/applet),
+The Gnome3 (fallback) applet use a settings file (~/.config/w1retap/applet),
 which has the form:
 
 [Config]
@@ -25,7 +21,9 @@ and icon.
 
 browse: Is the url to browse the full data web page 
 
-e.g.
+The Gnome-shell and Gnome2 applets use gsettings to store the same data.
+
+The source data file from "url" is of the format:
 
 Temperature: 15.9 °C
 Pressure: 1017.5 hPa
@@ -50,3 +48,6 @@ Requirements:
 
 vala 0.12 or later
 installed development packages.
+# aptitude install valac libsoup2.4-dev  dconf-tools
+## and the relevant GTK dev package.
+

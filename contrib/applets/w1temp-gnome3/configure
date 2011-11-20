@@ -5123,7 +5123,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-netbsd*)
+netbsd* | netbsdelf*-gnu)
   if echo __ELF__ | $CC -E - | $GREP __ELF__ > /dev/null; then
     lt_cv_deplibs_check_method='match_pattern /lib[^/]+(\.so\.[0-9]+\.[0-9]+|_pic\.a)$'
   else
@@ -8465,6 +8465,9 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
   openbsd*)
     with_gnu_ld=no
     ;;
+  linux* | k*bsd*-gnu | gnu*)
+    link_all_deplibs=no
+    ;;
   esac
 
   ld_shlibs=yes
@@ -8687,7 +8690,7 @@ _LT_EOF
       fi
       ;;
 
-    netbsd*)
+    netbsd* | netbsdelf*-gnu)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -8864,6 +8867,7 @@ _LT_EOF
 	if test "$aix_use_runtimelinking" = yes; then
 	  shared_flag="$shared_flag "'${wl}-G'
 	fi
+	link_all_deplibs=no
       else
 	# not using gcc
 	if test "$host_cpu" = ia64; then
@@ -9320,7 +9324,7 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
       link_all_deplibs=yes
       ;;
 
-    netbsd*)
+    netbsd* | netbsdelf*-gnu)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -10173,6 +10177,7 @@ gnu*)
   library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}${major} ${libname}${shared_ext}'
   soname_spec='${libname}${release}${shared_ext}$major'
   shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=no
   hardcode_into_libs=yes
   ;;
 
@@ -10341,14 +10346,10 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # Add ABI-specific directories to the system library path.
-  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
-
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
-
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -10358,6 +10359,18 @@ fi
   # people can always --disable-shared, the test was removed, and we
   # assume the GNU/Linux dynamic linker is in use.
   dynamic_linker='GNU/Linux ld.so'
+  ;;
+
+netbsdelf*-gnu)
+  version_type=linux
+  need_lib_prefix=no
+  need_version=no
+  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
+  soname_spec='${libname}${release}${shared_ext}$major'
+  shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=no
+  hardcode_into_libs=yes
+  dynamic_linker='NetBSD ld.elf_so'
   ;;
 
 netbsd*)
@@ -12611,6 +12624,7 @@ _ACEOF
 
 
 
+
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -12745,6 +12759,7 @@ if test -n "$GLIB_MODULE_CFLAGS"; then
   pkg_cv_GLIB_MODULE_CFLAGS=`$PKG_CONFIG --cflags "gmodule-2.0 >= 2.2.0
 			        dbus-1 >= $DBUS_REQUIRED
 				dbus-glib-1 >= $DBUS_REQUIRED" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -12767,6 +12782,7 @@ if test -n "$GLIB_MODULE_LIBS"; then
   pkg_cv_GLIB_MODULE_LIBS=`$PKG_CONFIG --libs "gmodule-2.0 >= 2.2.0
 			        dbus-1 >= $DBUS_REQUIRED
 				dbus-glib-1 >= $DBUS_REQUIRED" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -12786,11 +12802,11 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gmodule-2.0 >= 2.2.0
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gmodule-2.0 >= 2.2.0
 			        dbus-1 >= $DBUS_REQUIRED
 				dbus-glib-1 >= $DBUS_REQUIRED" 2>&1`
         else
-	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --print-errors "gmodule-2.0 >= 2.2.0
+	        GLIB_MODULE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gmodule-2.0 >= 2.2.0
 			        dbus-1 >= $DBUS_REQUIRED
 				dbus-glib-1 >= $DBUS_REQUIRED" 2>&1`
         fi
@@ -12846,6 +12862,7 @@ if test -n "$GIO_MODULE_CFLAGS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_GIO_MODULE_CFLAGS=`$PKG_CONFIG --cflags "gio-2.0 >= 2.16.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -12862,6 +12879,7 @@ if test -n "$GIO_MODULE_LIBS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_GIO_MODULE_LIBS=`$PKG_CONFIG --libs "gio-2.0 >= 2.16.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -12881,9 +12899,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gio-2.0 >= 2.16.0" 2>&1`
+	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gio-2.0 >= 2.16.0" 2>&1`
         else
-	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --print-errors "gio-2.0 >= 2.16.0" 2>&1`
+	        GIO_MODULE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gio-2.0 >= 2.16.0" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GIO_MODULE_PKG_ERRORS" >&5
@@ -12918,6 +12936,7 @@ if test -n "$GNOME_APPLETS_CFLAGS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_GNOME_APPLETS_CFLAGS=`$PKG_CONFIG --cflags "gtk+-3.0 >= $GTK_REQUIRED  libpanelapplet-4.0 >= $LIBPANEL_REQUIRED" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -12934,6 +12953,7 @@ if test -n "$GNOME_APPLETS_LIBS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_GNOME_APPLETS_LIBS=`$PKG_CONFIG --libs "gtk+-3.0 >= $GTK_REQUIRED  libpanelapplet-4.0 >= $LIBPANEL_REQUIRED" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -12953,9 +12973,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gtk+-3.0 >= $GTK_REQUIRED  libpanelapplet-4.0 >= $LIBPANEL_REQUIRED" 2>&1`
+	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gtk+-3.0 >= $GTK_REQUIRED  libpanelapplet-4.0 >= $LIBPANEL_REQUIRED" 2>&1`
         else
-	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --print-errors "gtk+-3.0 >= $GTK_REQUIRED  libpanelapplet-4.0 >= $LIBPANEL_REQUIRED" 2>&1`
+	        GNOME_APPLETS_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gtk+-3.0 >= $GTK_REQUIRED  libpanelapplet-4.0 >= $LIBPANEL_REQUIRED" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GNOME_APPLETS_PKG_ERRORS" >&5
@@ -12988,6 +13008,7 @@ if test -n "$LIBSOUP_CFLAGS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_LIBSOUP_CFLAGS=`$PKG_CONFIG --cflags "libsoup-2.4 >= 2.26" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -13004,6 +13025,7 @@ if test -n "$LIBSOUP_LIBS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_LIBSOUP_LIBS=`$PKG_CONFIG --libs "libsoup-2.4 >= 2.26" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -13023,9 +13045,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        LIBSOUP_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "libsoup-2.4 >= 2.26" 2>&1`
+	        LIBSOUP_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsoup-2.4 >= 2.26" 2>&1`
         else
-	        LIBSOUP_PKG_ERRORS=`$PKG_CONFIG --print-errors "libsoup-2.4 >= 2.26" 2>&1`
+	        LIBSOUP_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsoup-2.4 >= 2.26" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$LIBSOUP_PKG_ERRORS" >&5

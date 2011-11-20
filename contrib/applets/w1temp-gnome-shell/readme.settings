@@ -1,0 +1,5 @@
+org.w1retap.w1temp browse-url 'https://roo.daria.co.uk/wx/'
+org.w1retap.w1temp delay 120
+org.w1retap.w1temp key 'temperature'
+org.w1retap.w1temp log-errors true
+org.w1retap.w1temp url 'https://roo/wx/wx_static.json'
