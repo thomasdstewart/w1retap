@@ -51,9 +51,9 @@
 	      <p class="indent">
 		<object data="thermo.<!-- var:gtype -->" 
 			type="<!-- var:imime -->" 
-			width="40" height="150"
+			width="40" height="160"
 			style="float: right; "
-			title="Temperature in Daria's Greenhouse (<!-- var:gtemp -->)" >
+			title="Exterior temperature (<!-- var:temp -->)" >
 		</object>
 		  
 		Timestamp:
@@ -84,22 +84,21 @@
             </td>
             <td class="dockbg">
               <p class="indent">
-		Timestamp:
-		<!-- var:pdate --><br />
-		Direction:
-		<!-- var:wdirn -->&deg;<br />
-		Average Speed:
-		<!-- var:wspeed -->kts (adjusted to 10m)<br />
-		Gust:
-		<!-- var:wgust -->kts (adjusted to 10m)<br />
-		Tide:
-		<!-- var:tide -->m<br /></p>
+		Timestamp: <!-- var:pdate --><br />
+		Direction: <!-- var:wdirn -->&deg;<br />
+		Average Speed: <!-- var:wspeed -->kts <br />
+		Gust: <!-- var:wgust -->kts <br />
+		Tide: <!-- var:tide -->m<br />
+		Source: <!-- var:dsource --><br /></p>
 	      <hr />
 	      <p class="indent">
 		Data is from the
 		<a href="http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
 		<a href="http://www.sotonmet.co.uk/wap">WAP</a>
-		feed and adjusted for the wind sensor height.
+		feed (or 
+		<a href="http://www.bramblemet.co.uk/default.shtm">BrambleMet</a>
+		<a href="http://www.bramblemet.co.uk/wap">WAP</a> when
+		SotonMet is not working).
 	      </p>
 	      <hr/>
 	    </td>
@@ -228,6 +227,10 @@
 	      <!-- end:rainlist -->
 	    </tbody>
 	  </table>
+	<p class="indent">
+	  <a href="rainfall.html">Long term current and historic
+	  rainfall graphs</a>.
+	</p>
 	</div>
 	<div class="space-line"></div>
       </div>
@@ -280,8 +283,7 @@
 				   Southampton Water, --> it is convenient to use the <a href=
 											 "http://www.sotonmet.co.uk/default.shtm">SotonMet</a>
 	  <a href="http://www.sotonmet.co.uk/wap">WAP</a> feed for wind
-	  information. The wind speed is normalised from the value
-	  measured at 53m to a more normal 10m for display.
+	  information.
 	</p>
 	<p>
 	  In the rainfall table, the <i>Avg. Month mm</i> column is the
@@ -342,7 +344,11 @@
 	    Wunderground.com</a>
 	  <br/>
 	  <a
-	     href="http://www.bbc.co.uk/weather/5day.shtml?id=3485&amp;links">
+	     href="http://wow.metoffice.gov.uk/latestobservationservlet?siteID=22841429">
+	    BBC Weather Observations (Wow!)</a>
+	  <br/>
+	  <a
+	     href="http://www.bbc.co.uk/weather/2637487">
 	    BBC Weather Centre</a>
 	  <br/>
 	  <a
@@ -401,6 +407,15 @@
 	      <a href="http://www.ruby-lang.org/en/"><img
 							src="Ruby-POWERED.png"  class="cximag"
 							alt="Remember. Understand. Believe. Yield!" /> </a>
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>
+	      <a rel="license"
+		 href="http://creativecommons.org/licenses/by-sa/3.0/">
+		<img alt="Creative Commons License" class="cximg"
+		     src="http://i.creativecommons.org/l/by-sa/3.0/80x15.png"/>
+	      </a>
 	    </td>
 	  </tr>
 	</table>
