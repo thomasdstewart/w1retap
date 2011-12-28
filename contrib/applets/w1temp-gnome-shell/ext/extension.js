@@ -200,8 +200,18 @@ w1temp.prototype = {
 
     // retrieve a w1temp icon image
     _getIconImage: function(temp) {
+        var file_name;
 	let atemp = Math.round(temp);
-	let file_name = "w1_thermo_%04d".format(atemp);
+	if(atemp >=  0)
+	{
+	    file_name = "w1_thermo_%04d".format(atemp);
+	}
+	else
+	{
+	    // alas, format doesn't for -ve values ....
+	    atemp=Math.abs(atemp);
+            file_name = "w1_thermo_-%03d".format(atemp);	 
+        }
 	return file_name;
     },
 
@@ -228,6 +238,7 @@ w1temp.prototype = {
 	    here._w1tempInfo.text = d + "\u2103";
 	    here._w1tempIcon.set_tooltip_text(txt);
 	    here._w1tempIcon.icon_name =  here._getIconImage(d);
+//	    here._log_msg("\nIco "+ here._w1tempIcon.icon_name );
         });
     },
 

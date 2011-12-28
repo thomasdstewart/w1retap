@@ -48,7 +48,7 @@ static sqlite3 * w1_opendb(char *dbname)
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
-    char *sql = "select distinct * from w1sensors";
+    char *sql = "select * from w1sensors order by device";
         //device,type,abbrv1,name1,units1,abbrv2,name2,units2
     sqlite3 *db;
     char *err;
