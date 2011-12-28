@@ -45,7 +45,7 @@ static PGconn * w1_opendb(char *params)
 #define VALTPQRY "SELECT format_type(a.atttypid, a.atttypmod)" \
     " FROM pg_class c, pg_attribute a WHERE c.relname = 'readings'" \
     " AND a.attname = 'value' AND a.attrelid = c.oid"
-#define SENSQRY "select distinct * from w1sensors"
+#define SENSQRY "select * from w1sensors order by device"
 #define RATEQRY "select name,value,rmin,rmax from ratelimit"
 
 static char * valtype;

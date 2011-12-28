@@ -1,5 +1,5 @@
-SUBDIRS = $(USE_SQLITE) $(USE_MYSQL) $(USE_PGSQL) $(USE_ODBC) libusblinux300
-DIST_SUBDIRS = sqlite mysql pgsql odbc libusblinux300
+SUBDIRS = $(USE_SQLITE) $(USE_MYSQL) $(USE_PGSQL) $(USE_ODBC) $(USE_MONGO) libusblinux300
+DIST_SUBDIRS = sqlite mysql pgsql odbc libusblinux300 mongo
 EXTRA_DIST = w1retap.h sensors.sql
 
 bin_PROGRAMS=w1retap

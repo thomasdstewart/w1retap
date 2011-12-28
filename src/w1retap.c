@@ -297,9 +297,10 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             int j;
             
-            fprintf(stderr, "%s %s (%ds)\n",
-                    w1->devs[i].serial, w1->devs[i].devtype, w1->devs[i].intvl);
-
+            fprintf(stderr, "%s %s (%ds)%s\n",
+                    w1->devs[i].serial, w1->devs[i].devtype, w1->devs[i].intvl,
+                    (w1->devs[i].stype == W1_INVALID) ? " !" : "");
+            
             if(w1->devs[i].coupler)
             {
 	        char *branch = (w1->devs[i].coupler->branch == COUPLER_AUX_ON) ? "aux" : "main";

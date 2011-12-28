@@ -28,6 +28,9 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Define to 1 if you have the `mongoc' library (-lmongoc). */
+#undef HAVE_LIBMONGOC
+
 /* Define to 1 if you have the `mysqlclient' library (-lmysqlclient). */
 #undef HAVE_LIBMYSQLCLIENT
 
@@ -55,6 +58,9 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
+
+/* Define to 1 if you have the <mongoc/mongo.h> header file. */
+#undef HAVE_MONGOC_MONGO_H
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
