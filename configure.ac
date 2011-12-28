@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.3.9,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.4.0,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -22,9 +22,12 @@ AC_ARG_WITH(mysql, AC_HELP_STRING([--without-mysql], [Don't build for MySQL]))
 AC_ARG_WITH(postgres, AC_HELP_STRING([--without-postgres], [Don't build for PostgreSQL]))
 AC_ARG_WITH(sqlite, AC_HELP_STRING([--without-sqlite], [Don't build for SQLite]))
 AC_ARG_WITH(odbc, AC_HELP_STRING([--without-odbc], [Don't build for ODBC]))
+AC_ARG_WITH(mongo, AC_HELP_STRING([--without-mongo], [Don't build for Mongodb]))
 AC_ARG_WITH(libxml, AC_HELP_STRING([--without-libxml], [Don't build for libXML]))
 
 # Checks for libraries.
+
+AC_CHECK_LIB([mongoc], [mongo_connect])
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
 # But don't set fscking LIBS ....
 LIBS= 
@@ -34,8 +37,8 @@ AC_CHECK_LIB([rt], [clock_nanosleep])
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h ])
-AC_CHECK_HEADERS(sql.h)
+CPPFLAGS="$CPPFLAGS -DMONGO_HAVE_STDINT=1"
+AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h sql.h mongoc/mongo.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -58,6 +61,7 @@ AC_CHECK_FUNCS([alarm atexit gettimeofday memset sqrt stpcpy strcasecmp strchr s
 
 USE_SQLITE=
 USE_ODBC=
+USE_MONGO=
 USE_MYSQL=
 USE_PGSQLE=
 USE_APPLET=
@@ -77,6 +81,14 @@ if test "$with_sqlite" != "no" ; then
  USE_SQLITE=sqlite
 fi
 
+if test "$ac_cv_header_mongo_h" = "no" -o "$ac_cv_lib_mongoc_mongo_connect" = "no" ; then
+ with_mongo="no"
+fi
+
+if test "$with_mongo" != "no"; then
+ USE_MONGO=mongo
+fi
+
 if test "$ac_cv_header_sql_h" = "no" -o "$ac_cv_lib_odbc_SQLAllocHandle" = "no" ; then
  with_odbc="no"
 fi
@@ -84,6 +96,7 @@ fi
 if test "$with_odbc" != "no"; then
  USE_ODBC=odbc
 fi
+
 
 if test "$with_libxml" = "no" ; then
  : #AC_MSG_RESULT([not checking for libXML]) 
@@ -97,7 +110,6 @@ AC_CHECK_LIB([xml2],[xmlNewTextWriterMemory])
 AC_SUBST([XML2_CFLAGS])
 AC_SUBST([XML2_LIBS]) 
 fi
-
 
 AC_PATH_PROG(MYSQL_CONFIG, mysql_config, no)
 if test "$MYSQL_CONFIG" = "no" -o  "$with_mysql" = "no" ; then
@@ -153,6 +165,7 @@ AC_SUBST(PGSQL_CFLAGS)
 
 AC_SUBST(USE_SQLITE)
 AC_SUBST(USE_ODBC)
+AC_SUBST(USE_MONGO)
 AC_SUBST(USE_MYSQL)
 AC_SUBST(USE_PGSQL)
 AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
@@ -184,6 +197,7 @@ src/sqlite/Makefile
 src/mysql/Makefile
 src/pgsql/Makefile
 src/odbc/Makefile
+src/mongo/Makefile
 )
 
 echo
@@ -191,6 +205,7 @@ echo "Configuration:"
 if test -n "$USE_APPLET"; then echo ' * Gnome applet' ; fi
 if test -n "$USE_MYSQL"; then echo ' * MySQL plugin' ; fi
 if test -n "$USE_ODBC"; then echo ' * ODBC plugin' ; fi
+if test -n "$USE_MONGO"; then echo ' * Mongodb plugin' ; fi
 if test -n "$USE_PGSQL"; then echo ' * PostgreSQL plugin' ; fi
 if test -n "$USE_SQLITE"; then echo ' * SQLite plugin' ; fi
 echo

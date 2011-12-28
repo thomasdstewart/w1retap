@@ -95,7 +95,7 @@ static MYSQL * w1_opendb(char *params)
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
     w1_device_t * devs = NULL;
-    char *sql = "select distinct * from w1sensors";
+    char *sql = "select * from w1sensors order by device";
     MYSQL *conn;
     MYSQL_RES *res;
     MYSQL_ROW row;

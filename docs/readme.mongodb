@@ -1,0 +1,103 @@
+Overview
+~~~~~~~~
+
+From w1retap 1.4.0, mongodb (<http://www.mongodb.org/> a 'NOSQL'
+database) is available as a storage option. This document records what
+is necessary in order to use mongodb.
+
+* It is recommended to have the mongo server on a 64 bit computer,
+  especially if the database is large. This is a mongo feature.
+
+The implementation of mongodb largely follows the data structures (in
+an unstructured way :) defined for an SQL RDBMS. In particular, the
+w1sensors and ratelimit collections use exactly the same field names
+as the eponymous SQL tables / columns, e.g.
+
+{ "device" : "1D4A1B0B000000E1", "type" : "DS2423", "abbrv1" : "RGC1", 
+  "name1" : "Counter1", "units1" : "tips", "abbrv2" : "RGC0", 
+  "name2" : "Counter0", "units2" : "tips", "params" : " 16218 17475", 
+  "interval" : null }
+
+{ "device" : "265066B5000000D2", "type" : "HB-BARO", "abbrv1" : "OPRS", 
+  "name1" : "Pressure", "units1" : "hPa", "abbrv2" : null, "name2" : null, 
+  "units2" : null, "params" : "22.4077 900.3", "interval" : null }
+
+{ "name" : "OTMP0", "value" : 2.5, "rmin" : null, "rmax" : null }
+
+w1retap will write to a 'readings' collection, and optionally to a
+'replog' collection.  You don't need to define these, as they will
+magically exist when needed.
+
+The default is that the mongo database is called 'wx'. This can be
+changed in the configuration.
+
+The data is written to the collection 'readings'. Unlike the SQL RDBMS,
+where there is one row per sensor, the mongo driver creates one
+document per time-slice:
+
+> db.readings.find().sort({'date': -1}).limit(1)
+{ "_id" : ObjectId("4efa3af9cd29cc32f1000005"), "RGC1" : 16219, 
+  "CFRAME1" : 7.375, "OTMP2" : 9.1875, "OTMP1" : 19.84375, 
+  "OTMP0" : 7.25, "SOLAR" : 0, "STMP1" : 9.6875, "OPRS" : 1028.920166, 
+  "GHT" : 7.75, "RGC0" : 22506, "OHUM" : 85.436615, 
+  "date" : ISODate("2011-12-27T21:38:00Z") }
+
+This may make analysis easier. 
+
+w1retap does NOT create any indices, it is advised to at least create
+an index on the date field on the readings collection:
+
+> db.readings.ensureIndex({date:1})
+
+Installing
+~~~~~~~~~~
+
+It is necessary to have the mongo C API (mongoc) installed. On
+Archlinux, this is available in the repositories (aur/mongoc). On
+other platforms, you may need to install it yourself, perhaps from
+<https://github.com/mongodb/mongo-c-driver>. In this case, it is
+necessary to install the header files to /usr/include/mongoc and the
+lib*.so files to /usr/lib (or somewhere on the library search path).
+
+Configuration
+~~~~~~~~~~~~~
+
+For a single database (not a replica set), the configuration is simple
+(in ~/.config/w1retap/rc):
+
+init = libw1mongo.so=host=localhost
+log = libw1mongo.so=host=mongo-host dbname=sensors port=12345
+
+The first example defaults to dbname=wx. If not given as port=NNNNN,
+the port defaults to the mongo default (27017).
+
+For a replica set, it is necessary to define the replica set name, and
+more of more seed hosts (and optionally, the port if not 27017).
+
+e.g.
+
+log = libw1mongo.so=replica=wxset,piglet,tigger/30000,woozle/30001 dbname=wxs
+
+defines a replica set called wxset, with instances on piglet (default
+port), tigger port 30000 and woozle port 30001. The database name is
+wxs.
+
+Example usage
+~~~~~~~~~~~~~
+
+contrib/mongos contains the equivalent ruby scripts for the sample web site
+page builder.
+
+Notes
+~~~~~
+
+Currently the mongoc API is IPv4 only (and you should also define
+replica sets in the mongo shell with IP addresses vice host names or
+the C API will fail). A set of patches has been submitted to address
+this (and can be found here as mongo-c-ipv6.dif). Note that if you're
+not using replica sets, you can define the w1retap server hosts as
+host names, and w1retap will resolve the IPv4 addresses (see also in
+mongo/w1mongo.c how to avoid doing this if you have a patched mongoc).
+
+-jh Dec 2011
+
