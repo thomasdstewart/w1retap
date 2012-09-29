@@ -1,0 +1,5 @@
+SUBDIRS = src 
+EXTRA_DIST = m4 src
+
+ACLOCAL_AMFLAGS = -I m4
+

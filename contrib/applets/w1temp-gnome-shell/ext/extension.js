@@ -65,26 +65,66 @@ w1temp.prototype = {
     _logme: null,
     _settings: null,
     _key: null,
-    _nm_state:  NM_state.UNKNOWN,
+    _nm_state: NM_state.NM_STATE_CONNECTED_GLOBAL,
     _w1_state: W1_state.WAITING,
     _tid: 0,
     _session: null,
     _message: null,
     _logfile: null,
+    _use_nm: true,
+    _mtxt: null,
+
+    _mrefresh: function() {
+	let here=this;
+
+        here._log_msg("Refresh "+ here._nm_state);
+	if (here._tid > 0)
+        {
+            Mainloop.source_remove(here._tid);
+            here._tid = 0;
+        }
+        if(here._w1_state == W1_state.FETCHING)
+        {
+	    here._session.cancel_message(here._message, 503);
+            here._w1_state = W1_state.WAITING;
+	}
+        else if (here._nm_state == NM_state.NM_STATE_CONNECTED_GLOBAL)
+        {
+	    here._getW1tempInfo();
+        }
+    },
+
+    _mload: function() {
+	let here=this;
+	Util.spawn(["xdg-open", here._burl]);
+    },
+
+    _addmopts: function() {
+	let here=this;
+	here.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        let item = new PopupMenu.PopupMenuItem("Refresh");
+        item.connect('activate', function () { here._mrefresh();});
+        here.menu.addMenuItem(item);
+	item = new PopupMenu.PopupMenuItem("Load in browser ...");
+        item.connect('activate', function () { here._mload();});
+        here.menu.addMenuItem(item);
+    },
 
     _init: function() {
 	this._getsettings();
-	this._nm_init();
+	if (this._use_nm == true)
+	{
+	    this._nm_init();
+	}
 
-	this._getlog();
+       	this._getlog();
 	this._log_msg("Started");
 
 	this._w1tempIcon = new St.Icon({
 	    icon_type: St.IconType.FULLCOLOR,
             icon_name: 'view-refresh-symbolic',
-            style_class: 'w1temp-status-icon',
-	    has_tooltip: true,
-            tooltip_text: 'w1 temp'});
+            style_class: 'w1temp-status-icon'
+            });
 	
         this._w1tempInfo = new St.Label({ 
 	text: _('...'),
@@ -96,44 +136,13 @@ w1temp.prototype = {
         topBox.add_actor(this._w1tempInfo);
         this.actor.add_actor(topBox);
 	
-        let children = Main.panel._rightBox.get_children();
-        Main.panel._rightBox.insert_actor(this.actor, children.length-1);
-
 	if(this._nm_state == NM_state.NM_STATE_CONNECTED_GLOBAL )
 	{
 	    this._getW1tempInfo();
 	}
 
         Main.panel._menus.addMenu(this.menu);
-	this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-        let item = new PopupMenu.PopupMenuItem("Refesh");
-
-	let here=this;
-        item.connect('activate', function() {
-	    if (here._tid > 0)
-            {
-                Mainloop.source_remove(here._tid);
-                here._tid = 0;
-            }
-            if(here._w1_state == W1_state.FETCHING)
-            {
-		here._session.cancel_message(here._message, 503);
-                here._w1_state = W1_state.WAITING;
-	
-            }
-            else if (here._nm_state == NM_state.NM_STATE_CONNECTED_GLOBAL)
-            {
-		here._getW1tempInfo();
-            }
-        });
-        this.menu.addMenuItem(item);
-
-	item = new PopupMenu.PopupMenuItem("Load in browser");
-        item.connect('activate', function() {
-	    Util.spawn(["xdg-open", here._burl]);
-        });
-        this.menu.addMenuItem(item);
+	this._addmopts();
     },
 
     _getlog: function(){
@@ -163,7 +172,7 @@ w1temp.prototype = {
 	let here=this;
 	if(this._settings == null)
 	{
-	    this._settings = new Gio.Settings({ schema: 'org.w1retap.w1temp' });
+	    this._settings = new Gio.Settings({ schema: 'org.gnome.shell.extensions.w1retap' });
 	    this._settings_id = this._settings.connect ('changed', function() { 
 		here._getsettings(); } );
 	}
@@ -173,11 +182,13 @@ w1temp.prototype = {
 	this._burl = this._settings.get_string("browse-url");
 	this._delay = this._settings.get_int("delay");
 	this._logme = this._settings.get_boolean ("log-errors");
+	this._use_nm = this._settings.get_boolean ("use-nm");
     },
 
     // retrieve the w1temp data 
     _loadw1JSON: function(url, callback) {
 	let here = this;
+        here._log_msg("Getting  "+ url );
         here._session = new Soup.SessionAsync();
         here._message = Soup.Message.new('GET', url);
 	here._w1_state = W1_state.FETCHING;
@@ -189,6 +200,8 @@ w1temp.prototype = {
 		callback.call(here, jObj); 
 
 	    }
+
+	    here._log_msg("Status now "+ here._nm_state);
 	    if(here._nm_state == NM_state.NM_STATE_CONNECTED_GLOBAL )
 	    {
 		here._tid = Mainloop.timeout_add_seconds(here._delay, function() {
@@ -204,13 +217,12 @@ w1temp.prototype = {
 	let atemp = Math.round(temp);
 	if(atemp >=  0)
 	{
-	    file_name = "w1_thermo_%04d".format(atemp);
+	   file_name = "w1_thermo_%04d".format(atemp);
 	}
 	else
 	{
-	    // alas, format doesn't for -ve values ....
-	    atemp=Math.abs(atemp);
-            file_name = "w1_thermo_-%03d".format(atemp);	 
+	   atemp=Math.abs(atemp);
+           file_name = "w1_thermo_-%03d".format(atemp);	 
         }
 	return file_name;
     },
@@ -221,31 +233,53 @@ w1temp.prototype = {
 	    here._w1_state = W1_state.WAITING;
             here._w1data = w1data;
 	    let d = 0;
-	    let txt = "";
+	    var txt = "";
 	    for(var i =0; i < this._w1data.length; i++)
 	    {
 		let wx = this._w1data[i];
-		if (i != 0)
-		{
-		    txt += "\n";
-		}
-		txt = txt + wx.name+": "+wx.value+" "+wx.units;
+		if (i > 0) { txt += "\n"};
+		txt += wx.name+": "+wx.value+" "+wx.units;
 		if(wx.name.toLowerCase() == here._key)
 		{
 		    d = wx.value;
 		}
 	    }
 	    here._w1tempInfo.text = d + "\u2103";
-	    here._w1tempIcon.set_tooltip_text(txt);
 	    here._w1tempIcon.icon_name =  here._getIconImage(d);
-//	    here._log_msg("\nIco "+ here._w1tempIcon.icon_name );
+            here._log_msg(">> "+ txt);
+
+	    if(here._mtxt != null)
+	    {
+		here._mtxt.destroy();
+	    }
+            here.menu.removeAll();
+	    here.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+	    here._mtxt = new St.Label({ text: txt, style_class: 'w1temp-menu-text'});
+	    here.menu.addActor(here._mtxt);
+	    here._addmopts();
         });
+    },
+
+    _kill_all: function() {
+	let here=this;
+	if(here._nm_state == NM_state.NM_STATE_CONNECTED_GLOBAL )
+	{
+	    if(here._w1_state == W1_state.FETCHING)
+	    {
+		here._session.cancel_message(here._message, 503);
+	    }
+	}
+	if (here._tid > 0)
+	{
+	    Mainloop.source_remove(here._tid);
+	}
+	this._dbus.destroy();
     },
 
     _nm_init: function() {
 	let here=this;
-	this._dbus = new NMProxy(DBus.system, NM_DBUS_NAME, NM_DBUS_PATH);
-	this._dbus.connect('StateChanged', function(dbus,value) {
+	here._dbus = new NMProxy(DBus.system, NM_DBUS_NAME, NM_DBUS_PATH);
+	here._dbus.connect('StateChanged', function(dbus,value) {
 	    here._log_msg("NM state changed from " + here._nm_state + " to " + value);
 	    here._nm_state = value;
 	    if (here._tid > 0)
@@ -271,6 +305,7 @@ w1temp.prototype = {
 	    else
 	    {
 		here._nm_state = value;
+		here._log_msg("NM initial " + value);
 		if(here._nm_state == NM_state.NM_STATE_CONNECTED_GLOBAL )
 		{
 		    here._getW1tempInfo();
@@ -291,5 +326,6 @@ function enable() {
 }
 
 function disable() {
+    w1._kill_all();
     w1.destroy();
 }

@@ -30,25 +30,59 @@
 #include "libpq-fe.h"
 #include "w1retap.h"
 
+#define VALTPQRY "SELECT format_type(a.atttypid, a.atttypmod) FROM pg_class c, pg_attribute a WHERE c.relname = 'readings' AND a.attrelid = c.oid and a.attname in ('date','wxdata','value')"
+
+#define SENSQRY "select * from w1sensors order by device"
+#define RATEQRY "select name,value,rmin,rmax from ratelimit"
+
+static short json = 0;
+static short tstamp = 0;
+
 static PGconn * w1_opendb(char *params)
 {
     PGconn *mydb = NULL;
+    PGresult *res;
     mydb = PQconnectdb(params);
+
     if (PQstatus(mydb) != CONNECTION_OK)
     {
         PQfinish(mydb);
         mydb = NULL;
     }
+    else
+    {
+        res = PQexec(mydb,VALTPQRY);
+        if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
+        {
+            char *s = NULL;
+            int nn = PQntuples(res);
+            if (nn > 0)
+            {
+                int i;
+                for(i = 0; i < nn; i++)
+                {
+                    s = PQgetvalue(res, i, 0);
+                    if(s && *s)
+                    {
+                        if ((0 == strncmp(s,"json", sizeof("json")-1))
+                            || (0 == strncmp(s,"text", sizeof("text")-1)))
+                        {
+                            json = 1;
+                        } else if (0 == strncmp(s,"timestamp", sizeof("timestamp")-1))
+                        {
+                            tstamp = 1;
+                        }
+                    }
+                }
+            }
+        }
+#ifdef TESTBIN
+        fprintf(stderr,"json %d, tstamp %d\n", json, tstamp);
+#endif
+        if (res) PQclear(res);
+    }
     return mydb;
 }
-
-#define VALTPQRY "SELECT format_type(a.atttypid, a.atttypmod)" \
-    " FROM pg_class c, pg_attribute a WHERE c.relname = 'readings'" \
-    " AND a.attname = 'value' AND a.attrelid = c.oid"
-#define SENSQRY "select * from w1sensors order by device"
-#define RATEQRY "select name,value,rmin,rmax from ratelimit"
-
-static char * valtype;
 
 void  w1_init (w1_devlist_t *w1, char *dbnam)
 {
@@ -59,6 +93,8 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     int n = 0, ni = 0;
     
     idb = w1_opendb(dbnam);
+    if(idb)
+    {
     res = PQexec(idb, SENSQRY);
 
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
@@ -119,23 +155,6 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     w1->devs=devs;
     if(res) PQclear(res);
 
-    res = PQexec(idb,VALTPQRY);
-    if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
-    {
-        char *s;
-        s = PQgetvalue(res, 0, 0);
-        if(s && *s)
-        {
-            if(valtype)
-            {
-                free(valtype);
-            }
-            valtype = strdup(s);
-        }
-    }
-
-    if (res) PQclear(res);
-    
     res = PQexec(idb, RATEQRY);
     if (res && PQresultStatus(res) == PGRES_TUPLES_OK)
     {
@@ -188,6 +207,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
     }
     if (res) PQclear(res);
     PQfinish(idb);
+    }
 }
 
 static PGconn *db;
@@ -243,7 +263,7 @@ static void db_status(char *dbnam)
         retry = 0;
     }
 
-    if ((retry % 10) == 1)
+    if (db && (retry % 10) == 1)
     {
         db_syslog(PQerrorMessage(db));
     }
@@ -265,12 +285,13 @@ void w1_cleanup(void)
 void handle_result(PGresult *res)
 {
     if(res){
-#if defined(TESTBIN)
-        puts(PQresultErrorMessage(res));
-#endif
         ExecStatusType status = PQresultStatus(res);
         if((status == PGRES_NONFATAL_ERROR) || (status == PGRES_FATAL_ERROR)){
+#if defined(TESTBIN)
+            puts(PQresultErrorMessage(res));
+#else
             syslog(LOG_ERR, "psql: %s", PQresultErrorMessage(res));
+#endif
         }
         PQclear(res);
     }
@@ -288,80 +309,117 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
     }
     
     db_status(dbnam);
-    
-    if(stmt == NULL)
+    if(db)
     {
-        stmt = "insrt";
-
-#if PGV == 7
-#define STMTSTR "prepare insrt(%s,text,%s) as insert into readings (date,name,value) values ($1,$2,$3)"
-
-#warning "Pg Version 7"
-        char stmtstr[256];
-        char *tstr = (w1->timestamp) ? "timestamp with time zone" : "integer";
-        snprintf(stmtstr, sizeof(stmtsrr),STMTSTR,tstr,valtype);
-        res = PQexec(db, stmtstr);
-#elif PGV >= 8
-        res = PQprepare(db, stmt,
-                        "insert into readings (date,name,value) values ($1,$2,$3)", 0, NULL);
-#else
-#error "Bad PG version"        
-#endif
-        if(res) PQclear(res);        
-    }
-    
-    res = PQexec(db,"begin");
-    handle_result(res);
-    for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++) // for each device
-    {
-        if(devs->init) // if the device is initialised
+        if(stmt == NULL)
         {
-            int j;
-            int n;
-            for (j = 0; j < devs->ns; j++) // for each sensor
+            stmt = "insrt";
+
+            if(json == 1)
             {
-                if(devs->s[j].valid) // if there's a valid reading
-                {
-                    char *rval = NULL;
-                    char tval[64];
-                    
-                    if(devs->stype == W1_COUNTER || devs->stype == W1_WINDVANE)
-                        n=asprintf(&rval, "%.0f", devs->s[j].value); // do not include any decimal places for integer values
-                    else
-                        n=asprintf(&rval, "%f", devs->s[j].value);   // include default 6 decimal places
-
-                    if(w1->timestamp){
-                        struct tm *tm;
-                        tm = localtime(&w1->logtime);
-                        strftime(tval, sizeof(tval), "%F %T%z", tm);
-                    }else{
-                        snprintf(tval, sizeof(tval), "%ld", w1->logtime);
-                    }
-
-                    if(devs->s[j].abbrv[0] == '>'){
-                        // store sensor value in a separate named table
-                        char *query;
-                        n=asprintf(&query, "INSERT INTO %s (date, value) VALUES ('%s', '%s')", &devs->s[j].abbrv[1], tval, rval);
-                        res = PQexec(db, query);
-                        handle_result(res);
-                        free(query);
-                    }else{
-                        // store sensor value in the 'readings' table
-                        const char * pvals[3];
-                    pvals[0] = tval;
-                    pvals[1] = devs->s[j].abbrv;
-                    pvals[2] = rval;
-                    res = PQexecPrepared(db, stmt, 3, pvals, NULL, NULL, 0);
-                    handle_result(res);
-                    }
-                    free(rval);
-                }
-                n=n; // just so we compile with 4.5 and 4.6, alas
+                res = PQprepare(db, stmt,
+                                "insert into readings (date,wxdata) values ($1,$2)", 0, NULL);
             }
+            else
+            {
+                res = PQprepare(db, stmt,
+                                "insert into readings (date,name,value) values ($1,$2,$3)", 0, NULL);
+            }
+            if(res) PQclear(res);        
         }
+        res = PQexec(db,"begin");
+        handle_result(res);
+        char *jstr = NULL;
+        char *jptr = NULL;
+        if(json)
+        {
+            jstr = jptr = malloc(4096);
+            jptr = stpcpy(jptr, "{");
+        }
+
+        char tval[64];                
+        if(tstamp)
+        {
+            struct tm *tm;
+            tm = (w1->force_utc) ? gmtime(&w1->logtime) : localtime(&w1->logtime);
+            strftime(tval, sizeof(tval), "%F %T%z", tm);
+        }
+        else
+        {
+            snprintf(tval, sizeof(tval), "%ld", w1->logtime);
+        }
+
+        int nlog = 0;
+        for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++) // for each device
+        {
+            if(devs->init) // if the device is initialised
+            {
+                int j;
+                int n;
+                for (j = 0; j < devs->ns; j++) // for each sensor
+                {
+                    if(devs->s[j].valid) // if there's a valid reading
+                    {
+                        nlog++;
+                        char *rval = NULL;
+                        if(devs->stype == W1_COUNTER || devs->stype == W1_WINDVANE)
+                            n=asprintf(&rval, "%.0f", devs->s[j].value); // do not include any decimal places for integer values
+                        else
+                            n=asprintf(&rval, "%f", devs->s[j].value);   // include default 6 decimal places
+                        
+                        if(json)
+                        {
+                            n = sprintf(jptr,"\"%s\":%s,", devs->s[j].abbrv, rval);
+                            jptr += n;
+                        }
+                        else
+                        {
+                            if(devs->s[j].abbrv[0] == '>')
+                            {
+                                // store sensor value in a separate named table
+                                char *query;
+                                n=asprintf(&query, "INSERT INTO %s (date, value) VALUES ('%s', '%s')", &devs->s[j].abbrv[1], tval, rval);
+                                res = PQexec(db, query);
+                                handle_result(res);
+                                free(query);
+                            }
+                            else
+                            {
+                                // store sensor value in the 'readings' table
+                                const char * pvals[3];
+                                pvals[0] = tval;
+                                pvals[1] = devs->s[j].abbrv;
+                                pvals[2] = rval;
+                                res = PQexecPrepared(db, stmt, 3, pvals, NULL, NULL, 0);
+                                handle_result(res);
+                            }
+                        }
+                        
+                        free(rval);
+                    }
+                }
+            }
+
+        }
+        if(json)
+        {
+            if(nlog)
+            {
+                strcpy(jptr-1,"}");
+#if defined(TESTBIN)
+                fprintf(stderr, "%s\n", jstr);
+#endif
+                const char * pvals[2];
+                pvals[0] = tval;
+                pvals[1] = jstr;
+                res = PQexecPrepared(db, stmt, 2, pvals, NULL, NULL, 0);
+                handle_result(res);
+            }
+            free(jstr);
+        }
+        res = PQexec(db,"commit");
+        handle_result(res);
     }
-    res = PQexec(db,"commit");
-    handle_result(res);
 }
 
 void w1_report(w1_devlist_t *w1, char *dbnam)
@@ -371,20 +429,15 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
     if(w1->lastmsg)
     {
         db_status(dbnam);
+        if(db)
+        {
+            
         if(stml == NULL)
         {
             stml = "insrl";
 
-#if PGV == 7
-#warning "Pg Version 7"
-            res = PQexec(db, "prepare insrl(timestamp with time zone,text) as "
-                   "insert into replog values ($1,$2)");
-#elif PGV >= 8
             res = PQprepare(db, stml,
                             "insert into replog(date,message) values ($1,$2)", 0, NULL);
-#else
-#error "Bad PG version"        
-#endif
             if(res) PQclear(res);                        
         }
 
@@ -393,7 +446,7 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
         {
             const char * pvals[2];
             char tstr[64];
-            logtimes(w1->logtime, tstr);
+            logtimes(w1, w1->logtime, tstr);
             pvals[0] = tstr;
             pvals[1] = w1->lastmsg;
             res = PQexecPrepared(db, stml, 2, pvals, NULL, NULL, 0);
@@ -402,6 +455,8 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
         res = PQexec(db,"commit");
         if(res) PQclear(res);        
     }
+    }
+    
 }
 
 #if defined(TESTBIN)
@@ -416,14 +471,61 @@ int main(int argc, char **argv)
     }
 
     w1=&w;
+
+    char *p=NULL;
+    if((p = getenv("W1RCFILE")))
+    {
+        w1->rcfile = strdup(p);
+    }
+    read_config(w1);
+
     w1_init(w1, auth);
-    w1->logtime = 0;
+
+    for(int n = 0; n < w1->numdev; n++)
+    {
+        fprintf(stderr, "%s %s\n",
+                w1->devs[n].serial, w1->devs[n].devtype);
+        fprintf(stderr, "\t0: %s %s\n",
+                w1->devs[n].s[0].abbrv, w1->devs[n].s[0].name);
+        fprintf(stderr, "\t1: %s %s\n",
+                w1->devs[n].s[1].abbrv, w1->devs[n].s[1].name);
+    }
+
+
+    w1->logtime = time(NULL);
     w1->timestamp = 1;
-    w1->devs[0].s[0].valid = 1;
-    w1->devs[0].init = 1;
-    w1->devs[0].s[0].value = 22.22;
-    w1->devs[0].s[0].abbrv = "TEST";
-    w1_logger(w1, auth);    
+    if(w1->numdev > 0)
+    {
+        w1->logtime = time(0);
+        w1->devs[0].init = 1;
+        w1->devs[0].s[0].valid = 1;
+        w1->devs[0].s[0].value = 22.22;
+
+        w1->devs[1].init = 1;
+        w1->devs[1].s[0].valid = 1;
+        w1->devs[1].s[0].value = 69;
+        w1->devs[1].s[1].valid = 99.0;
+        w1->devs[1].s[1].value = 18.88;
+
+        w1->devs[2].init = 1;
+        w1->devs[2].s[0].valid = 1;
+        w1->devs[2].s[0].value = 1001.45;
+        w1_logger(w1, argv[1]);
+        
+        sleep(5);
+        w1->logtime = time(0);
+        w1->devs[0].init = 1;
+        w1->devs[0].s[0].valid = 1;
+        w1->devs[0].s[0].value = 25.77;
+        
+        w1->devs[1].init = 1;
+        w1->devs[1].s[0].valid = 1;
+        w1->devs[1].s[0].value = 66;
+        w1->devs[1].s[1].valid = 1;
+        w1->devs[1].s[1].value = 12.565;
+        w1->devs[2].init = 0;
+    }
+    w1_logger(w1, auth);
     return 0;
 }
 #endif
