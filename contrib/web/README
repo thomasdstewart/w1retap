@@ -29,8 +29,6 @@ CREATE TABLE station
         location text,
         software text,
         url text,
-        wu_user text,
-        wu_pass text,
         rfact real
 );
 
@@ -50,10 +48,6 @@ software: The name of the weather station software ('w1retap').
 
 url:	  The URL of a site providing information about your site.
 
-wu_user:  The Wunderground.com user name.
-
-wu_pass:  The Wunderground.com password name.
-
 rfact:	  The factor that converts one tip of the rain sensor bucket
 	  to inches. For the standard LaCrosse guage with a TAI8540,
 	  the value is 0.0204" per tip. The author placed a funnel of
@@ -64,10 +58,11 @@ e.g.:
 
  INSERT INTO station VALUES ('Jonathan & Daria''s Weather Station',
    50.91532, -1.53036, 19, 'Netley Marsh', 'w1retap',
-   'http://www.daria.co.uk/wx/', 'myusername', 'sososecret', 0.0105);
+   'http://www.daria.co.uk/wx/', 0.0105);
 
 
-These scripts are licenced under the MIT Licence.
+These scripts are licenced under the MIT Licence. They may be
+incomplete. Ask if you think there's something else you need.
 
 The Ruby scripts require some modules that are not part of a standard
 Ruby installation; if not provided by your OS distribution: 

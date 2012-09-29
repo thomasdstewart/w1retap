@@ -335,10 +335,10 @@ void w1_freeup(w1_devlist_t * w1)
     w1->devs = NULL;
 }
 
-void logtimes(time_t now, char *tbuf)
+void logtimes(w1_devlist_t *w1,time_t now, char *tbuf)
 {
     struct tm *tm;
-    tm = localtime(&now);
+    tm = (w1->force_utc) ? gmtime(&now) : localtime(&now);
     strftime(tbuf, TBUF_SZ, "%FT%T%z", tm);
 }
 
@@ -374,7 +374,7 @@ void w1_tmpfilelog (w1_devlist_t *w1)
         if(n)
         {
             char tbuf[TBUF_SZ];
-            logtimes(w1->logtime, tbuf);
+            logtimes(w1, w1->logtime, tbuf);
             n += sprintf(line+n,"udate=%ld\ndate=%s\n", w1->logtime, tbuf);
             int fd = open(w1->tmpname, O_WRONLY|O_CREAT|O_TRUNC, 0664);
             flock(fd, LOCK_EX);

@@ -32,7 +32,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
-#include <mongoc/mongo.h>
+#include <inttypes.h>
+#include <mongo-client/mongo.h>
 #include "w1retap.h"
 
 typedef struct
@@ -51,58 +52,9 @@ typedef struct
 
 #define MDEF_PORT 27017
 
-/*
- * As mongo C api (alas) requires IPv4 addressing, we could use
- * gethostbyname, but this is a useful example.
- *
- * This code becomes unnecessary once the mongo C api works with host
- * names and IPV6
- */
-
-#define USE_MY_RESOLVER alas
-
-#ifdef USE_MY_RESOLVER
-const char * get_str_host(char *name)
-{
-    const char *res=NULL;
-    static char straddr[INET6_ADDRSTRLEN];
-    struct addrinfo hints, *servinfo, *p;
-    int rv;
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET; // reallyAF_UNSPEC; 
-    hints.ai_socktype = SOCK_STREAM;
-
-    if ((rv = getaddrinfo(name, NULL, &hints, &servinfo)) != 0)
-    {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return NULL;
-    }
-    for(p = servinfo; p != NULL; p = p->ai_next)
-    {
-        void *addr;
-//        if (p->ai_family == AF_INET)
-//        {
-        addr = &(((struct sockaddr_in *)p->ai_addr)->sin_addr);
-//        }
-//        else
-//        {
-//          addr = &(((struct sockaddr_in6 *)p->ai_addr)->sin6_addr);
-//        }
-        res = inet_ntop(p->ai_family, addr, straddr, sizeof straddr);
-        if(res)
-            break;
-    }
-    freeaddrinfo(servinfo);
-    return res;
-}
-#else
-#define get_str_host(v) (v)
-#endif
-
-
 static char *dbname;
-static mongo conn[1];
+static mongo_sync_connection *conn;
+static char mkid=FALSE;
 
 static void mongo_params(char *params, w1repset_t **rset)
 {
@@ -112,7 +64,6 @@ static void mongo_params(char *params, w1repset_t **rset)
     char *host = NULL;
     int port = 0;
     w1repset_t *rs = NULL;
-    const char *addr;
     
     for(s0 = mp; (s1=strsep(&s0, " "));)
     {
@@ -121,8 +72,7 @@ static void mongo_params(char *params, w1repset_t **rset)
         {
             if (strcmp(t,"host") == 0)
             {
-                addr = get_str_host(v);
-                host = (addr) ? strdup(addr) : strdup(v);
+                host = strdup(v);
             }
             else if (strcmp(t,"port") == 0)
             {
@@ -168,8 +118,7 @@ static void mongo_params(char *params, w1repset_t **rset)
                     port = strtol(q, NULL, 0);
                 }
                 rs->hp[nh].port = (port) ? port : MDEF_PORT;
-                addr = get_str_host(s1);
-                rs->hp[nh].host = (addr) ? strdup(addr) : strdup(s1);
+                rs->hp[nh].host = strdup(s1);
             }
         }
         rs->nhosts = nh;
@@ -202,111 +151,115 @@ static void rset_free(w1repset_t *r)
     free(r);
 }
 
-static mongo* w1_opendb(char *params)
+static mongo_sync_connection * w1_opendb(char *params)
 {
-    mongo *pconn = NULL;
-    long status=-1;
     w1repset_t *rset = NULL;
-    
     mongo_params(params, &rset);
+
+#ifdef TESTBIN
+    int i;
+    if (rset->setname)
+        printf("%s\n", rset->setname);
+    for(i = 0; i < rset->nhosts; i++)
+    {
+        printf("%s/%d\n", rset->hp[i].host, rset->hp[i].port);
+    }
+#endif
+
+        /* Really, we don't care about rep sets with this API */
+
     if(rset && rset->nhosts > 0)
     {
         if(rset->setname)
         {
             int i;
-            
-            mongo_replset_init( conn, rset->setname);
-            for(i = 0; i < rset->nhosts; i++)
+            conn = mongo_sync_connect(rset->hp[0].host, rset->hp[0].port, TRUE);
+            mongo_sync_conn_set_auto_reconnect (conn, TRUE);
+            for(i = 1; i < rset->nhosts; i++)
             {
-                mongo_replset_add_seed(conn, rset->hp[i].host,
+                mongo_sync_conn_seed_add (conn, rset->hp[i].host,
                                        rset->hp[i].port);
             }
-            status = mongo_replset_connect( conn );
         }
         else
         {
-            status = mongo_connect( conn, rset->hp[0].host, rset->hp[0].port);
+            conn = mongo_sync_connect(rset->hp[0].host, rset->hp[0].port, TRUE);
         }
         
-        if( status != MONGO_OK )
+        if( conn == NULL )
         {
-            switch ( conn->err )
-            {
-                case MONGO_CONN_SUCCESS:
-                    fputs("connection succeeded\n", stderr);
-                    break;
-                case MONGO_CONN_NO_SOCKET:
-                    fputs("no socket\n", stderr);
-                    break;
-                case MONGO_CONN_FAIL:
-                    fputs( "connection failed\n",stderr);
-                    break;
-                case MONGO_CONN_NOT_MASTER:
-                    fputs("not master\n",stderr);
-                    break;
-                default:
-                    fprintf(stderr, "Mongo error %d\n", conn->err);
-                    break;
-            }
-        }
-        else
-        {
-            pconn = conn;
+            perror("Connection");
+            exit(1);
         }
     }
     rset_free(rset);
-    return pconn;
+    if(mkid == FALSE)
+    {
+        mkid=TRUE;
+        mongo_util_oid_init(0);
+    }
+
+    return conn;
 }
 
 void  w1_init (w1_devlist_t *w1, char *params)
 {
     w1_device_t * devs = NULL;
-    mongo *pconn;
     int nx = 0;
     int nn = 0;
     int ni = 0;
 
-    pconn = w1_opendb(params);
-    if(pconn)
+    if(conn == NULL)
+        conn = w1_opendb(params);
+
+    if(conn)
     {
-        char *device;
-        char *dtype;
-        mongo_cursor cursor[1];
+        gchar *device;
+        gchar *dtype;
         const char * key;
         const char *value;
         char buff[32];
-        double d;
-        long l;
+        gdouble d;
+        gint64 i64;
+        gint32 i32;
         char collection[128];
-        
-        int nr = mongo_count(conn,dbname,"w1sensors",NULL);
-        
+        bson *query;
+
+        int nr =  (int)mongo_sync_cmd_count(conn, dbname,"w1sensors",NULL);
         devs = malloc(sizeof(w1_device_t)*nr);
         memset(devs, 0, sizeof(w1_device_t)*nr);
 
-        bson query[1];        
-        bson_init( query );
-        bson_append_start_object( query, "$query" );
-        bson_append_finish_object( query );
-        bson_append_start_object( query, "$orderby");
-        bson_append_int( query, "device", 1);
-        bson_append_finish_object( query );
-        bson_finish( query );
-
+        bson *nq =bson_new ();
+        bson_finish (nq);
+        query = bson_build_full (BSON_TYPE_DOCUMENT, "$query", TRUE, nq,
+                                 BSON_TYPE_DOCUMENT, "$orderby", TRUE,
+                                 bson_build (BSON_TYPE_INT32, "device", 1,
+                                             BSON_TYPE_NONE),
+                                 BSON_TYPE_NONE);
+        bson_finish (query);
+        
         snprintf(collection, sizeof(collection), "%s.w1sensors", dbname);
-        mongo_cursor_init(cursor, conn, collection);
-        mongo_cursor_set_query(cursor, query);
+        
+        mongo_packet *p;
+        mongo_sync_cursor *cursor;
+        
+        p = mongo_sync_cmd_query (conn, collection, 0, 0, nr, query, NULL);
+        cursor = mongo_sync_cursor_new (conn, collection, p);
 
-        while( mongo_cursor_next(cursor) == MONGO_OK )
+        while (mongo_sync_cursor_next (cursor))
         {
-            bson_iterator it[1];
+            bson *result = mongo_sync_cursor_get_data (cursor);
+            bson_cursor *c;
+            const gchar *ds;
             device = dtype = NULL;
-            if ( bson_find( it, mongo_cursor_bson( cursor ), "device" )) {
-                device = strdup(bson_iterator_string(it));
-            }
-            if ( bson_find( it, mongo_cursor_bson( cursor ), "type" )) {
-                dtype = strdup(bson_iterator_string(it));
-            }
+            c = bson_find (result, "device");
+            bson_cursor_get_string (c, &ds);
+            device=strdup(ds);
+            bson_cursor_free (c);
+            c = bson_find (result, "type");
+            bson_cursor_get_string (c, &ds);
+            bson_cursor_free (c);
+            dtype=strdup(ds);
             if(device && dtype)
             {
                 nn = w1_get_device_index(devs, ni, device, dtype);
@@ -320,29 +273,29 @@ void  w1_init (w1_devlist_t *w1, char *params)
                     nx = nn;
                 }
                 bson_type type;
-                bson_iterator_init( it, &cursor->current);
-                while(bson_iterator_more(it))
+                c= bson_cursor_new(result);
+                while(bson_cursor_next(c))
                 {
-                    type =  bson_iterator_next(it);
-                    key = bson_iterator_key(it);
+                    type =  bson_cursor_type(c);
+                    key = bson_cursor_key(c);
                     value=NULL;
                     switch (type)
                     {
-                        case BSON_STRING:
-                            value =  bson_iterator_string(it);
+                        case BSON_TYPE_STRING:
+                            bson_cursor_get_string(c,&value);
                             break;
-                        case BSON_INT:
-                            l =  bson_iterator_int(it);
-                            snprintf(buff, sizeof(buff), "%ld", l);
+                        case BSON_TYPE_INT32:
+                            bson_cursor_get_int32(c,&i32);
+                            snprintf(buff, sizeof(buff), "%d", i32);
                             value = buff;
                             break;
-                        case BSON_LONG:
-                            l =  bson_iterator_long(it);
-                            snprintf(buff, sizeof(buff), "%ld", l);
+                        case BSON_TYPE_INT64:
+                            bson_cursor_get_int64(c,&i64);
+                            snprintf(buff, sizeof(buff), "%"PRId64, i64);
                             value = buff;
                             break;
-                        case BSON_DOUBLE:
-                            d =bson_iterator_double(it);
+                        case BSON_TYPE_DOUBLE:
+                            bson_cursor_get_double(c,&d);
                             snprintf(buff, sizeof(buff), "%f", d);
                             value = buff;
                             break;
@@ -359,38 +312,60 @@ void  w1_init (w1_devlist_t *w1, char *params)
             }
             free(device);
             free(dtype);
+            bson_cursor_free (c);
+            free(result);
         }
-        mongo_cursor_destroy( cursor );
         w1->numdev = ni;
         w1->devs=devs;
+        mongo_sync_cursor_free (cursor);
+        bson_free(query);
+//        bson_free(nq);
+//        free(p);
+        
+        query=bson_new ();
+        bson_finish (query);
+        fflush(stdout);
+        
+        nr =  (int)mongo_sync_cmd_count(conn, dbname,"ratelimit",NULL);
         snprintf(collection, sizeof(collection), "%s.ratelimit", dbname);
-        mongo_cursor_init(cursor, conn, collection);
-        while (mongo_cursor_next(cursor) == MONGO_OK)
+        p = mongo_sync_cmd_query (conn, collection, 0, 0, nr, query, NULL);
+        cursor = mongo_sync_cursor_new (conn, collection, p);
+        while (mongo_sync_cursor_next (cursor))
         {
-            bson_iterator it[1];
+            bson_cursor *c;
             short flags = 0;
             char *name = NULL;
+            const char *cname;
             double roc=0,rmin=0,rmax=0;
+            bson *result = mongo_sync_cursor_get_data (cursor);
 
-            if (BSON_STRING == bson_find(it, mongo_cursor_bson(cursor), "name"))
+            c = bson_find (result, "name");
+            if (bson_cursor_get_string (c, &cname))
             {
-                name = strdup(bson_iterator_string(it));
+                name = strdup(cname);
             }
-            if (BSON_DOUBLE == bson_find(it, mongo_cursor_bson(cursor), "value" ))
+            bson_cursor_free (c);
+
+            c = bson_find (result, "value");
+            if (bson_cursor_get_double (c, &roc))
             {
                 flags |= W1_ROC;
-                roc =  bson_iterator_double(it);
             }
-            if (BSON_DOUBLE == bson_find(it, mongo_cursor_bson(cursor), "rmin"))
+            bson_cursor_free (c);
+
+            c = bson_find (result, "rmin");
+            if (bson_cursor_get_double (c, &rmin))
             {
                 flags |= W1_RMIN;
-                rmin = bson_iterator_double(it);
             }
-            if (BSON_DOUBLE == bson_find(it, mongo_cursor_bson(cursor), "rmax"))
+            bson_cursor_free (c);
+
+            c = bson_find (result, "rmax");
+            if (bson_cursor_get_double (c, &rmax))
             {
                 flags |= W1_RMAX;
-                rmax = bson_iterator_double(it);
             }
+            bson_cursor_free (c);
 
             if(flags)
             {
@@ -408,8 +383,8 @@ void  w1_init (w1_devlist_t *w1, char *params)
             }
             free(name);
         }
-        mongo_cursor_destroy(cursor);
-        mongo_destroy(pconn);
+        mongo_sync_cursor_free (cursor);
+        bson_free(query);
     }
     else
     {
@@ -417,50 +392,63 @@ void  w1_init (w1_devlist_t *w1, char *params)
     }
 }
 
-static mongo *mconn;
 void w1_cleanup(void)
 {
     free(dbname);
     dbname = NULL;
-    mongo_destroy(conn);
-    mconn = NULL;
+    mongo_sync_disconnect (conn);
+    conn = NULL;
+}
+
+static guint8* w1_id_new(time_t *xnow)
+{
+    static time_t last;
+    time_t now;
+    static unsigned int  seq;
+
+    now = time(xnow);
+    if(now == last)
+    {
+        seq++;
+    }
+    else
+    {
+        seq = 0;
+    }
+    return mongo_util_oid_new(seq);
 }
 
 void w1_logger(w1_devlist_t *w1, char *params)
 {
     int i,nv=0;
     w1_device_t *devs;
-    bson b[1];
+    bson *doc;
     
     if (access("/tmp/.w1retap.lock", F_OK) == 0)
     {
         return;
     }
     
-    if(mconn == NULL)
+    if(conn == NULL)
     {
-        mconn = w1_opendb(params);
+       conn = w1_opendb(params);
     }
 
-    if(mconn)
+    if(conn == NULL)
     {
-        if(mongo_check_connection (mconn) != MONGO_OK)
-        {
-            w1_cleanup();
-            mconn = w1_opendb(params);
-        }
-        
-    }
-    
-    if(mconn == NULL)
-    {
-        syslog(LOG_ERR, "mongo error: %d", conn->err);
+        syslog(LOG_ERR, "mongo conn error");
         return;
     }
     
-    bson_init(b);
-    bson_append_new_oid(b, "_id");
-    bson_append_time_t(b, "date", w1->logtime);
+    doc = bson_new();
+    guint8* id =  w1_id_new(NULL);
+    gint64 ts = w1->logtime*1000ULL;
+#ifdef TESTBIN
+    fprintf(stderr,"ts =  %ld %" PRId64 "\n", w1->logtime, ts);
+#endif
+
+    bson_append_oid(doc,"_id",id);
+    bson_append_utc_datetime(doc, "date", ts);
 
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
@@ -471,39 +459,47 @@ void w1_logger(w1_devlist_t *w1, char *params)
             {
                 if(devs->s[j].valid)
                 {
-                    bson_append_double(b, devs->s[j].abbrv, devs->s[j].value);
+                    bson_append_double(doc, devs->s[j].abbrv, devs->s[j].value);
                     nv++;
                 }
             }
         }
     }
-    bson_finish(b);
+    bson_finish(doc);
     if(nv > 0)
     {
         char collection[128];
         snprintf(collection, sizeof(collection), "%s.readings", dbname);
-        mongo_insert( conn, collection, b );
+#ifdef TESTBIN
+        fprintf(stderr,"coll = %s\n", collection);
+#endif
+        if(!mongo_sync_cmd_insert (conn, collection, doc, NULL))
+        {
+            perror ("mongo_sync_cmd_insert()");
+        }
     }
-    bson_destroy( b );
+    bson_free(doc);
+    free(id);
 }
 
 void w1_report(w1_devlist_t *w1, char *dbnam)
 {
     if(w1->lastmsg)
     {
-         bson b[1];
+         bson *b;
          time_t now;
          char collection[128];
          snprintf(collection, sizeof(collection), "%s.replog", dbname);
-         
-         time(&now);
-         bson_init(b);
-         bson_append_new_oid(b, "_id");
-         bson_append_time_t(b, "date", now);
-         bson_append_string(b, "message", w1->lastmsg);
+         guint8* id =  w1_id_new(&now);
+         gint64 ts = now*1000;
+         b = bson_new();
+         bson_append_oid(b,"_id",id);
+         bson_append_utc_datetime(b, "date", ts);
+         bson_append_string(b, "message", w1->lastmsg, -1);
          bson_finish(b);
-         mongo_insert(conn, collection, b);
-         bson_destroy(b);
+         mongo_sync_cmd_insert (conn, collection, b, NULL);
+         bson_free(b);
+         free(id);
     }
 }
 
@@ -521,6 +517,7 @@ int main(int argc, char **argv)
     }
     
     w1_init(w1, argv[1]);
+    
     for(n = 0; n < w1->numdev; n++)
     {
         fprintf(stderr, "%s %s\n",
@@ -530,7 +527,8 @@ int main(int argc, char **argv)
         fprintf(stderr, "\t1: %s %s\n",
                 w1->devs[n].s[1].abbrv, w1->devs[n].s[1].name);
     }
-    
+
+
     w1->logtime = time(0);
     w1->devs[0].init = 1;
     w1->devs[0].s[0].valid = 1;
@@ -561,5 +559,5 @@ int main(int argc, char **argv)
     w1->devs[2].init = 0;
     w1_logger(w1, argv[1]);
     return 0;
-}
+ }
 #endif

@@ -52,12 +52,16 @@ an index on the date field on the readings collection:
 Installing
 ~~~~~~~~~~
 
-It is necessary to have the mongo C API (mongoc) installed. On
-Archlinux, this is available in the repositories (aur/mongoc). On
-other platforms, you may need to install it yourself, perhaps from
-<https://github.com/mongodb/mongo-c-driver>. In this case, it is
-necessary to install the header files to /usr/include/mongoc and the
-lib*.so files to /usr/lib (or somewhere on the library search path).
+For w1retap 1.4.0, is was necessary to have the mongo C API (mongoc)
+installed. On Archlinux, this is available in the repositories
+(aur/mongoc). On other platforms, you may need to install it yourself,
+perhaps from <https://github.com/mongodb/mongo-c-driver>. In this
+case, it is necessary to install the header files to
+/usr/include/mongoc and the lib*.so files to /usr/lib (or somewhere on
+the library search path).
+
+For versions after 1.4.0, the libmongo-client library is used. 
+<https://github.com/algernon/libmongo-client.git>.
 
 Configuration
 ~~~~~~~~~~~~~
@@ -91,13 +95,8 @@ page builder.
 Notes
 ~~~~~
 
-Currently the mongoc API is IPv4 only (and you should also define
-replica sets in the mongo shell with IP addresses vice host names or
-the C API will fail). A set of patches has been submitted to address
-this (and can be found here as mongo-c-ipv6.dif). Note that if you're
-not using replica sets, you can define the w1retap server hosts as
-host names, and w1retap will resolve the IPv4 addresses (see also in
-mongo/w1mongo.c how to avoid doing this if you have a patched mongoc).
+The hacks for the native mongoc library are no longer necessary with
+libmongo-client.
 
--jh Dec 2011
+-jh Mar 2012
 

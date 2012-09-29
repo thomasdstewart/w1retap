@@ -133,7 +133,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
         return;
     }
     
-    logtimes(w1->logtime, timb);
+    logtimes(w1, w1->logtime, timb);
 
     for(devs=w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {

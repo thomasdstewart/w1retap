@@ -33,6 +33,7 @@ adaptor (aka DS9097U-S09),
 The logging is performed by one or more "plugin" modules, these
 currently include:
 
+	Mongodb
 	Sqlite (version 3)
 	PostgreSQL
 	MySQL
@@ -69,8 +70,5 @@ I'm no BSD expert, and found it necessary to set:
 export ACLOCAL_FLAGS="-I /usr/local/share/aclocal"
 export PATH=$PATH:/usr/local/gnu-autotools/bin/
 export LDFLAGS="-L/usr/local/lib"
-
-In addition, if you want the gnome applet, you need to move the bonobo
-server and pixmaps manually.
 
 Jonathan Hudson, Netley Marsh, England.

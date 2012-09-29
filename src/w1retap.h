@@ -157,12 +157,13 @@ struct w1_devlist
     double *pres_reduction_temp;
     short allow_escape;
     gboolean release_me;
+    gboolean force_utc;
 };
 
 extern void w1_tmpfilelog (w1_devlist_t *);
 extern void w1_freeup(w1_devlist_t *);
 extern void w1_enumdevs(w1_device_t *);
-extern void logtimes(time_t, char *);
+extern void logtimes(w1_devlist_t *, time_t, char *);
 extern char *w1_get_from_home(const char *);
 extern void dll_parse(w1_devlist_t *, int, char *);
 extern void read_config(w1_devlist_t *);

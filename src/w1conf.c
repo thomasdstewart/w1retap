@@ -54,7 +54,13 @@ void read_config(w1_devlist_t *w1)
         {
             char lbuf[512];
             
-            if(1 == sscanf(buf,"log = %512[^\n]", lbuf))
+            if(1 == sscanf(buf,"device = %512[^\n]", lbuf))
+            {
+                w1->iface = g_strdup(lbuf);
+            }
+// Oh what ugly webs we weave ....
+#ifndef TESTBIN
+            else if(1 == sscanf(buf,"log = %512[^\n]", lbuf))
             {
                 dll_parse(w1, 'l', lbuf);
             }
@@ -66,10 +72,7 @@ void read_config(w1_devlist_t *w1)
             {
                 dll_parse(w1, 'r', lbuf);
             }
-            else if(1 == sscanf(buf,"device = %512[^\n]", lbuf))
-            {
-                w1->iface = g_strdup(lbuf);
-            }
+#endif
             else if(1 == sscanf(buf,"pidfile = %512[^\n]", lbuf))
             {
                 w1->pidfile = g_strdup(lbuf);
@@ -83,6 +86,12 @@ void read_config(w1_devlist_t *w1)
             else if(1 == sscanf(buf,"allow_rate_escape = %512[^\n]", lbuf))
             {
                 w1->allow_escape =  (lbuf[0] == 't' || lbuf[0] == 'T' ||
+                                  lbuf[0] == 'y' || lbuf[0] == 'Y' ||
+                                  lbuf[0] == '1');
+            }
+            else if(1 == sscanf(buf,"force_utc = %512[^\n]", lbuf))
+            {
+                w1->force_utc =  (lbuf[0] == 't' || lbuf[0] == 'T' ||
                                   lbuf[0] == 'y' || lbuf[0] == 'Y' ||
                                   lbuf[0] == '1');
             }

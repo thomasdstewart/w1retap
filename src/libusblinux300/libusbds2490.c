@@ -400,7 +400,7 @@ SMALLINT DS2490Read(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
 {
 
     // Synchronous read:
-	uint	nBytes = *pnBytes;
+    int	nBytes = *pnBytes;
 
     // read
     nBytes = usb_bulk_read(hDevice,         // handle
@@ -432,7 +432,7 @@ SMALLINT DS2490Write(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
 {
    // Synchronous write:
    // assume enough room for write
-   uint	nBytes = *pnBytes;
+    int	nBytes = *pnBytes;
 
    // write
    nBytes = usb_bulk_write(hDevice,         // handle

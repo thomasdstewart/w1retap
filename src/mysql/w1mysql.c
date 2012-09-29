@@ -325,7 +325,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
                     if(w1->timestamp)
                     {
                         struct tm *tm;
-                        tm = localtime(&w1->logtime);
+                        tm = (w1->force_utc) ? gmtime(&w1->logtime) : localtime(&w1->logtime);
                         strftime(tval, sizeof(tval), "'%F %T%z'", tm);
                     }
                     else
@@ -346,7 +346,6 @@ void w1_logger(w1_devlist_t *w1, char *params)
                             syslog(LOG_ERR, "MySQL error %s", mse);
                         }
                     }
-		    n=n; // gcc 4.6, alas
                     free(q);
 #endif
                 }

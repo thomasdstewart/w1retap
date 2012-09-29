@@ -3,10 +3,16 @@
 require 'svg/svg'
 require 'zlib'
 
+WD=200
+HT=800
+#HPY=HT
+#HPX=WD
+
+
 module SvgThermo
-  def SvgThermo.makeimage temp, ph=150, pw=40, noc=false
-    svg = SVG.new('40px', '150px', '0 0 200 800') 
-    svg << SVG::Rect.new(0, 0, 200, 800) {
+  def SvgThermo.makeimage temp, ph=160, pw=40, noc=false
+    svg = SVG.new("#{pw}px", "#{ph}px", "0 0 #{WD} #{HT}") 
+    svg << SVG::Rect.new(0, 0, WD, HT) {
     self.style = SVG::Style.new(:fill => '#ffffeb', :fill_opacity => 1)}
     
     svg << SVG::Rect.new(58,2, 96, 680, 5, 5) {

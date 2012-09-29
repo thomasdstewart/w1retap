@@ -40,9 +40,9 @@ module CWOP
     (fmt % [d,m]) + "#{sgn}"
   end
 
-  def CWOP.upload stn, flag, w
-    s = "#{stn[:cwop_user]}>APRS,TCPXX*:"
-    s << Time.at(w[:udate]).gmtime.strftime("@%d%H%Mz")
+  def CWOP.upload stn, flag, w, acnt
+    s = "#{acnt[:userid]}>APRS,TCPXX*:"
+    s << w[:date].gmtime.strftime("@%d%H%Mz")
     s << fixll("%02d%05.2f", 'NS', stn[:stnlat]) + '/' +
       fixll("%03d%05.2f", 'EW', stn[:stnlong])
     s << '_.../...g...'
@@ -53,13 +53,13 @@ module CWOP
     s << "b%05d" % (w[:pres]*10.0).to_i
     s << stn[:software]
 
-    unless flag
+    if flag.nil?
       TCPSocket.open(HOST,PORT) do |skt|
-	skt.puts "user #{stn[:cwop_user]} pass -1 vers #{stn[:software]}\r"
+	skt.puts "user #{acnt[:userid]} pass -1 vers #{stn[:software]}\r"
 	skt.puts "#{s}\r"
 	if File.exists?("/tmp/cwop.log")
 	  File.open("/tmp/cwop.log",'a') do |f|
-	    f.puts "user #{stn[:cwop_user]} pass -1 vers #{stn[:software]}\r"
+	    f.puts "user #{acnt[:userid]} pass -1 vers #{stn[:software]}\r"
 	    f.puts "#{s}\r"
 	  end
 	end
@@ -71,15 +71,15 @@ module CWOP
 end
 
 if __FILE__ == $0
-  require 'rubygems'
   require 'sequel'
   require 'optparse'
 
-  opt_s = 'postgres:///sensors'
+  opt_s = 'postgres:///wx'
+  #opt_s = 'sqlite:///home/jrh/Projects/wx-sequel/wx.sqlite'
   flag = nil
 
   ARGV.options do |opts|
-    opts.on('-t','--test', 'Test mode') {flag = true }
+    opts.on('-f','--fake', 'fake mode') {flag = true }
     opts.on("-s", "--sensor_db Sequel_DBname", String) {|o| opt_s = o }
     begin
       opts.parse!
@@ -87,10 +87,9 @@ if __FILE__ == $0
       puts opts ; exit
     end
   end
-
-  now = Time.now.to_i;
-  dbh = Sequel.connect(opt_s)
-  stn = dbh[:station].first
-  w = dbh["select * from latest order by udate desc limit 1"].first
-  CWOP.upload stn, flag, w
+  db = Sequel.connect(opt_s)
+  stn = db[:station].first
+  acnt = db[:accounts].filter(:name => 'cwop').first
+  w = db[:latest].order(:date.desc).limit(1).first
+  CWOP.upload stn, flag, w, acnt
 end

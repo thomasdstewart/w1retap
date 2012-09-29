@@ -38,7 +38,7 @@ module Wug
     ("%.3f" % (mb/33.8638864))
   end
 
-  def Wug.upload stn, flag, w
+  def Wug.upload stn, flag, w, acnt
     q = {}
     q['humidity'] = (w[:humid]) ? ("%.1f" % w[:humid]) : 'N/A'
     q['tempf'] = CtoF w[:temp]
@@ -46,13 +46,13 @@ module Wug
     q['baromin'] = mbtoin(w[:pres])
     q['softwaretype'] = stn[:software]
     q['weather'] = q['clouds'] = 'NA'
-    q['dateutc'] = Time.at(w[:udate]).gmtime.strftime("%Y-%m-%d %H:%M")
+    q['dateutc'] = w[:date].gmtime.strftime("%Y-%m-%d %H:%M")
     q['rainin'] = w[:rain]
     q['dailyrainin'] = w[:rain24] if  w[:rain24]
     q['soiltempf'] = CtoF w[:stemp] if  w[:stemp]
     q['solarradiation'] = w[:solar] if w[:solar]
 
-    url = WURL << '?action=updateraw&ID=' << stn[:wu_user] << '&PASSWORD=' << stn[:wu_pass]
+    url = WURL << '?action=updateraw&ID=' << acnt[:userid] << '&PASSWORD=' << acnt[:password]
 
     q.keys.sort.each do |s|
       url << '&' << s << '=' << q[s].to_s
@@ -71,12 +71,26 @@ module Wug
 end
 
 if __FILE__ == $0
-#  require 'rubygems'
   require 'sequel'
-  flag = (ARGV.size > 0)
-  now = Time.now.to_i;
-  dbh = Sequel.connect('postgres:///sensors')
-  stn = dbh[:station].first
-  w = dbh["select * from latest order by udate desc limit 1"].first
-  Wug.upload stn, flag, w
+  requre 'optparse'
+
+  opt_s = 'postgres:///wx?host=/tmp/'
+#  opt_s = 'sqlite:///home/jrh/Projects/wx-sequel/wx.sqlite'
+  
+  flag = true
+
+  ARGV.options do |opts|
+    opts.on('-r','--real', 'real mode') {flag = nil }
+    opts.on("-s", "--sensor_db Sequel_DBname", String) {|o| opt_s = o }
+    begin
+      opts.parse!
+    rescue
+      puts opts ; exit
+    end
+  end
+  db = Sequel.connect(opt_s)
+  stn = db[:station].first
+  w = db[:latest].order(:date.desc).limit(1).first
+  acnt = db[:accounts].filter(:name => 'wug').first
+  Wug.upload stn, flag, w, acnt
 end

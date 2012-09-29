@@ -51,3 +51,4 @@ installed development packages.
 # aptitude install valac libsoup2.4-dev  dconf-tools
 ## and the relevant GTK dev package.
 
+The gnome-shell applet is 'supported'; the others are not.

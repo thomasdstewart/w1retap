@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta http-equiv="refresh" content="90" />
+    <meta name="description" content="Personal Weather Station" />
+    <meta name="keywords" content=
+	  "Jonathan Hudson,Daria Hudson,Linux,Weather,1-wire,Dallas,
+	   Netley Marsh,Southampton" />
+    <meta name="geo.position" content="50.9153; -1.53036" />
+    <meta name="geo.placename" content="Netley Marsh" />
+    <meta name="geo.region" content="GB-STH" />
+    <meta name="ICBM" content="50.9153, -1.53036" />
+    <meta name="DC.title" content="Netley Marsh Weather" />
+    <title>Netley Marsh Weather Station</title>
+    <link rel="stylesheet" type="text/css" href="wxpage.css"/>
+    <script type='text/javascript' src='js/jquery.min.js'></script>    
+    <script type='text/javascript' src='js/infinite-rotator.js'>
+    </script>           
+  </head>	   
+  <body>   
+    <div>
+      <table width="100%" style="float: left; margin:0; padding: 1px;"
+	     cellspacing='0' border='0' summary="wdata" cellpadding='0' > 
+	<!-- begin:wdata -->
+	<tbody>
+	  <tr class="<!-- var:pcol -->"> 
+	    <td class='aleft4'><!-- var:name -->: </td>
+	    <td class='aleft'><!-- var:value --> <!-- var:units --></td>
+	  </tr>
+	  <!-- end:wdata -->
+	</tbody>
+      </table>
+    </div>
+    <div id="rotating-item-wrapper">
+      <img src="http://roo/wx/temp.<!-- var:gtype -->" 
+	   alt="wx" class="rotating-item" width="478" height="220" />
+      <img src="http://roo/wx/press.<!-- var:gtype -->" 
+	   alt="wx" class="rotating-item" width="478" height="220" />
+      <img src="http://roo/wx/cond.<!-- var:gtype -->" 
+	   alt="wx" class="rotating-item" width="478" height="220" />
+    </div>
+  </body>   
+</html>
+

@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.4.0,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.4.1,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -27,7 +27,6 @@ AC_ARG_WITH(libxml, AC_HELP_STRING([--without-libxml], [Don't build for libXML])
 
 # Checks for libraries.
 
-AC_CHECK_LIB([mongoc], [mongo_connect])
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
 # But don't set fscking LIBS ....
 LIBS= 
@@ -37,8 +36,8 @@ AC_CHECK_LIB([rt], [clock_nanosleep])
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-CPPFLAGS="$CPPFLAGS -DMONGO_HAVE_STDINT=1"
-AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h sql.h mongoc/mongo.h])
+CPPFLAGS="$CPPFLAGS"
+AC_CHECK_HEADERS([fcntl.h limits.h memory.h stdlib.h string.h sys/file.h sys/time.h unistd.h sql.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -81,11 +80,11 @@ if test "$with_sqlite" != "no" ; then
  USE_SQLITE=sqlite
 fi
 
-if test "$ac_cv_header_mongo_h" = "no" -o "$ac_cv_lib_mongoc_mongo_connect" = "no" ; then
- with_mongo="no"
-fi
+PKG_CHECK_MODULES(MONGO,libmongo-client,with_mongo="yes",with_mongo="no")
+AC_SUBST(MONGO_CFLAGS)
+AC_SUBST(MONGO_LIBS)    
 
-if test "$with_mongo" != "no"; then
+if test "x${with_mongo}" = "xyes"; then
  USE_MONGO=mongo
 fi
 
@@ -156,7 +155,7 @@ else
  CPPFLAGS="$save_flags"
 fi
 
-CPPFLAGS="$save_flags -Werror -Wno-unused-but-set-variable -Wno-unused-result"
+CPPFLAGS="$CPPFLAGS -Werror -Wno-unused-but-set-variable -Wno-unused-result"
 
 AC_SUBST(MYSQL_LIBS)
 AC_SUBST(MYSQL_CFLAGS)

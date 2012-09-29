@@ -73,7 +73,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
         writer = xmlNewTextWriterMemory(buf, 0);
         if (writer)
         {
-            logtimes(w1->logtime, timb);
+            logtimes(w1, w1->logtime, timb);
             if(0 == xmlTextWriterStartDocument(writer, NULL, XMLENC, NULL))
             {
                 xmlTextWriterSetIndent (writer, 1);
@@ -154,7 +154,7 @@ void w1_logger (w1_devlist_t *w1, char *logfile)
         return;
     }
     
-    logtimes(w1->logtime, timb);
+    logtimes(w1, w1->logtime, timb);
     fputs("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", lfp);
     fprintf(lfp, "<report timestamp=\"%s\" unixepoch=\"%ld\" sane=\"no\">\n",
                  timb, w1->logtime);
