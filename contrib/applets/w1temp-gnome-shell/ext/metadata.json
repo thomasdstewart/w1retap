@@ -1,5 +1,5 @@
 { 
-   "shell-version": [ "3.2", "3.2.1" ],
+   "shell-version": [ "3.2","3.4" ],
    "uuid": "w1temp@daria.co.uk",
    "name": "w1temp",
    "description": "Provide w1temp information",

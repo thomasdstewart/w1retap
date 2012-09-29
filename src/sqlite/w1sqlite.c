@@ -28,12 +28,53 @@
 #include <sys/file.h>
 #include "w1retap.h"
 
+static short json ;
+static short tstamp ;
+
 static sqlite3 * w1_opendb(char *dbname)
 {
     sqlite3 *mydb = NULL;
     if(sqlite3_open(dbname, &mydb) == SQLITE_OK)
     {
+        const char *dbuf;
+        int sres;
+        
         sqlite3_busy_timeout(mydb,5000);
+        if(SQLITE_OK == sqlite3_table_column_metadata(mydb, NULL, "readings",
+                                                      "date", &dbuf,
+                                                      NULL, NULL, NULL, NULL))
+        {
+#if defined(TESTBIN)
+            fprintf(stderr, "t = %s\n",  dbuf);
+#endif
+            if (0 == strncmp(dbuf, "timestamp", sizeof("timestamp")-1))
+            {
+                tstamp = 1;
+            }
+        }
+        if(SQLITE_OK == (sres = sqlite3_table_column_metadata(mydb, NULL, "readings",
+                                                              "wxdata", &dbuf,
+                                                              NULL, NULL, NULL, NULL)))
+        {
+#if defined(TESTBIN)       
+            fprintf(stderr, "v1 = %s\n",  dbuf);
+#endif
+            if(0 == strncmp(dbuf, "text", sizeof("text")-1)
+                || 0 == strncmp(dbuf, "varchar", sizeof("varchar")-1)
+                || 0 == strncmp(dbuf, "char", sizeof("char")-1)
+                )
+                json = 1;
+        }
+#if defined(TESTBIN)       
+        else
+        {
+            fprintf(stderr, "**bad res = %d\n",  sres);
+        }
+#endif
+
+#if defined(TESTBIN)
+        fprintf(stderr,"j=%d t=%d\n", json, tstamp);
+#endif
     }
     else
     {
@@ -200,7 +241,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
             sqlite3_free(err);
         }
     }
-    
+ 
     sqlite3_close(db);
 }
 
@@ -244,42 +285,115 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 
     if(stmt == NULL)
     {
-        const char *tl;
-        static char s[] = "insert into readings(date,name,value) values (?,?,?)";    
-	sqlite3_prepare(db, s, sizeof(s)-1, &stmt, &tl);
+        char *s;
+        if(json)
+        {
+            s = "insert into readings(date,wxdata) values (?,?)";
+        }
+        else
+        {
+            s = "insert into readings(date,name,value) values (?,?,?)";
+        }
+        sqlite3_prepare_v2(db, s, -1, &stmt, NULL);
     }
 
     sqlite3_exec(db,"begin", NULL, NULL,NULL);
+    
+    char *jstr = NULL;
+    char *jptr = NULL;
+    char tval[64];
+    int nlog = 0;
+    
+    if(json)
+    {
+        jstr = jptr = malloc(4096);
+        jptr = stpcpy(jptr, "{");
+    }
+    
+    if(tstamp)
+    {
+        struct tm *tm;
+        tm = (w1->force_utc) ? gmtime(&w1->logtime) : localtime(&w1->logtime);
+        strftime(tval, sizeof(tval), "%F %T%z", tm);
+    }
+
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
         if(devs->init)
         {
             int j;
+            int n;
+            
             for (j = 0; j < devs->ns; j++)
             {
                 if(devs->s[j].valid)
                 {
-                    if(w1->timestamp)
+                    nlog++;
+                    if(json)
                     {
-                        struct tm *tm;
-                        char tval[64];
-                        tm = localtime(&w1->logtime);
-                        strftime(tval, sizeof(tval), "%F %T%z", tm);
-                        sqlite3_bind_text(stmt, 1, tval, -1, SQLITE_STATIC);
+                        char *rval = NULL;
+                        if(devs->stype == W1_COUNTER ||
+                           devs->stype == W1_WINDVANE)
+                            n=asprintf(&rval, "%.0f", devs->s[j].value);
+                        else
+                            n=asprintf(&rval, "%f", devs->s[j].value);
+
+                        n = sprintf(jptr,"\"%s\":%s,", devs->s[j].abbrv,
+                                    rval);
+                        jptr += n;
+                        free(rval);
                     }
                     else
                     {
-                        sqlite3_bind_int(stmt, 1, w1->logtime);
+                        if(tstamp)
+                        {
+                            sqlite3_bind_text(stmt, 1, tval, -1, SQLITE_STATIC);
+                        }
+                        else
+                        {
+                            sqlite3_bind_int(stmt, 1, w1->logtime);
+                        }
+                        sqlite3_bind_text(stmt, 2, devs->s[j].abbrv, -1, SQLITE_STATIC);
+                        sqlite3_bind_double(stmt, 3, (double)devs->s[j].value);
+                        sqlite3_step(stmt);
+                        sqlite3_reset(stmt);
                     }
-                    sqlite3_bind_text(stmt, 2, devs->s[j].abbrv, -1, SQLITE_STATIC);
-                    sqlite3_bind_double(stmt, 3, (double)devs->s[j].value);
-                    sqlite3_step(stmt);
-                    sqlite3_reset(stmt);
                 }
             }
         }
     }
-    sqlite3_exec(db,"commit", NULL, NULL,NULL);
+
+//    fprintf(stderr, "%s json %d timestamp %d nlog %d\n", tval, json, tstamp, nlog);
+    int nres;
+    if(json)
+    {
+        if(nlog)
+        {
+            strcpy(jptr-1,"}");
+#if defined(TESTBIN)
+            fprintf(stderr, "%s\n", jstr);
+#endif
+//            fprintf(stderr, "%s\n", jstr);
+            if(tstamp)
+            {
+                nres = sqlite3_bind_text(stmt, 1, tval, -1, SQLITE_STATIC);
+//                fprintf(stderr,"bind tval %d\n", nres);                
+            }
+            else
+            {
+                sqlite3_bind_int(stmt, 1, w1->logtime);
+            }
+            nres = sqlite3_bind_text(stmt, 2, jstr, -1, NULL);
+//            fprintf(stderr,"bind json %d\n", nres);
+            nres = sqlite3_step(stmt);
+//            fprintf(stderr,"step json %d\n", nres);            
+        }
+        nres = sqlite3_reset(stmt);
+//        fprintf(stderr,"reset  json %d\n", nres);        
+    }
+    nres = sqlite3_exec(db,"commit", NULL, NULL,NULL); 
+//    fprintf(stderr,"commit json %d\n", nres);   
+//    fflush(stderr);
 }
 
 void w1_report(w1_devlist_t *w1, char *dbnam)
@@ -310,3 +424,74 @@ void w1_report(w1_devlist_t *w1, char *dbnam)
         sqlite3_exec(db,"commit", NULL, NULL,NULL);
     }
 }
+
+#if defined(TESTBIN)
+
+int main(int argc, char **argv)
+{
+    char *dbname=NULL;
+    
+    w1_devlist_t w = {0},*w1;
+
+    if(argc == 2)
+    {
+        dbname=argv[1];
+    }
+
+    w1=&w;
+
+    char *p=NULL;
+    if((p = getenv("W1RCFILE")))
+    {
+        w1->rcfile = strdup(p);
+    }
+    read_config(w1);
+    w1_init(w1, dbname);
+    
+    for(int n = 0; n < w1->numdev; n++)
+    {
+        fprintf(stderr, "%s %s\n",
+                w1->devs[n].serial, w1->devs[n].devtype);
+        fprintf(stderr, "\t0: %s %s\n",
+                w1->devs[n].s[0].abbrv, w1->devs[n].s[0].name);
+        fprintf(stderr, "\t1: %s %s\n",
+                w1->devs[n].s[1].abbrv, w1->devs[n].s[1].name);
+    }
+    
+    w1->logtime = time(NULL);
+    w1->timestamp = 1;
+    if(w1->numdev > 0)
+    {
+        w1->logtime = time(0);
+        w1->devs[0].init = 1;
+        w1->devs[0].s[0].valid = 1;
+        w1->devs[0].s[0].value = 22.22;
+
+        w1->devs[1].init = 1;
+        w1->devs[1].s[0].valid = 1;
+        w1->devs[1].s[0].value = 69;
+        w1->devs[1].s[1].valid = 99.0;
+        w1->devs[1].s[1].value = 18.88;
+
+        w1->devs[2].init = 1;
+        w1->devs[2].s[0].valid = 1;
+        w1->devs[2].s[0].value = 1001.45;
+        w1_logger(w1, dbname);
+        
+        sleep(5);
+        w1->logtime = time(0);
+        w1->devs[0].init = 1;
+        w1->devs[0].s[0].valid = 1;
+        w1->devs[0].s[0].value = 25.77;
+        
+        w1->devs[1].init = 1;
+        w1->devs[1].s[0].valid = 1;
+        w1->devs[1].s[0].value = 66;
+        w1->devs[1].s[1].valid = 1;
+        w1->devs[1].s[1].value = 12.565;
+        w1->devs[2].init = 0;
+    }
+    w1_logger(w1, dbname);
+    return 0;
+}
+#endif

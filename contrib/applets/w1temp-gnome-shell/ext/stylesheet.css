@@ -1,5 +1,5 @@
 .w1temp-status-icon {
-    icon-size: 2em;
+    icon-size: 1.6em;
 }
 
 .w1temp-status-text {
@@ -7,4 +7,9 @@
    vertical-align: middle;
 }
 
+.w1temp-menu-text {
+   padding-left: 1em;
+   padding-right: 1em;
+   font-size: 0.9em;
+}
 

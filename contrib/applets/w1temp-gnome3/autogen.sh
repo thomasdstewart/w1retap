@@ -7,7 +7,7 @@ REQUIRED_AUTOMAKE_VERSION=1.8
 PKG_NAME=w1temp
 
 (test -f $srcdir/configure.ac \
-  && test -f $srcdir/src/w1temp.c) || {
+  && test -f $srcdir/curl-client/w1temp.c) || {
     echo -n "**Error**: Directory "\`$srcdir\'" does not look like the"
     echo " top-level $PKG_NAME directory"
     exit 1

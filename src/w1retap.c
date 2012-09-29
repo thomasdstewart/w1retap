@@ -46,8 +46,6 @@ enum W1_sigflag
 };
     
 
-//int lfd = -1;
-
 static volatile enum W1_sigflag sigme;
 
 #ifndef HAVE_CLOCK_NANOSLEEP 
@@ -117,7 +115,7 @@ void w1_replog(w1_devlist_t *w1, const char *fmt,...)
             if(fp)
             {
                 char s[64];
-                logtimes(w1->logtime, s);
+                logtimes(w1,w1->logtime, s);
                 fputs(s, fp);
                 fputc(' ', fp);                
                 fputs(p, fp);
@@ -401,6 +399,11 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             fputs ("Allowing rate limit escapes\n", stderr);
         }
+        if(w1->force_utc)
+        {
+            fputs ("dates logged at UTC\n", stderr);
+        }
+
     }
 }
 
@@ -445,6 +448,8 @@ int main(int argc, char **argv)
          "Display version number (and exit)", NULL},
         {"simulate",'s', 0, G_OPTION_ARG_NONE, &w1_simul,
         "Simulate readings (for testing, not yet implemented)", NULL},
+        {"use-utc",'u', 0, G_OPTION_ARG_NONE, &w1->force_utc,
+        "Store dates as UTC (vice localtime)", NULL},
         {"report-log",'r', 0, G_OPTION_ARG_STRING, &w1->repfile,
          "Report log file", "FILE"},
         {NULL}
@@ -512,7 +517,7 @@ int main(int argc, char **argv)
     
     if(w1->verbose)
     {
-        fputs("w1retap v" VERSION " (c) 2005-2011 Jonathan Hudson\n", stderr);
+        fputs("w1retap v" VERSION " (c) 2005-2012 Jonathan Hudson\n", stderr);
         fputs("Built: " __DATE__ " " __TIME__  " gcc " __VERSION__ "\n", stderr);        
         if(w1->verbose == 2)
         {
@@ -540,16 +545,6 @@ int main(int argc, char **argv)
         assert(0 == daemon(0,iclose));
     }
 
-#if 0
-    {
-        char filename[256];
-        time_t now;
-        now = time(NULL);
-        sprintf(filename,"/tmp/.w1retap-last-%ld", now);
-        lfd = open(filename, O_CREAT|O_WRONLY, 0644);
-    }
-#endif
-    
     if(w1->pidfile)
     {
         FILE *fp;
@@ -650,7 +645,7 @@ int main(int argc, char **argv)
                     if(w1->verbose)
                         fputs(ctime(&now.tv_sec),stderr);
                 }
-            } while (ns ==  -1 && errno == EINTR);
+            } while ((ns == EINTR) || (ns ==  -1 && errno == EINTR));
         }
         else
         {
