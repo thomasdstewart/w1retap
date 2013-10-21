@@ -320,7 +320,6 @@ void w1_logger(w1_devlist_t *w1, char *params)
 #else
                     char *q;
                     char tval[64];
-                    int n=0;
                     
                     if(w1->timestamp)
                     {
@@ -333,7 +332,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
                         snprintf(tval, sizeof(tval), "%ld", w1->logtime);
                     }
                     nv++;
-                    n = asprintf(&q,
+                    asprintf(&q,
                              "INSERT into readings(date,name,value) VALUES(%s,'%s',%g)",
                              tval, devs->s[j].abbrv, devs->s[j].value);
 		    if(w1->verbose) puts(q);
