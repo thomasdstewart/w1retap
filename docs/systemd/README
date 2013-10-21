@@ -1,0 +1,24 @@
+systemd support files
+~~~~~~~~~~~~~~~~~~~~~
+
+As ArchLinux has 'officially' moved to systemd, here are some examples
+to run w1retap as a systemd service.
+
+
+etc
+├── systemd
+│   └── system
+│       └── w1retap.service
+├── tmpfiles.d
+│   └── w1retap.conf
+└── udev
+    └── rules.d
+        └── 45-w1retap.rules
+
+scripts
+├── add_w1retap_user.sh
+└── addpsqluser.sh
+
+etc contains files needed under /etc
+scripts contains scripts to create the user and set database
+permissions.

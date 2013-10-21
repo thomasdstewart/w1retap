@@ -1,5 +1,8 @@
+1.4.2 2013-10-21
+	Minor code cleanups for increased GCC pedantic mode.
+
 1.4.1 2012-09-29
-	Added support for Postgresql 9.2 JSON column.
+	Added support for Postgresql 9.2+ JSON column.
 	(also suuports JSON formatted text in postgres and sqlite)
 	Removed support for Postgres 7.
 	Updated the Mongodb driver to libmongo-client. Updated the

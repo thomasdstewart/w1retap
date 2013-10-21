@@ -1,0 +1,7 @@
+# udev rules file for w1retap2
+#
+SUBSYSTEMS=="usb", GOTO="usb_w1_start"
+GOTO="usb_w1_end"
+LABEL="usb_w1_start"
+ATTRS{idVendor}=="04fa", ATTRS{idProduct}=="2490",GROUP="w1retap",MODE="0664"
+LABEL="usb_w1_end"
