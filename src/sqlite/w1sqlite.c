@@ -364,7 +364,6 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
     }
 
 //    fprintf(stderr, "%s json %d timestamp %d nlog %d\n", tval, json, tstamp, nlog);
-    int nres;
     if(json)
     {
         if(nlog)
@@ -373,27 +372,20 @@ void w1_logger(w1_devlist_t *w1, char *dbnam)
 #if defined(TESTBIN)
             fprintf(stderr, "%s\n", jstr);
 #endif
-//            fprintf(stderr, "%s\n", jstr);
             if(tstamp)
             {
-                nres = sqlite3_bind_text(stmt, 1, tval, -1, SQLITE_STATIC);
-//                fprintf(stderr,"bind tval %d\n", nres);                
+                sqlite3_bind_text(stmt, 1, tval, -1, SQLITE_STATIC);
             }
             else
             {
                 sqlite3_bind_int(stmt, 1, w1->logtime);
             }
-            nres = sqlite3_bind_text(stmt, 2, jstr, -1, NULL);
-//            fprintf(stderr,"bind json %d\n", nres);
-            nres = sqlite3_step(stmt);
-//            fprintf(stderr,"step json %d\n", nres);            
+            sqlite3_bind_text(stmt, 2, jstr, -1, NULL);
+            sqlite3_step(stmt);
         }
-        nres = sqlite3_reset(stmt);
-//        fprintf(stderr,"reset  json %d\n", nres);        
+        sqlite3_reset(stmt);
     }
-    nres = sqlite3_exec(db,"commit", NULL, NULL,NULL); 
-//    fprintf(stderr,"commit json %d\n", nres);   
-//    fflush(stderr);
+    sqlite3_exec(db,"commit", NULL, NULL,NULL); 
 }
 
 void w1_report(w1_devlist_t *w1, char *dbnam)

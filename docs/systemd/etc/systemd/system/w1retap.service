@@ -1,0 +1,16 @@
+[Unit]
+Description=w1retap
+Requires=postgresql.service
+After=postgresql.service
+
+[Service]
+Type=forking
+User=w1retap
+Group=w1retap
+ExecStart=/usr/bin/w1retap -d -R -t 120
+ExecStop=/bin/kill $MAINPID
+Restart=always
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

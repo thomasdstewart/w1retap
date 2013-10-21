@@ -258,7 +258,6 @@ void w1_logger (w1_devlist_t *w1, char *params)
                     SQLSMALLINT ValueType;
                     SQLSMALLINT ParameterType;
                     SQLPOINTER ParameterValuePtr;
-                    int res =0;
                     
                     if(w1->timestamp)
                     {
@@ -283,24 +282,24 @@ void w1_logger (w1_devlist_t *w1, char *params)
                         psz = sizeof(&w1->logtime);
                     }
         
-                    res = SQLBindParameter(stmt, 1, SQL_PARAM_INPUT,
+                    SQLBindParameter(stmt, 1, SQL_PARAM_INPUT,
                                            ValueType,
                                            ParameterType,
                                            0, 0,
                                            ParameterValuePtr, psz, &psz);
                     psz = strlen(devs->s[j].abbrv);
-                    res = SQLBindParameter(stmt, 2, SQL_PARAM_INPUT,
+                    SQLBindParameter(stmt, 2, SQL_PARAM_INPUT,
                                            SQL_C_CHAR,
                                            SQL_VARCHAR,
                                            0, 0,
                                            devs->s[j].abbrv, psz, &psz);
                     psz = sizeof(float);
-                    res = SQLBindParameter(stmt, 3, SQL_PARAM_INPUT,
+                    SQLBindParameter(stmt, 3, SQL_PARAM_INPUT,
                                            SQL_C_FLOAT,
                                            SQL_REAL,
                                            0, 0,
                                            &devs->s[j].value, psz, &psz);
-                    res = SQLExecute(stmt);
+                    SQLExecute(stmt);
                 }
             }
         }

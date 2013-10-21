@@ -270,7 +270,7 @@ static gboolean w1temp_fill (PanelApplet *applet, const gchar *iid,
     m.label = gtk_label_new (NULL);
     mlabel_set_text(&m, "???");
 
-    GtkWidget *hbox1 = gtk_hbox_new (FALSE, 0);
+    GtkWidget *hbox1 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
     m.applet = applet;
     gtk_widget_set_tooltip_text(GTK_WIDGET (applet),"no data");
     gtk_box_pack_start(GTK_BOX(hbox1), m.image,  TRUE, TRUE, 0);
