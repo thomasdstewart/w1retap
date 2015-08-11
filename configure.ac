@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT(w1retap,1.4.2,jh+w1retap@daria.co.uk,w1retap)
+AC_INIT(w1retap,1.4.3,jh+w1retap@daria.co.uk,w1retap)
 
 AC_PREREQ(2.60)
 AC_CONFIG_HEADER([config.h])
@@ -29,7 +29,7 @@ AC_ARG_WITH(libxml, AC_HELP_STRING([--without-libxml], [Don't build for libXML])
 
 AC_CHECK_LIB([odbc], [SQLAllocHandle])
 # But don't set fscking LIBS ....
-LIBS= 
+LIBS=
 AC_CHECK_LIB([m], [sin], [])
 AC_CHECK_LIB([rt], [clock_nanosleep])
 
@@ -69,12 +69,12 @@ GLIB_LIBS=
 
 PKG_CHECK_MODULES(SQLITE,sqlite3,[],[USE_SQLITE=])
 
-if test "x${SQLITE_LIBS}" = "x" ; then 
+if test "x${SQLITE_LIBS}" = "x" ; then
    with_sqlite="no"
 fi
 
 AC_SUBST(SQLITE_CFLAGS)
-AC_SUBST(SQLITE_LIBS)    
+AC_SUBST(SQLITE_LIBS)
 
 if test "$with_sqlite" != "no" ; then
  USE_SQLITE=sqlite
@@ -82,7 +82,7 @@ fi
 
 PKG_CHECK_MODULES(MONGO,libmongo-client,with_mongo="yes",with_mongo="no")
 AC_SUBST(MONGO_CFLAGS)
-AC_SUBST(MONGO_LIBS)    
+AC_SUBST(MONGO_LIBS)
 
 if test "x${with_mongo}" = "xyes"; then
  USE_MONGO=mongo
@@ -98,16 +98,16 @@ fi
 
 
 if test "$with_libxml" = "no" ; then
- : #AC_MSG_RESULT([not checking for libXML]) 
+ : #AC_MSG_RESULT([not checking for libXML])
 else
 AC_PATH_PROGS([TOOL_XML2_CONFIG], [xml2-config])
     AS_IF([test -n "$TOOL_XML2_CONFIG"],
           [XML2_CFLAGS=`$TOOL_XML2_CONFIG --cflags`
            XML2_LIBS=`$TOOL_XML2_CONFIG --libs`
            LIBXML_VERSION=`$TOOL_XML2_CONFIG --version`])
-AC_CHECK_LIB([xml2],[xmlNewTextWriterMemory]) 
+AC_CHECK_LIB([xml2],[xmlNewTextWriterMemory])
 AC_SUBST([XML2_CFLAGS])
-AC_SUBST([XML2_LIBS]) 
+AC_SUBST([XML2_LIBS])
 fi
 
 AC_PATH_PROG(MYSQL_CONFIG, mysql_config, no)
@@ -124,11 +124,11 @@ else
    save_LIBS="$LIBS"
    LIBS="$LIBS $MYSQL_LIBS"
    AC_CHECK_LIB([mysqlclient], [mysql_init])
-   if test "$ac_cv_lib_mysqlclient_mysql_init" = "yes" ; then
+#   if test "$ac_cv_lib_mysqlclient_mysql_init" = "yes" ; then
     USE_MYSQL=mysql
-   fi
+#   fi
    LIBS="$save_LIBS"
- fi	
+ fi
  CPPFLAGS="$save_CPPFLAGS"
 fi
 
@@ -146,7 +146,7 @@ else
   LIBS="$LIBS -L$PGSQL_LIBS"
   AC_CHECK_LIB([pq], [PQconnectdb])
   if test $ac_cv_lib_pq_PQconnectdb = yes ; then
-   PGV="$(pg_config --version | cut -f 2 -d ' ' | cut -f 1 -d '.')" 
+   PGV="$(pg_config --version | cut -f 2 -d ' ' | cut -f 1 -d '.')"
    PGSQL_CFLAGS="$PGSQL_CFLAGS -DPGV=$PGV"
    USE_PGSQL=pgsql
   fi

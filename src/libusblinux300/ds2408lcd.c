@@ -9,7 +9,7 @@
 static void output_byte(int portnum, uchar b)
 {
     uchar n,n1;
-    
+
     owWriteByte(portnum, (uchar)b);
     owWriteByte(portnum, (uchar)(~b));
     n = owReadByte(portnum);
@@ -44,7 +44,7 @@ int init_lcd(int portnum, uchar *snum)
         owTouchReset(portnum);
 
         owAccess(portnum); /* a5 */
-        owWriteByte(portnum, 0xf0);            
+        owWriteByte(portnum, 0xf0);
 
         owWriteByte(portnum, 0x8d);
         owWriteByte(portnum, 0x00);
@@ -56,26 +56,26 @@ int init_lcd(int portnum, uchar *snum)
             return rv;
         }
 
-        owTouchReset(portnum);        
+        owTouchReset(portnum);
         owAccess(portnum); /* a5 */
-        owWriteByte(portnum, 0x5a);                
+        owWriteByte(portnum, 0x5a);
         rv = 0;
     }
     return rv;
 }
 
-void prep2display(portnum)
+void prep2display(int portnum)
 {
-    
+
     fputs("Start init disp\n", stdout);
     output_byte(portnum, 0x30);
     msDelay(5);
     output_byte(portnum, 0x30);
     output_byte(portnum, 0x30);
     output_byte(portnum, 0x20);
-        
+
     output_char(portnum, 0x28, 0);
-    output_char(portnum, 0x0c, 0);        
+    output_char(portnum, 0x0c, 0);
     output_char(portnum, 0x01, 0);
     output_char(portnum, 0x06, 0);
     output_char(portnum, 0x80, 0);
@@ -100,11 +100,11 @@ static void set_line(int portnum, int line)
                 c = 0x80;
                 break;
         }
-        output_char(portnum, c, 0);        
+        output_char(portnum, c, 0);
     }
 }
 
-static void prep_display(portnum)
+static void prep_display(int portnum)
 {
     owTouchReset(portnum);
     if(owAccess(portnum))
@@ -131,7 +131,7 @@ static void show_text(int portnum, uchar *text)
 
 int send_text_lcd(int portnum, char *text, int line, int cls)
 {
-    
+
     fputs("Init device\n", stdout);
     prep_display(portnum);
     set_line(portnum, line);
@@ -139,4 +139,3 @@ int send_text_lcd(int portnum, char *text, int line, int cls)
     show_text(portnum, (unsigned char*)text);
     return 0;
 }
-
