@@ -1,3 +1,8 @@
+1.4.3 2015-08-10
+	Support modern MySQL API (avoids trunctation of large values)
+	Build on ancient C compilers (like the Centos one)
+	Thanks to Mihail Peltekov (again) for nagging me on both of these
+
 1.4.2 2013-10-21
 	Minor code cleanups for increased GCC pedantic mode.
 

@@ -24,7 +24,7 @@ int HBUV_setup (int portnum, uchar *serno, hbuv_t *hb, char *params)
         {
             char c;
             char *p1, *p2;
-            
+
             for(p1 = params; (p2 = strtok(p1,", "));p1=NULL)
             {
                 if (sscanf(p2,"uo=%hhd", &c))
@@ -84,7 +84,7 @@ void HBUV_get_bytes (int portnum, uchar *snum, uchar act,
 {
     uchar block[32];
     int i;
-    
+
     owSerialNum(portnum,snum,FALSE);
     if (owAccess(portnum))
     {
@@ -137,14 +137,14 @@ void HBUV_read_version(int portnum, uchar *snum, char *vers)
 {
     HBUV_get_bytes(portnum, snum, HBUV_READVERSION, (uchar*)vers, 2);
 }
-                       
+
 int HBUV_read_data(int portnum, uchar *snum, hbuv_t *hb)
 {
-    uchar uvi;
+    uchar uvi=0;
     char tchar[2];
     int ret = 0;
-    
-    HBUV_get_byteval(portnum, snum, HBUV_READUVI, &uvi);    
+
+    HBUV_get_byteval(portnum, snum, HBUV_READUVI, &uvi);
     if (uvi == 0xff)
     {
         HBUV_get_byteval(portnum, snum, HBUV_READUVI, &uvi);
