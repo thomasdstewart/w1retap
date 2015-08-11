@@ -28,7 +28,7 @@
 //                    (Requires libusb http://libusb.sourceforge.net
 //                    or http://libusb-win32.sourceforge.net)
 //
-//  Version: 
+//  Version:
 //
 
 #include "ownet.h"
@@ -40,10 +40,10 @@
 extern struct usb_dev_handle *usb_dev_handle_list[MAX_PORTNUM];
 
 // global DS2490 state
-SMALLINT USBLevel[MAX_PORTNUM]; 
-SMALLINT USBSpeed[MAX_PORTNUM]; 
-SMALLINT USBVersion[MAX_PORTNUM]; 
-SMALLINT USBVpp[MAX_PORTNUM]; 
+SMALLINT USBLevel[MAX_PORTNUM];
+SMALLINT USBSpeed[MAX_PORTNUM];
+SMALLINT USBVersion[MAX_PORTNUM];
+SMALLINT USBVpp[MAX_PORTNUM];
 
 //---------------------------------------------------------------------------
 // Attempt to resync and detect a DS2490
@@ -86,30 +86,30 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
    setup.Length = 0;
    setup.DataOut = FALSE;
    // call the libusb driver
-   usb_control_msg(hDevice, 
-                         setup.RequestTypeReservedBits, 
-			 setup.Request, 
-			 setup.Value, 
-			 setup.Index, 
-			 NULL, 
-			 setup.Length, 
+   usb_control_msg(hDevice,
+                         setup.RequestTypeReservedBits,
+			 setup.Request,
+			 setup.Value,
+			 setup.Index,
+			 NULL,
+			 setup.Length,
 			 TIMEOUT_LIBUSB);
 
    // disable strong pullup, but leave program pulse enabled (faster)
    setup.RequestTypeReservedBits = 0x40;
    setup.Request = MODE_CMD;
    setup.Value = MOD_PULSE_EN;
-   setup.Index = ENABLEPULSE_PRGE; 
+   setup.Index = ENABLEPULSE_PRGE;
    setup.Length = 0x00;
    setup.DataOut = FALSE;
    // call the libusb driver
-   usb_control_msg(hDevice, 
-                         setup.RequestTypeReservedBits, 
-			 setup.Request, 
-			 setup.Value, 
-			 setup.Index, 
-			 NULL, 
-			 setup.Length, 
+   usb_control_msg(hDevice,
+                         setup.RequestTypeReservedBits,
+			 setup.Request,
+			 setup.Value,
+			 setup.Index,
+			 NULL,
+			 setup.Length,
 			 TIMEOUT_LIBUSB);
 
    // return result of short check
@@ -118,7 +118,7 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
 
 
 //---------------------------------------------------------------------------
-// Check to see if there is a short on the 1-Wire bus. Used to stop 
+// Check to see if there is a short on the 1-Wire bus. Used to stop
 // communication with the DS2490 while the short is in effect to not
 // overrun the buffers.
 //
@@ -131,7 +131,7 @@ SMALLINT DS2490Detect(usb_dev_handle *hDevice)
 SMALLINT DS2490ShortCheck(usb_dev_handle *hDevice, SMALLINT *present, SMALLINT *vpp)
 {
    STATUS_PACKET status;
-   uchar nResultRegisters;
+   uchar nResultRegisters=0;
    uchar i;
 
    // get the result registers (if any)
@@ -143,19 +143,19 @@ SMALLINT DS2490ShortCheck(usb_dev_handle *hDevice, SMALLINT *present, SMALLINT *
 
    //	Check for short
    if(status.CommBufferStatus != 0)
-   {	
+   {
       return FALSE;
    }
    else
-   {  
+   {
       // check for short
       for (i = 0; i < nResultRegisters; i++)
-      {	
+      {
          // check for SH bit (0x02), ignore 0xA5
          if (status.CommResultCodes[i] & COMMCMDERRORRESULT_SH)
-         {	
+         {
             // short detected
-            return FALSE; 
+            return FALSE;
          }
       }
    }
@@ -164,13 +164,13 @@ SMALLINT DS2490ShortCheck(usb_dev_handle *hDevice, SMALLINT *present, SMALLINT *
    *present = TRUE;
    // loop through result registers
    for (i = 0; i < nResultRegisters; i++)
-   {   
+   {
       // only check for error conditions when the condition is not a ONEWIREDEVICEDETECT
       if (status.CommResultCodes[i] != ONEWIREDEVICEDETECT)
-      {   
+      {
          // check for NRS bit (0x01)
          if (status.CommResultCodes[i] & COMMCMDERRORRESULT_NRS)
-         {   
+         {
             // empty bus detected
             *present = FALSE;
          }
@@ -195,14 +195,14 @@ SMALLINT DS2490HaltPulse(usb_dev_handle *hDevice)
    SMALLINT ret;
    int limit;
 
-   
+
    // set a time limit
    limit = msGettick() + 300;
    // loop until confirm pulse has ended or timeout
    do
    {
       // HalExecWhenIdle, Resume Execution to stop an infinite pulse
-      
+
       // HalExecWhenIdle
       setup.RequestTypeReservedBits = 0x40;
       setup.Request = CONTROL_CMD;
@@ -212,22 +212,22 @@ SMALLINT DS2490HaltPulse(usb_dev_handle *hDevice)
       setup.DataOut = FALSE;
 
       // call the libusb driver
-      ret = usb_control_msg(hDevice, 
-                            setup.RequestTypeReservedBits, 
-			    setup.Request, 
-			    setup.Value, 
-			    setup.Index, 
-			    NULL, 
- 			    setup.Length, 
+      ret = usb_control_msg(hDevice,
+                            setup.RequestTypeReservedBits,
+			    setup.Request,
+			    setup.Value,
+			    setup.Index,
+			    NULL,
+ 			    setup.Length,
   			    TIMEOUT_LIBUSB);
-    
+
       if (ret < 0)
       {
          // failure
          break;
       }
 
-      // Resume Execution   
+      // Resume Execution
       setup.RequestTypeReservedBits = 0x40;
       setup.Request = CONTROL_CMD;
       setup.Value = CTL_RESUME_EXE;
@@ -236,15 +236,15 @@ SMALLINT DS2490HaltPulse(usb_dev_handle *hDevice)
       setup.DataOut = FALSE;
 
       // call the libusb driver
-      ret = usb_control_msg(hDevice, 
-	                    setup.RequestTypeReservedBits, 
-			    setup.Request, 
-   			    setup.Value, 
-  			    setup.Index, 
-   			    NULL, 
-   			    setup.Length, 
+      ret = usb_control_msg(hDevice,
+	                    setup.RequestTypeReservedBits,
+			    setup.Request,
+   			    setup.Value,
+  			    setup.Index,
+   			    NULL,
+   			    setup.Length,
    			    TIMEOUT_LIBUSB);
-   
+
       if (ret < 0)
       {
          // failure
@@ -271,13 +271,13 @@ SMALLINT DS2490HaltPulse(usb_dev_handle *hDevice)
             setup.Length = 0x00;
             setup.DataOut = FALSE;
             // call the libusb driver
-            ret = usb_control_msg(hDevice, 
-	                          setup.RequestTypeReservedBits, 
-   	    			  setup.Request, 
-   				  setup.Value, 
-   				  setup.Index, 
-   				  NULL, 
-   				  setup.Length, 
+            ret = usb_control_msg(hDevice,
+	                          setup.RequestTypeReservedBits,
+   	    			  setup.Request,
+   				  setup.Value,
+   				  setup.Index,
+   				  NULL,
+   				  setup.Length,
    				  TIMEOUT_LIBUSB);
 
             return TRUE;
@@ -309,7 +309,7 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
     // get status buffer
 //    bufferlength = usb_bulk_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);
 
-    bufferlength = usb_interrupt_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);   
+    bufferlength = usb_interrupt_read(hDevice,DS2490_EP1,(char *)buffer,sizeof(buffer),TIMEOUT_LIBUSB);
     if (bufferlength < 0)
     {
        OWERROR(OWERROR_ADAPTER_ERROR);
@@ -328,8 +328,8 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
     status->StatusFlags = buffer[8];
     status->CurrentCommCmd1 = buffer[9];
     status->CurrentCommCmd2 = buffer[10];
-    status->CommBufferStatus = buffer[11];  
-    status->WriteBufferStatus = buffer[12]; 
+    status->CommBufferStatus = buffer[11];
+    status->WriteBufferStatus = buffer[12];
     status->ReadBufferStatus = buffer[13];
     status->Reserved2 = buffer[14];
     status->Reserved3 = buffer[15];
@@ -353,7 +353,7 @@ SMALLINT DS2490GetStatus(usb_dev_handle *hDevice, STATUS_PACKET *status, uchar *
 
 
 //---------------------------------------------------------------------------
-// Description: Perfroms a hardware reset of the DS2490 equivalent to a 
+// Description: Perfroms a hardware reset of the DS2490 equivalent to a
 //              power-on reset
 // Input:       hDevice - the handle to the DS2490 device
 // Returns:     FALSE on failure, TRUE on success
@@ -372,13 +372,13 @@ SMALLINT DS2490Reset(usb_dev_handle *hDevice)
    setup.Length = 0x00;
    setup.DataOut = FALSE;
    // call the libusb driver
-   ret = usb_control_msg(hDevice, 
-                         setup.RequestTypeReservedBits, 
-			 setup.Request, 
-			 setup.Value, 
-			 setup.Index, 
-			 NULL, 
-			 setup.Length, 
+   ret = usb_control_msg(hDevice,
+                         setup.RequestTypeReservedBits,
+			 setup.Request,
+			 setup.Value,
+			 setup.Index,
+			 NULL,
+			 setup.Length,
 			 TIMEOUT_LIBUSB);
    if (ret < 0)
    {
@@ -451,4 +451,3 @@ SMALLINT DS2490Write(usb_dev_handle *hDevice, uchar *buffer, ushort *pnBytes)
       return TRUE;
    }
 }
-
