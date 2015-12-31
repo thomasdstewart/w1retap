@@ -5,7 +5,7 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -54,7 +54,7 @@ static w1_params_t * w1_dev_params(char *params)
         int j = 0;
 
         // specificly use strtok() to elimiate repeated spaces
-        
+
         for(r = sp; (s = strtok(r,"|: ")); j++,r=NULL)
             ; // NULL loop to count entries;
 
@@ -65,7 +65,7 @@ static w1_params_t * w1_dev_params(char *params)
             // Not sizeof(int) + ... to avoid packing issues (ppc)
             p = calloc(1,( sizeof(w1_params_t) + j* sizeof(double)));
             p->num = j;
-            for(j =0, r = sp; (s = strtok(r,"|: ")); r=NULL,j++)    
+            for(j =0, r = sp; (s = strtok(r,"|: ")); r=NULL,j++)
             {
                 p->values[j] = strtod(s,NULL);
             }
@@ -80,7 +80,7 @@ w1_sensor_t * w1_find_sensor(w1_devlist_t * w1, const char * s)
     w1_sensor_t *sensor = NULL;
     w1_device_t * devs;
     int i,j;
-    
+
     for(devs = w1->devs, i = 0; i < w1->numdev; i++, devs++)
     {
         for (j = 0; j < devs->ns; j++)
@@ -99,7 +99,7 @@ w1_sensor_t * w1_match_sensor(w1_device_t * dev, const char * s)
 {
     w1_sensor_t *sensor = NULL;
     int j;
-    
+
     for (j = 0; j < dev->ns; j++)
     {
         if((dev->s[j].abbrv && (strcasestr(dev->s[j].name, s) ||
@@ -116,7 +116,7 @@ int  w1_get_device_index(w1_device_t *devs, int ndev, char *serno, char *devtype
 {
     int i;
     int nn = -1;
-    
+
     for(i = 0; i < ndev; i++, devs++)
     {
         if(strcmp(serno, devs->serial) == 0 &&
@@ -136,7 +136,7 @@ static void w1_alloc_sensor(w1_device_t * w1)
         w1->s = realloc(w1->s, (w1->ns + ALLOCSENS)*sizeof( w1_sensor_t));
         memset(w1->s+w1->ns, 0, ALLOCSENS*sizeof( w1_sensor_t));
     }
-    w1->ns += 1;    
+    w1->ns += 1;
 }
 
 void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
@@ -152,12 +152,12 @@ void w1_set_device_data_index(w1_device_t * w1, int idx, char *sv)
                 w1->devtype = sv;
                 break;
             case 2:
-            case 5:            
+            case 5:
                 w1_alloc_sensor(w1);
                 w1->s[w1->ns-1].abbrv = sv;
                 break;
             case 3:
-            case 6:            
+            case 6:
                 w1->s[w1->ns-1].name = sv;
                 break;
             case 4:
@@ -221,7 +221,7 @@ void w1_set_device_data(w1_device_t * w1, const char *fnam, char *sv)
 void w1_enumdevs(w1_device_t * w)
 {
 #define MATCHES(__p1) (strncasecmp(__p1, w->devtype, (sizeof(__p1)-1)) == 0)
-    
+
     if( MATCHES("TEMPERATURE") || MATCHES("DS1820") || MATCHES("DS18S20") )
     {
         w->stype=W1_TEMP;
@@ -292,6 +292,10 @@ void w1_enumdevs(w1_device_t * w)
     {
         w->stype=W1_HBUV;
     }
+    else if (MATCHES("HB_HT") || MATCHES("HB-HT"))
+    {
+        w->stype=W1_HBHT;
+    }
 }
 
 
@@ -300,7 +304,7 @@ void w1_freeup(w1_devlist_t * w1)
     int i;
     w1_device_t * dev = NULL;
     void (*func)(void);
-    
+
     for(i = 0; i < w1->ndll; i++)
     {
         if (w1->dlls[i].type == 'l' && NULL != w1->dlls[i].handle)
@@ -312,11 +316,11 @@ void w1_freeup(w1_devlist_t * w1)
             }
         }
     }
-    
+
     for(dev=w1->devs, i = 0; i < w1->numdev; i++, dev++)
     {
         int i;
-        
+
         if(dev->serial)free(dev->serial);
         if(dev->devtype) free(dev->devtype);
         for(i = 0; i < dev->ns; i++)
@@ -379,7 +383,7 @@ void w1_tmpfilelog (w1_devlist_t *w1)
             int fd = open(w1->tmpname, O_WRONLY|O_CREAT|O_TRUNC, 0664);
             flock(fd, LOCK_EX);
             n=write(fd,line,n);
-            flock(fd, LOCK_UN);        
+            flock(fd, LOCK_UN);
             close(fd);
         }
         free(line);

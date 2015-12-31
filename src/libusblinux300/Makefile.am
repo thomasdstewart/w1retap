@@ -2,8 +2,8 @@ EXTRA_DIST=$(wildcard *.c) $(wildcard *.h) makefile.shrlib README ReadMe.txt mkd
 
 AM_CPPFLAGS = -Wall -D_GNU_SOURCE=1 -I . $(GLIB_CFLAGS) $(LIBUSB_CFLAGS)
 
-bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter mweather lcdtest atodtst humalog thermoms thermodl ds192xtest hbuvtest temptest
- 
+bin_PROGRAMS=w1find braybaro temp gethumd humids setds2409 coupler counter mweather lcdtest atodtst humalog thermoms thermodl ds192xtest hbuvtest temptest hbhttest
+
 pkglib_LTLIBRARIES = libw1common.la libw1serial.la libw1usb.la
 noinst_LIBRARIES = libowfat.a
 
@@ -28,7 +28,7 @@ libowfat_a_SOURCES = mbappreg.c mbeprom.c	     \
 	temp10.c atod26.c screenio.c		     \
 	cnt1d.c swt12.c pressure.c sht11_humid.c \
 	swt1f.c atod20.c ds2408lcd.c ds2760.c humutil.c \
-	ds192x.c hbuv.c
+	ds192x.c hbuv.c hbht.c
 
 w1find_SOURCES = w1find.c findtype.c
 w1find_DEPENDENCIES = libw1common.la
@@ -70,48 +70,53 @@ counter_DEPENDENCIES = libw1common.la
 counter_LDADD = -L. -lowfat -lw1common -lm
 counter_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
-mweather_SOURCES = mweather.c  findtype.c  weather.c 
+mweather_SOURCES = mweather.c  findtype.c  weather.c
 mweather_DEPENDENCIES = libw1common.la
 mweather_LDADD = -L. -lowfat -lw1common -lm
 mweather_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
 lcdtest_SOURCES = lcdtest.c findtype.c
-lcdtest_DEPENDENCIES = libw1common.la 
-lcdtest_LDADD = -L. -lowfat -lw1common -lm 
-lcdtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+lcdtest_DEPENDENCIES = libw1common.la
+lcdtest_LDADD = -L. -lowfat -lw1common -lm
+lcdtest_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
 atodtst_SOURCES = atodtst.c findtype.c
-atodtst_DEPENDENCIES = libw1common.la 
-atodtst_LDADD = -L. -lowfat -lw1common -lm 
-atodtst_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+atodtst_DEPENDENCIES = libw1common.la
+atodtst_LDADD = -L. -lowfat -lw1common -lm
+atodtst_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
 humalog_SOURCES = humalog.c findtype.c
-humalog_DEPENDENCIES = libw1common.la 
-humalog_LDADD = -L. -lowfat -lw1common -lm 
-humalog_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+humalog_DEPENDENCIES = libw1common.la
+humalog_LDADD = -L. -lowfat -lw1common -lm
+humalog_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
 thermoms_SOURCES = thermoms.c findtype.c thermo21.c
-thermoms_DEPENDENCIES = libw1common.la 
-thermoms_LDADD = -L. -lowfat -lw1common -lm 
-thermoms_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+thermoms_DEPENDENCIES = libw1common.la
+thermoms_LDADD = -L. -lowfat -lw1common -lm
+thermoms_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
 thermodl_SOURCES = thermodl.c findtype.c thermo21.c
-thermodl_DEPENDENCIES = libw1common.la 
-thermodl_LDADD = -L. -lowfat -lw1common -lm 
-thermodl_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+thermodl_DEPENDENCIES = libw1common.la
+thermodl_LDADD = -L. -lowfat -lw1common -lm
+thermodl_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
-ds192xtest_SOURCES = ds192x.c 
+ds192xtest_SOURCES = ds192x.c
 ds192xtest_DEPENDENCIES = libw1common.la
-ds192xtest_LDADD = -L. -lowfat -lw1common -lm 
-ds192xtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
-ds192xtest_CPPFLAGS = -DTESTMAIN=1 
+ds192xtest_LDADD = -L. -lowfat -lw1common -lm
+ds192xtest_LDFLAGS = -rdynamic  $(GLIB_LIBS)
+ds192xtest_CPPFLAGS = -DTESTMAIN=1
 
-hbuvtest_SOURCES = hbuvtest.c 
-hbuvtest_DEPENDENCIES = libw1common.la 
-hbuvtest_LDADD = -L. -lowfat -lw1common -lm 
-hbuvtest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+hbuvtest_SOURCES = hbuvtest.c
+hbuvtest_DEPENDENCIES = libw1common.la
+hbuvtest_LDADD = -L. -lowfat -lw1common -lm
+hbuvtest_LDFLAGS = -rdynamic  $(GLIB_LIBS)
 
-temptest_SOURCES = temptest.c 
-temptest_DEPENDENCIES = libw1common.la 
-temptest_LDADD = -L. -lowfat -lw1common -lm 
-temptest_LDFLAGS = -rdynamic  $(GLIB_LIBS) 
+hbhttest_SOURCES = hbhttest.c
+hbhttest_DEPENDENCIES = libw1common.la
+hbhttest_LDADD = -L. -lowfat -lw1common -lm
+hbhttest_LDFLAGS = -rdynamic  $(GLIB_LIBS)
+
+temptest_SOURCES = temptest.c
+temptest_DEPENDENCIES = libw1common.la
+temptest_LDADD = -L. -lowfat -lw1common -lm
+temptest_LDFLAGS = -rdynamic  $(GLIB_LIBS)

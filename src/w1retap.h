@@ -5,7 +5,7 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,7 +32,7 @@
 enum W1_type {W1_INVALID, W1_TEMP, W1_HUMID, W1_PRES, W1_COUNTER, W1_BRAY,
               W1_SHT11, W1_COUPLER, W1_WINDVANE, W1_DS2438V, W1_HBBARO,
               W1_HIH, W1_DS2760, W1_DS2450, W1_MS_TC, W1_DS1921, W1_DS1923,
-              W1_HBUV };
+              W1_HBUV, W1_HBHT };
 
 enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 
@@ -80,7 +80,7 @@ typedef struct
     double roc;
     double lval;
     time_t ltime;
-    short  reason;    
+    short  reason;
 } w1_sensor_t;
 
 typedef struct
@@ -121,7 +121,7 @@ typedef struct
     unsigned char control[16];
 } w1_windvane_private_t;
 
-typedef struct 
+typedef struct
 {
     char devid[32];
     int branch;
@@ -179,4 +179,3 @@ extern void w1_initialize_couplers(w1_devlist_t *);
 extern int w1_get_device_index(w1_device_t *, int, char *, char *);
 extern void w1_verify_intervals (w1_devlist_t *);
 #endif
-

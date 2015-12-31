@@ -5,7 +5,7 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -44,11 +44,11 @@ enum W1_sigflag
     W1_READALL = (2),
     W1_SHOWCF = (4)
 };
-    
+
 
 static volatile enum W1_sigflag sigme;
 
-#ifndef HAVE_CLOCK_NANOSLEEP 
+#ifndef HAVE_CLOCK_NANOSLEEP
 static inline void nanosub(struct timespec *a, struct timespec *b,
                            struct timespec *result)
 {
@@ -61,7 +61,7 @@ static inline void nanosub(struct timespec *a, struct timespec *b,
     }
 }
 #endif
-   
+
 static void sig_hup(int x)
 {
     sigme |= W1_RECONF;
@@ -84,7 +84,7 @@ void w1_replog(w1_devlist_t *w1, const char *fmt,...)
     va_list va;
     char *p;
     int nc;
-    
+
     va_start (va, fmt);
     if ((nc = vasprintf (&p, fmt, va)) != -1)
     {
@@ -98,7 +98,7 @@ void w1_replog(w1_devlist_t *w1, const char *fmt,...)
             }
         }
         w1->lastmsg = NULL;
-        
+
         if(w1->repfile)
         {
             if(fp == NULL)
@@ -117,7 +117,7 @@ void w1_replog(w1_devlist_t *w1, const char *fmt,...)
                 char s[64];
                 logtimes(w1,w1->logtime, s);
                 fputs(s, fp);
-                fputc(' ', fp);                
+                fputc(' ', fp);
                 fputs(p, fp);
                 fputc('\n', fp);
                 fflush(fp);
@@ -135,7 +135,7 @@ static void do_init(w1_devlist_t *w1)
     int n;
     int done_i = 0;
     void (*func)(w1_devlist_t *w1, char *);
-    
+
     for(n = 0; n < w1->ndll; n++)
     {
         if(w1->dlls[n].type == 'c' && done_i == 0)
@@ -208,7 +208,7 @@ void dll_parse(w1_devlist_t *w1, int typ, char *params)
 {
     char *sep;
     char *sofile = NULL;
-    
+
     if(w1->ndll == (MAXDLL-1))
     {
         fputs("Too many DLLs\n", stderr);
@@ -232,7 +232,7 @@ void dll_parse(w1_devlist_t *w1, int typ, char *params)
 
     if(NULL != (w1->dlls[w1->ndll].handle = g_module_open(sofile, G_MODULE_BIND_LAZY)))
     {
-        w1->dlls[w1->ndll].type = typ;            
+        w1->dlls[w1->ndll].type = typ;
         if(sep && *sep)
         {
             w1->dlls[w1->ndll].param = strdup(sep);
@@ -246,7 +246,7 @@ static void cleanup(int n, void * w)
 {
     int i;
     w1_devlist_t *w1 = w;
-    
+
     w1_freeup(w1);
     for(i = 0; i < w1->ndll; i++)
     {
@@ -255,13 +255,13 @@ static void cleanup(int n, void * w)
             g_module_close(w1->dlls[i].handle);
             w1->dlls[i].handle = 0;
         }
-        
+
         if(w1->dlls[i].param)
         {
             free(w1->dlls[i].param);
             w1->dlls[i].param = NULL;
         }
-        w1->dlls[w1->ndll].type = 0;            
+        w1->dlls[w1->ndll].type = 0;
     }
     w1->ndll = 0;
     free(w1->rcfile);
@@ -285,20 +285,20 @@ static void w1_show(w1_devlist_t *w1, int forced)
     if(w1->verbose || forced)
     {
         int i;
-        
+
         if(w1->numdev)
         {
             fputs("Sensors:\n", stderr);
         }
-        
+
         for(i = 0; i < w1->numdev; i++)
         {
             int j;
-            
+
             fprintf(stderr, "%s %s (%ds)%s\n",
                     w1->devs[i].serial, w1->devs[i].devtype, w1->devs[i].intvl,
                     (w1->devs[i].stype == W1_INVALID) ? " !" : "");
-            
+
             if(w1->devs[i].coupler)
             {
 	        char *branch = (w1->devs[i].coupler->branch == COUPLER_AUX_ON) ? "aux" : "main";
@@ -315,7 +315,7 @@ static void w1_show(w1_devlist_t *w1, int forced)
                 }
                 fputc('\n', stderr);
             }
-            
+
             for(j = 0; j < w1->devs[i].ns; j++)
             {
                 if(w1->devs[i].s[j].abbrv)
@@ -345,12 +345,12 @@ static void w1_show(w1_devlist_t *w1, int forced)
         {
             fputs("Plugins:\n", stderr);
         }
-        
+
         for(i = 0; i < w1->ndll; i++)
         {
             char *s;
             char *p=NULL;
-            
+
             if((s=w1->dlls[i].param))
             {
                 if ((p = strcasestr(w1->dlls[i].param,"password=")))
@@ -368,7 +368,7 @@ static void w1_show(w1_devlist_t *w1, int forced)
             {
                 s="";
             }
-            
+
             fprintf(stderr, "%2d: %c [%p] %s => %s\n",
                     i,
                     w1->dlls[i].type,
@@ -409,7 +409,7 @@ static void w1_show(w1_devlist_t *w1, int forced)
 
 int main(int argc, char **argv)
 {
-    struct timeval now = {0};        
+    struct timeval now = {0};
     struct sigaction act ={{0}};
     gboolean immed = 0;
     gboolean showvers=0;
@@ -438,7 +438,7 @@ int main(int argc, char **argv)
          "Interface device", "DEVICE"},
         {"cycle-time", 't', 0, G_OPTION_ARG_INT, &w1->delay,
          "Time (secs) between device readings", "SECS"},
-        {"dont-read",'N', 0, G_OPTION_ARG_NONE, &w1->doread, 
+        {"dont-read",'N', 0, G_OPTION_ARG_NONE, &w1->doread,
          "Don't read sensors (for debugging)",NULL},
         {"verbose", 'v', 0, G_OPTION_ARG_NONE, &w1->verbose,
          "Verbose messages", NULL},
@@ -462,7 +462,7 @@ int main(int argc, char **argv)
     {
         exit(2);
     }
-    
+
     act.sa_flags = SA_RESTART;
     sigemptyset(&(act.sa_mask));
 
@@ -481,7 +481,7 @@ int main(int argc, char **argv)
     w1->delay = w1->cycle = W1_DEFAULT_INTVL;
     w1->temp_scan = 1000;
     w1->pres_reduction_temp = NULL;
-    
+
     if((p = getenv("W1RCFILE")))
     {
 	w1->rcfile = strdup(p);
@@ -498,11 +498,11 @@ int main(int argc, char **argv)
             fprintf (stderr, "%s\n", error->message);
             g_error_free (error);
             exit(1);
-        } 
+        }
     }
 
     immed ^= 1; // weird JH logic ...
-    
+
     if(w1->tmpname == NULL)
     {
         w1->tmpname = "/tmp/.w1retap.dat";
@@ -512,13 +512,13 @@ int main(int argc, char **argv)
 
     if(showvers)
         w1->verbose = 2;
-    
+
     w1->vane_offset &= 0xf;
-    
+
     if(w1->verbose)
     {
-        fputs("w1retap v" VERSION " (c) 2005-2012 Jonathan Hudson\n", stderr);
-        fputs("Built: " __DATE__ " " __TIME__  " gcc " __VERSION__ "\n", stderr);        
+        fputs("w1retap v" VERSION " (c) 2005-2015 Jonathan Hudson\n", stderr);
+        fputs("Built: " __DATE__ " " __TIME__  " gcc " __VERSION__ "\n", stderr);
         if(w1->verbose == 2)
         {
             exit (0);
@@ -536,7 +536,7 @@ int main(int argc, char **argv)
     init_interfaces(w1);
     w1->logtime =time(NULL);
     w1_replog (w1, "Startup w1retap v" VERSION);
-    
+
     if(w1->daemonise)
     {
         // preserve redirected log files unless TTYs
@@ -589,23 +589,23 @@ int main(int argc, char **argv)
 
         if(once)
             break;
-        
+
         if(w1->delay)
         {
             int ns;
             immed = 1;
-            
+
             do
             {
                 struct timespec req;
                 ns = 0;
                 if(sigme & W1_READALL)
                 {
-                    sigme &= ~W1_READALL;                    
+                    sigme &= ~W1_READALL;
                     nv = w1_read_all_sensors(w1, 0);
                     w1_tmpfilelog(w1);
                 }
-                
+
                 if(sigme & W1_RECONF)
                 {
                     sigme &= ~W1_RECONF;
@@ -625,11 +625,11 @@ int main(int argc, char **argv)
                 if(w1->verbose)
                     fputs("Waiting ... ", stderr);
 		gettimeofday(&now, NULL);
-#ifdef HAVE_CLOCK_NANOSLEEP 
+#ifdef HAVE_CLOCK_NANOSLEEP
                 req.tv_sec = (now.tv_sec / w1->delay)*w1->delay + w1->delay;
                 req.tv_nsec = 0;
                 ns  = clock_nanosleep(CLOCK_REALTIME,TIMER_ABSTIME, &req, NULL);
-#else                
+#else
 		struct timespec then, nnow;
                 then.tv_sec = w1->delay * (1 + now.tv_sec / w1->delay);
                 then.tv_nsec = 200*1000*1000; /* ensure tick crossed */
