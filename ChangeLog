@@ -1,3 +1,7 @@
+1.4.4 2015-12-31
+	Support the new Hobby Boards Temperature & Humidity sensor (for Graeme
+	Gemmill who kindy lent me his sensor for development).
+
 1.4.3 2015-08-10
 	Support modern MySQL API (avoids trunctation of large values)
 	Build on ancient C compilers (like the Centos one)
