@@ -112,14 +112,14 @@ void HBHT_set_poll_freq (int portnum, uchar *snum, uchar val)
 
 uchar HBHT_get_poll_freq (int portnum, uchar *snum)
 {
-    uchar val;
+    uchar val = 0;
     HBHT_get_byteval(portnum, snum, HBHT_GETPOLLFREQ, &val);
     return val;
 }
 
 short HBHT_get_hum_offset(int portnum, uchar *snum)
 {
-    uchar hoff_raw[2];
+    uchar hoff_raw[2] = {0, 0};
     short hoff;
     HBHT_get_bytes(portnum, snum, HBHT_GETHUMIDOFFSET, hoff_raw, 2);
     hoff = (hoff_raw[0] | (hoff_raw[1] << 8));
@@ -148,7 +148,7 @@ void HBHT_read_version(int portnum, uchar *snum, char *vers)
 
 int HBHT_read_data(int portnum, uchar *snum, hbht_res_t *hb)
 {
-    uchar tchar[2];
+    uchar tchar[2] = {0, 0};
     HBHT_get_bytes(portnum, snum, HBHT_GETTEMPERATURE_C, (uchar*)&tchar, 2);
     hb->temp = (float)((short)(tchar[0] | (tchar[1] << 8)))/10.0;
     HBHT_get_bytes(portnum, snum, HBHT_GETCORRHUMID, (uchar*)&tchar, 2);

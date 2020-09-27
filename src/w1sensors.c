@@ -45,6 +45,8 @@
 #include "hbht.h"
 #include "w1retap.h"
 
+#define W1_RETRY 10
+
 // Table from DalSemi application note 755A (page four): http://pdfserv.maxim-ic.com/en/an/app755A.pdf
 #define WINDVANE_VCC       (1.0)                                // connected to VCC through pull-up resistor
 #define WINDVANE_R2        (WINDVANE_VCC / 2.0)                 // connected to 50% voltage divider
@@ -153,13 +155,11 @@ static int w1_select_device(w1_devlist_t *w1, w1_device_t *w)
 
 static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
 {
-    static char *restxt[] = {"OK","RATE","MIN","undef","MAX"};
+    static char *restxt[] = {"OK","RATE","MIN","undef","MAX","SEQ"};
 
     int chk = 0;
     float act =  s->value;
     float rate = 0;
-
-    s->valid = 1;
 
     if((s->flags & W1_RMIN) && (s->value < s->rmin))
     {
@@ -174,7 +174,7 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
 
     if(chk == 0 && (s->flags & W1_ROC))
     {
-        if (!(w1->allow_escape == 1 && (s->reason & (W1_RMIN|W1_RMAX)) != 0))
+//        if (!(w1->allow_escape == 1 && (s->reason & (W1_RMIN|W1_RMAX)) != 0))
         {
             if (s->ltime > 0 && s->ltime != w1->logtime)
             {
@@ -190,10 +190,27 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
     }
 
     s->reason = chk;
+
+    if(chk ==0 && strncmp(s->abbrv,"RGC", 3) == 0)
+    {
+/*
+  w1_replog (w1, "%s result=%.2f actual=%.2f rate=%.2f prev=%.2f "
+                   "prevtime_t=%d logtime_t=%d reason=%s",
+                   s->abbrv, s->value, act, rate,
+                   s->lval, s->ltime, w1->logtime, restxt[chk]);
+*/
+        if(s->value < s->lval)
+        {
+            s->value = s->lval;
+            chk = W1_SEQ;
+        }
+    }
+
     if(chk == 0)
     {
         s->ltime = w1->logtime;
         s->lval = s->value;
+        s->valid = 1;
     }
     else
     {
@@ -201,7 +218,9 @@ static int w1_validate(w1_devlist_t *w1, w1_sensor_t *s)
                    "prevtime_t=%d logtime_t=%d reason=%s",
                    s->abbrv, s->value, act, rate,
                    s->lval, s->ltime, w1->logtime, restxt[chk]);
+        s->valid = 0;
     }
+
     return (int)s->valid;
 }
 
@@ -357,6 +376,15 @@ static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w, ds2438v_t *v)
             if(v)
                 v->vdd = val;
         }
+        else
+        {
+            if(w1_match_sensor(w,"Solar") != NULL)
+            {
+                float v1;
+                v1 = ReadAtoD(w1->portnum,TRUE, w->serno);
+                w1_replog (w1, "Solar vdd %.1f", v1);
+            }
+        }
 
         s = w1_match_sensor(w, "vad");
         if ((v && (v->req & DS2438_VAD)) || s)
@@ -402,13 +430,18 @@ static int w1_read_voltages(w1_devlist_t *w1, w1_device_t *w, ds2438v_t *v)
         if ((v && (v->req & DS2438_TEMP)) || s)
         {
             val = Get_Temperature(w1->portnum,w->serno);
-            if(s)
+            if(val != -1)
             {
-                s->value = val;
-                nv += w1_validate(w1, s);
+                int nv1 = 0;
+                if(s)
+                {
+                    s->value = val;
+                    nv1 = w1_validate(w1, s);
+                    nv += nv1;
+                }
+                if(v && nv1 == 1)
+                    v->temp = val;
             }
-            if(v)
-                v->temp = val;
         }
     }
     return nv;
@@ -582,7 +615,7 @@ static int w1_read_sht11 (w1_devlist_t *w1, w1_device_t *w)
                 nv += w1_validate(w1, s);
             }
 
-            if((s = w1_match_sensor(w, "Humid")))
+            if((s = w1_match_sensor(w, "Humidity")))
             {
                 s->value = rh;
                 nv += w1_validate(w1, s);
@@ -635,7 +668,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
             nv += w1_validate(w1, s);
         }
 
-        if((s = w1_match_sensor(w, "Humid")))
+        if((s = w1_match_sensor(w, "Humidity")))
         {
             s->value = humid;
             nv += w1_validate(w1, s);
@@ -644,7 +677,7 @@ static int w1_read_humidity(w1_devlist_t *w1, w1_device_t *w)
 
     if(w->s[0].valid == 0 || w->s[1].valid == 0 )
     {
-        w1_replog (w1, "%f %f %f %f %c", vddx, v.vad, v.temp, humid, vind);
+        w1_replog (w1, "readhumid %f %f %f %f %c", vddx, v.vad, v.temp, humid, vind);
     }
     return nv;
 }
@@ -653,7 +686,7 @@ static int w1_read_hih (w1_devlist_t *w1, w1_device_t *w)
 {
     float humid=0,temp=0;
     float vdd =0 ,vad =0;
-    int nv = 0;
+    int nv = 0, nv1 = 0;
 
     if(w->init == 0)
     {
@@ -665,35 +698,41 @@ static int w1_read_hih (w1_devlist_t *w1, w1_device_t *w)
     {
         ds2438v_t v = {0};
         v.req = DS2438_VAD | DS2438_VDD | DS2438_TEMP;
-        nv = w1_read_voltages(w1, w, &v);
-
-        // Shamelessly researched from owfs; ow_2438.c
-        humid = (v.vad/v.vdd-(0.8/v.vdd)) /
+        nv1 = w1_read_voltages(w1, w, &v);
+        if(nv1 != 0)
+        {
+                // Shamelessly researched from owfs; ow_2438.c
+            humid = (v.vad/v.vdd-(0.8/v.vdd)) /
                       (0.0062*(1.0305+0.000044*temp+0.0000011*v.temp*v.temp));
 
-        if (w1->verbose)
-        {
-            fprintf(stderr, "vdd %f vad %f temp %f rh %f\n",
-                    v.vdd, v.vad, v.temp, humid);
-        }
+            if (w1->verbose)
+            {
+                fprintf(stderr, "vdd %f vad %f temp %f rh %f\n",
+                        v.vdd, v.vad, v.temp, humid);
+            }
 
-        w1_sensor_t *s;
+            w1_sensor_t *s;
+/*
+ *  Not necessary, done read_voltages
         if((s = w1_match_sensor(w, "Temp")))
         {
             s->value = v.temp;
             nv += w1_validate(w1, s);
         }
-
-        if((s = w1_match_sensor(w, "Humid")))
-        {
-            s->value = humid;
-            nv += w1_validate(w1, s);
+*/
+            if((s = w1_match_sensor(w, "Humidity")))
+            {
+                if (humid > 100)
+                    humid = 99.9;
+                s->value = humid;
+                nv += w1_validate(w1, s);
+            }
         }
-    }
-
-    if(w->s[0].valid == 0 || w->s[1].valid == 0 )
-    {
-        w1_replog (w1, "%f %f %f %f", vdd, vad, temp, humid);
+        if(w->s[0].valid == 0 || w->s[1].valid == 0 )
+        {
+            w1_replog (w1, "hih nv1 %d %d %f %f %f %f", nv1, nv, vdd, vad, temp, humid);
+            w->s[0].valid = w->s[1].valid = 0;
+        }
     }
     return nv;
 }
@@ -892,7 +931,7 @@ static int w1_read_ds1923 (w1_devlist_t *w1, w1_device_t *w)
                 nv += w1_validate(w1, s);
             }
 
-            if((s = w1_match_sensor(w, "Humid")))
+            if((s = w1_match_sensor(w, "Humidity")))
             {
                 s->value = v.rh;
                 nv += w1_validate(w1, s);
@@ -1007,7 +1046,7 @@ static int w1_read_hbht (w1_devlist_t *w1, w1_device_t *w)
                 nv += w1_validate(w1, s);
             }
 
-            if((s = w1_match_sensor(w, "Humid")))
+            if((s = w1_match_sensor(w, "Humidity")))
             {
                 s->value = hb.humid;
                 nv += w1_validate(w1, s);
@@ -1310,92 +1349,96 @@ int w1_read_all_sensors(w1_devlist_t *w1, time_t secs)
             }
             if(secs == 0 || d->intvl == 0 || ((secs % d->intvl) == 0))
             {
-#if 0
+                int rtry;
+
+                for(rtry = 0; rtry < W1_RETRY; rtry++)
                 {
-                    char buf[256];
-                    int nc;
-                    nc = sprintf(buf,"%s %s\n", d->devtype, d->serial);
-                        if(write(lfd, buf, nc) == nc)
-                            fdatasync(lfd);
+                    switch(d->stype)
+                    {
+                        case W1_TEMP:
+                            r = w1_read_temp(w1, d);
+                            break;
+
+                        case W1_HUMID:
+                            r = w1_read_humidity(w1, d);
+                            break;
+
+                        case W1_PRES:
+                            r = w1_read_pressure(w1, d);
+                            break;
+
+                        case W1_COUNTER:
+                            r = w1_read_counter(w1, d);
+                            break;
+
+                        case W1_BRAY:
+                            r = w1_read_bray(w1, d);
+                            break;
+
+                        case W1_HBBARO:
+                            r = w1_read_hb_pressure(w1, d);
+                            break;
+
+                        case W1_SHT11:
+                            r = w1_read_sht11(w1, d);
+                            break;
+
+                        case W1_WINDVANE:
+                            r = w1_read_windvane(w1, d);
+                            break;
+
+                        case W1_DS2438V:
+                            r = w1_read_voltages(w1, d, NULL);
+                            break;
+
+                        case W1_HIH:
+                            r = w1_read_hih(w1, d);
+                            break;
+
+                        case W1_DS2760:
+                            r = w1_read_ds2760(w1, d);
+                            break;
+
+                        case W1_DS2450:
+                            r = w1_read_ds2450(w1, d);
+                            break;
+
+                        case W1_MS_TC:
+                            r = w1_read_current(w1, d);
+                            break;
+
+                        case W1_DS1921:
+                            r = w1_read_ds1921(w1, d);
+                            break;
+
+                        case W1_DS1923:
+                            r = w1_read_ds1923(w1, d);
+                            break;
+
+                        case W1_HBUV:
+                            r = w1_read_hbuv(w1, d);
+                            break;
+
+                        case W1_HBHT:
+                            r = w1_read_hbht(w1, d);
+                            break;
+
+                        case W1_INVALID:
+                        default:
+                            r = -1;
+                            break;
+                    }
+                    if(r != 0)
+                        break;
+                    else
+                    {
+                        w1_replog (w1, "retry %d %s", rtry, d->serial);
+			usleep(50*1000);
+                    }
+
                 }
-#endif
-                switch(d->stype)
+                if(r >= 0)
                 {
-                    case W1_TEMP:
-                        r = w1_read_temp(w1, d);
-                        break;
-
-                    case W1_HUMID:
-                        r = w1_read_humidity(w1, d);
-                        break;
-
-                    case W1_PRES:
-                        r = w1_read_pressure(w1, d);
-                        break;
-
-                    case W1_COUNTER:
-                        r = w1_read_counter(w1, d);
-                        break;
-
-                    case W1_BRAY:
-                        r = w1_read_bray(w1, d);
-                        break;
-
-                    case W1_HBBARO:
-                        r = w1_read_hb_pressure(w1, d);
-                        break;
-
-                    case W1_SHT11:
-                        r = w1_read_sht11(w1, d);
-                        break;
-
-                    case W1_WINDVANE:
-                        r = w1_read_windvane(w1, d);
-                        break;
-
-                    case W1_DS2438V:
-                        r = w1_read_voltages(w1, d, NULL);
-                        break;
-
-                    case W1_HIH:
-                        r = w1_read_hih(w1, d);
-                        break;
-
-                    case W1_DS2760:
-                        r = w1_read_ds2760(w1, d);
-                        break;
-
-                    case W1_DS2450:
-                        r = w1_read_ds2450(w1, d);
-                        break;
-
-                    case W1_MS_TC:
-                        r = w1_read_current(w1, d);
-                        break;
-
-                    case W1_DS1921:
-                        r = w1_read_ds1921(w1, d);
-                        break;
-
-                    case W1_DS1923:
-                        r = w1_read_ds1923(w1, d);
-                        break;
-
-                    case W1_HBUV:
-                        r = w1_read_hbuv(w1, d);
-                        break;
-
-                    case W1_HBHT:
-                        r = w1_read_hbht(w1, d);
-                        break;
-
-                    case W1_INVALID:
-                    default:
-                        r = -1;
-                        break;
-                }
-
-                if(r >= 0){
                     nv += r;
                     if(r == 0)
                         syslog(LOG_WARNING, "Failed to read sensor %s (type %s)", d->serial, d->devtype);

@@ -16,9 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#if defined(TESTBIN)
-#define _GNU_SOURCE         /* See feature_test_macros(7) */
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -32,10 +29,12 @@
 #include <syslog.h>
 #include "w1retap.h"
 
-// If you know how to make this stmt/prepare work, the fix this
-// to a suitable version (and fix timestamp stuff too).
 
-#define MINVERS 50000
+// This forces the bad old way of doing MYSQL inserts, as prepared statements appear to
+// fail when loaded dynamically
+#if !defined(W1MYSQL_MINVERS)
+# define W1MYSQL_MINVERS 9999999
+#endif
 
 static void my_params(char *params,
                       char **host, char **dbname, char **user, char **pass)
@@ -226,7 +225,7 @@ void  w1_init (w1_devlist_t *w1, char *dbnam)
 }
 
 static MYSQL *conn;
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
 static MYSQL_STMT *stmt;
 #endif
 
@@ -234,7 +233,7 @@ void w1_cleanup(void)
 {
     if(conn)
     {
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
         mysql_stmt_close(stmt);
         stmt = NULL;
 #endif
@@ -255,15 +254,22 @@ void w1_logger(w1_devlist_t *w1, char *params)
 
     if(conn == NULL)
     {
+        if(w1->verbose)
+            fprintf(stderr, "mysql version check %d %d\n", MYSQL_VERSION_ID, W1MYSQL_MINVERS);
+
         conn = w1_opendb(params);
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
         mysql_autocommit(conn, 0);
 #else
         mysql_real_query(conn, "SET AUTOCOMMIT=0",
                          sizeof("SET AUTOCOMMIT=0")-1);
 #endif
     }
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
+
+    if(w1->verbose)
+        fprintf(stderr, "Using prepared statement\n");
+
     if(stmt == NULL)
     {
         const char s[] =
@@ -280,18 +286,18 @@ void w1_logger(w1_devlist_t *w1, char *params)
         if(devs->init)
         {
             int j;
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
             MYSQL_BIND   bind[3];
 #endif
             for (j = 0; j < devs->ns; j++)
             {
-                memset(bind, 0, sizeof(bind));
                 if(devs->s[j].valid)
                 {
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
+                    memset(bind, 0, sizeof(bind));
+                    struct tm *tm = NULL;
                     if(w1->timestamp)
                     {
-                        struct tm *tm;
                         tm = (w1->force_utc) ? gmtime(&w1->logtime) :
                             localtime(&w1->logtime);
                         MYSQL_TIME mtm = {0};
@@ -303,6 +309,7 @@ void w1_logger(w1_devlist_t *w1, char *params)
                         mtm.second= tm->tm_sec;
                         mtm.neg = 0;
                         mtm.second_part = 0;
+                        mtm.time_type =  MYSQL_TIMESTAMP_DATETIME;
                         bind[0].buffer_type= MYSQL_TYPE_TIMESTAMP;
                         bind[0].buffer= (char *)&mtm;
                         bind[0].is_null= (my_bool*) 0;
@@ -334,8 +341,15 @@ void w1_logger(w1_devlist_t *w1, char *params)
                     if(mysql_stmt_execute(stmt))
                     {
                         fprintf(stderr, "execute:  %s\n", mysql_error(conn));
+                        fprintf(stderr, "timestamp = %d\n", w1->timestamp);
+                        fprintf(stderr, "logtime = %ld\n", w1->logtime);
+                        if(tm != NULL)
+                        {
+                            char tval[64];
+                            strftime(tval, sizeof(tval), "'%F %T'", tm);
+                            fprintf(stderr, "timestamp %s %d\n", tval, w1->force_utc);
+                        }
                     }
-
 #else
                     char *q;
                     char tval[64];
@@ -344,17 +358,21 @@ void w1_logger(w1_devlist_t *w1, char *params)
                     {
                         struct tm *tm;
                         tm = (w1->force_utc) ? gmtime(&w1->logtime) : localtime(&w1->logtime);
-                        strftime(tval, sizeof(tval), "'%F %T%z'", tm);
-                        printf("timestamp %s\n", tval);
+                        strftime(tval, sizeof(tval), "'%F %T'", tm);
+//                        printf("timestamp %s %d\n", tval, strlen(tval1));
                     }
                     else
                     {
                         snprintf(tval, sizeof(tval), "%ld", w1->logtime);
-                        printf("time_t %s\n", tval);
+//                        printf("time_t %s\n", tval);
                     }
                     asprintf(&q,
                              "INSERT into readings(date,name,value) VALUES(%s,'%s',%g)",
                              tval, devs->s[j].abbrv, (double)devs->s[j].value);
+
+                    if(w1->verbose)
+                        printf("SQL:%s\n", q);
+
                     if(0 != mysql_real_query(conn, q, strlen(q)))
                     {
                         const char *mse;
@@ -362,6 +380,8 @@ void w1_logger(w1_devlist_t *w1, char *params)
                         if (mse)
                         {
                             syslog(LOG_ERR, "MySQL error %s", mse);
+                            if(w1->verbose)
+                                fprintf(stderr, "Err:%s\n", mse);
                         }
                     }
                     free(q);
@@ -370,72 +390,9 @@ void w1_logger(w1_devlist_t *w1, char *params)
             }
         }
     }
-#if MYSQL_VERSION_ID > MINVERS
+#if MYSQL_VERSION_ID > W1MYSQL_MINVERS
     mysql_commit(conn);
 #else
     mysql_real_query(conn, "COMMIT", sizeof("COMMIT")-1);
 #endif
 }
-
-
-#if defined(TESTBIN)
-int main(int argc, char **argv)
-{
-    int n;
-    w1_devlist_t *w1;
-    w1 = calloc(1, sizeof(w1_devlist_t));
-
-    if(argc < 2)
-    {
-        fputs("Need dbparams as argv[1] please\n", stderr);
-        exit(1);
-    }
-
-    w1_init(w1, argv[1]);
-    for(n = 0; n < w1->numdev; n++)
-    {
-        fprintf(stderr, "%s %s\n",
-                w1->devs[n].serial, w1->devs[n].devtype);
-        fprintf(stderr, "\t0: %s %s\n",
-                w1->devs[n].s[0].abbrv, w1->devs[n].s[0].name);
-        fprintf(stderr, "\t1: %s %s\n",
-                w1->devs[n].s[1].abbrv, w1->devs[n].s[1].name);
-    }
-
-
-    w1->timestamp = 1;
-
-    w1->logtime = time(NULL);
-    w1->devs[0].init = 1;
-    w1->devs[0].s[0].valid = 1;
-    w1->devs[0].s[0].value = 22.22;
-
-    w1->devs[1].init = 1;
-    w1->devs[1].s[0].valid = 1;
-    w1->devs[1].s[0].value = 69;
-    w1->devs[1].s[1].valid = 99.0;
-    w1->devs[1].s[1].value = 18.88;
-
-    w1->devs[2].init = 1;
-    w1->devs[2].s[0].valid = 1;
-    w1->devs[2].s[0].value = 1001.45;
-    w1_logger(w1, argv[1]);
-
-    sleep(2);
-    w1->logtime = time(NULL);
-    w1->devs[0].init = 1;
-    w1->devs[0].s[0].valid = 1;
-    w1->devs[0].s[0].value = 25.77;
-
-    w1->devs[1].init = 1;
-    w1->devs[1].s[0].valid = 1;
-    w1->devs[1].s[0].value = 66;
-
-    w1->devs[2].init = 1;
-    w1->devs[2].s[1].valid = 1;
-    w1->devs[2].s[1].value = 18722598.00;
-
-    w1_logger(w1, argv[1]);
-    return 0;
-}
-#endif

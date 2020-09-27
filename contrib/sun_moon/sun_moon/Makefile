@@ -1,5 +1,5 @@
 CC=gcc
-LDFLAGS=-lnova
+LDFLAGS=-lnova -lm
 CFLAGS=-Wall -O2 -s
 
 all: solar lunar sun_moon

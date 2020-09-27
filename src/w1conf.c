@@ -5,7 +5,7 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,7 +53,7 @@ void read_config(w1_devlist_t *w1)
         while(fgets(buf, sizeof(buf), fp))
         {
             char lbuf[512];
-            
+
             if(1 == sscanf(buf,"device = %512[^\n]", lbuf))
             {
                 w1->iface = g_strdup(lbuf);
@@ -115,7 +115,7 @@ void read_config(w1_devlist_t *w1)
             }
             else
             {
-                (void)(sscanf(buf,"delay = %d", &w1->delay) ||    
+                (void)(sscanf(buf,"delay = %d", &w1->delay) ||
                        sscanf(buf,"demonise = %d", &w1->daemonise) ||
                        sscanf(buf,"altitude = %d", &w1->altitude) ||
                        sscanf(buf,"vane_offset = %d", &w1->vane_offset) ||
@@ -126,5 +126,6 @@ void read_config(w1_devlist_t *w1)
         }
         fclose(fp);
     }
+    else
+        fprintf(stderr, "failed to read config\n");
 }
-
