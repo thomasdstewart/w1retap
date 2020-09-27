@@ -348,7 +348,7 @@ extern int owHasErrors(void);
 // libloader
 int      owAcquireEx(char *port_zstr);
 SMALLINT owAcquire(int portnum, char *port_zstr);
-extern SMALLINT FAMILY_CODE_04_ALARM_TOUCHRESET_COMPLIANCE;
+SMALLINT FAMILY_CODE_04_ALARM_TOUCHRESET_COMPLIANCE;
 
 // One Wire functions defined in ownetu.c
 SMALLINT  (*owFirst)(int portnum, SMALLINT do_reset, SMALLINT alarm_only);

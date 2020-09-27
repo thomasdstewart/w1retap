@@ -523,6 +523,14 @@ int main(int argc, char **argv)
         {
             exit (0);
         }
+        fprintf(stderr, "cfg: read from %s\n", w1->rcfile);
+        fprintf(stderr, "cfg: delay = %d\n", w1->delay);
+        fprintf(stderr, "cfg: demonise = %d\n", w1->daemonise);
+        fprintf(stderr, "cfg: altitude = %d\n", w1->altitude);
+        fprintf(stderr, "cfg: vane_offset = %d\n", w1->vane_offset);
+        fprintf(stderr, "cfg: timestamp = %d\n", w1->timestamp);
+        fprintf(stderr, "cfg: logtemp = %d\n", w1->logtmp);
+        fprintf(stderr, "cfg: temp_scan = %d\n", w1->temp_scan);
     }
 
     do_init(w1);

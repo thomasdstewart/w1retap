@@ -45,6 +45,7 @@ enum W1_so_opts {W1_SO_INIT=1, W1_SO_LOG=2};
 #define W1_ROC (1 << 0)
 #define W1_RMIN (1 << 1)
 #define W1_RMAX (1 << 2)
+#define W1_SEQ  (W1_RMAX+1)
 
 #define ALLOCDEV 8
 #define TBUF_SZ 32
