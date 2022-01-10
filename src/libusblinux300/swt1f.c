@@ -153,20 +153,20 @@ int SetSwitch1F(int portnum, uchar *SerialNum, int Swtch, int NumExtra,
 //
 // Returns: Returns the number of devices found on the branch
 //
-int FindBranchDevice(int portnum, uchar Branch[8], uchar BranchSN[][8], int MAXDEVICES,
+int FindBranchDevice(int portnum, uchar *Branch, uchar BranchSN[][8], int MAXDEVICES,
                      int MainBr)
 {
    int NumDevices = 0;
    short result;
 
-   result = owBranchFirst(portnum, &Branch[0], FALSE, MainBr);
+   result = owBranchFirst(portnum, Branch, FALSE, MainBr);
 
    while(result)
    {
       owSerialNum(portnum,BranchSN[NumDevices], TRUE);
       NumDevices++;
 
-      result = owBranchNext(portnum, &Branch[0], FALSE, MainBr);
+      result = owBranchNext(portnum, Branch, FALSE, MainBr);
    }
 
    return NumDevices;
@@ -187,7 +187,7 @@ int FindBranchDevice(int portnum, uchar Branch[8], uchar BranchSN[][8], int MAXD
 //                        Serial Number placed in the global SerialNum
 //            FALSE (0): There are no devices on the 1-Wire Net.
 //
-int owBranchFirst(int portnum, uchar BrSN[8], int AlarmD, int FirMain)
+int owBranchFirst(int portnum, uchar *BrSN, int AlarmD, int FirMain)
 {
    int smart_main = 4;
    int smart_aux = 2;
@@ -226,7 +226,7 @@ int owBranchFirst(int portnum, uchar BrSN[8], int AlarmD, int FirMain)
 //                        Serial Number placed in the global SerialNum
 //            FALSE (0): There are no devices on the 1-Wire Net.
 //
-int owBranchNext(int portnum, uchar BrSN[8], int AlarmD, int NextMain)
+int owBranchNext(int portnum, uchar *BrSN, int AlarmD, int NextMain)
 {
    int smart_main = 4;
    int smart_aux = 2;

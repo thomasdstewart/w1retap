@@ -46,7 +46,7 @@
 //          FALSE(0) could not read the counter, perhaps device is not
 //                   in contact
 //
-SMALLINT ReadCounter(int portnum, uchar SerialNum[8], int CounterPage,
+SMALLINT ReadCounter(int portnum, uchar *SerialNum, int CounterPage,
                      unsigned int *Count)
 {
    uchar rt=FALSE;

@@ -115,8 +115,7 @@ int main(int argc, char **argv)
          exit(1);
       }
       else
-         printf("File '%s' opened to write mission results.\n",
-                 argv[filenum]);
+         printf("File '%s' opened to write mission results.\n", argv[filenum]);
    }
 
    // get list of Thermochron's
@@ -218,4 +217,3 @@ void PrintResults(ThermoStateType *ThermoState, FILE *fp, int ConvertToF)
    // free the memory block used
    free(str);
 }
-
