@@ -1,40 +1,40 @@
 //---------------------------------------------------------------------------
 // Copyright (C) 2000 Dallas Semiconductor Corporation, All Rights Reserved.
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a 
-// copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the 
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
 // Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included 
+//
+// The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-// MERCHANTABILITY,  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-// IN NO EVENT SHALL DALLAS SEMICONDUCTOR BE LIABLE FOR ANY CLAIM, DAMAGES 
-// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
-// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY,  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL DALLAS SEMICONDUCTOR BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
-// 
-// Except as contained in this notice, the name of Dallas Semiconductor 
-// shall not be used except as stated in the Dallas Semiconductor 
-// Branding Policy. 
+//
+// Except as contained in this notice, the name of Dallas Semiconductor
+// shall not be used except as stated in the Dallas Semiconductor
+// Branding Policy.
 //---------------------------------------------------------------------------
 //
-//  thermo21.c - Thermochron iButton utility functions 
+//  thermo21.c - Thermochron iButton utility functions
 //
 //  Version: 2.00
-//    
+//
 //    History:
-//           1.03 -> 2.00  Reorganization of Public Domain Kit 
+//           1.03 -> 2.00  Reorganization of Public Domain Kit
 //                         Convert to global CRC utility functions
 //                         Y2K fix.
 
 #include "ownet.h"
-#include "thermo21.h"   
+#include "thermo21.h"
 #include <time.h>
 #include <stdio.h>
 
@@ -46,7 +46,7 @@
 #include <string.h>
 #endif
 
-// Local Function Prototypes 
+// Local Function Prototypes
 static int ThermoStep(int,ThermoStateType *,ThermoScript *,int *,int *,int *,char *);
 static int ReadPages(int,int,int,int *,uchar *);
 static int WriteScratch(int,uchar *,int,int);
@@ -57,7 +57,7 @@ static int WriteMemory(int,uchar *, int, int);
 static int current_speed[MAX_PORTNUM];
 
 // download steps
-static ThermoScript Download[] = 
+static ThermoScript Download[] =
     {{ ST_READ_STATUS,  "Setup to read the mission status"},
      { ST_READ_PAGES,   "Read the status page"},
      { ST_READ_ALARM,   "Setup to read alarm pages"},
@@ -66,16 +66,16 @@ static ThermoScript Download[] =
      { ST_READ_PAGES,   "Read the histogram pages"},
      { ST_READ_LOG,     "Setup to read log pages"},
      { ST_READ_PAGES,   "Read the log pages"},
-     { ST_FINISH,       "Finished"}}; 
+     { ST_FINISH,       "Finished"}};
 
 // read status only steps
-static ThermoScript GetStatus[] = 
+static ThermoScript GetStatus[] =
     {{ ST_READ_STATUS,  "Setup to read the mission status"},
      { ST_READ_PAGES,   "Read the status page"},
-     { ST_FINISH,       "Finished"}}; 
+     { ST_FINISH,       "Finished"}};
 
 // mission steps (assume already did StatusThermo)
-static ThermoScript Mission[] = 
+static ThermoScript Mission[] =
     {{ ST_CLEAR_SETUP,  "Setup clear memory"},
      { ST_WRITE_MEM,    "Write clear memory bit"},
      { ST_CLEAR_MEM,    "Clear the memory"},
@@ -95,7 +95,7 @@ static ThermoScript Mission[] =
 //--------------------------------------------------------------------------
 // The 'DownloadThermo' downloads the specified Thermochron in 'SerialNum'
 // and puts the data in the state variable 'ThermoState'.  Progress output
-// is printed to the specified file 'fp'. 
+// is printed to the specified file 'fp'.
 //
 // 'portnum'     - number 0 to MAX_PORTNUM-1.  This number is provided to
 //                 indicate the symbolic port number.
@@ -121,7 +121,7 @@ int DownloadThermo(int portnum, uchar *SerialNum,
 //--------------------------------------------------------------------------
 // The 'ReadThermoStatus' reads the Thermochron status in 'SerialNum'
 // and puts the data in the state variable 'ThermoState'.  Progress output
-// is printed to the specified file 'fp'. 
+// is printed to the specified file 'fp'.
 //
 // 'portnum'     - number 0 to MAX_PORTNUM-1.  This number is provided to
 //                 indicate the symbolic port number.
@@ -137,18 +137,18 @@ int DownloadThermo(int portnum, uchar *SerialNum,
 int ReadThermoStatus(int portnum, uchar *SerialNum,
 				   ThermoStateType *ThermoState, FILE *fp)
 {
-   
+
    // set the serial num
    owSerialNum(portnum, SerialNum, FALSE);
 
    // run the script and read status of thermochron
    return RunThermoScript(portnum,ThermoState,GetStatus,fp);
-} 
+}
 
 //--------------------------------------------------------------------------
 // The 'MissionThermo' starts a new Thermochron mission on 'SerialNum'
 // from the state information provided in 'ThermoState'. Progress output
-// is printed to the specified file 'fp'. 
+// is printed to the specified file 'fp'.
 //
 // 'portnum'     - number 0 to MAX_PORTNUM-1.  This number is provided to
 //                 indicate the symbolic port number.
@@ -173,7 +173,7 @@ int MissionThermo(int portnum, uchar *SerialNum,
 
 //--------------------------------------------------------------------------
 // Run the specified script.  Return TRUE if all steps completed else FALSE.
-// Status is printed to file 'fp'.  
+// Status is printed to file 'fp'.
 //
 int RunThermoScript(int portnum, ThermoStateType *ThermoState,
                     ThermoScript script[], FILE *fp)
@@ -181,7 +181,7 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
    char msg[256],LastDescription[256],LastMsg[256];
    int StepCount,SubStep,ErrorCount,Status;
    int last_clear_step=0;
-   
+
    // reset the step to the begining
    StepCount = 0;
    SubStep = 0;
@@ -190,10 +190,10 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
 
    LastDescription[0] = 0;
    LastMsg[0] = 0;
- 
+
    // loop to perform all of the steps to download the Thermochron
    do
-   {   
+   {
       // switch on the status of the last step done
       switch(Status)
       {
@@ -211,9 +211,9 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
             // record the step position of the last memory clear
             // this is in case we need to attempt a clear again
             if (script[StepCount].Step == ST_CLEAR_SETUP)
-               last_clear_step = StepCount;               
+               last_clear_step = StepCount;
 
-            // print step description if different 
+            // print step description if different
             if (strcmp(LastDescription,
                 script[StepCount].StepDescription) != 0)
             {
@@ -224,7 +224,7 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
             // perform a step in the job
             Status = ThermoStep(portnum,ThermoState,&script[StepCount],
                                 &SubStep,&Status, &ErrorCount, msg);
-                      
+
             // print results if different
             if (strcmp(LastMsg,msg) != 0)
             {
@@ -234,7 +234,7 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
             else
                fprintf(fp,".");
 
-            break;     
+            break;
          // encountered a transient error
          case STATUS_ERROR_TRANSIENT:
             // check if transient error is a memory clear
@@ -245,8 +245,8 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
                SubStep = 0;
                ErrorCount = 0;
                Status = STATUS_INPROGRESS;
-               break; 
-            }    
+               break;
+            }
             // if 20 tansient errors in a row then abort
             if (ErrorCount > 20)
                Status = STATUS_ERROR_HALT;
@@ -263,8 +263,8 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
             return FALSE;
       }
    }
-   while (!key_abort()); 
- 
+   while (!key_abort());
+
    // key abort
    fprintf(fp,"Aborting script due to key press\n");
    return FALSE;
@@ -274,8 +274,8 @@ int RunThermoScript(int portnum, ThermoStateType *ThermoState,
 //----------------------------------------------------------------------
 //  Use the script to perform a step and return.
 //
-int ThermoStep(int portnum, ThermoStateType *ThermoState, 
-               ThermoScript *StateScript, int *SubStep, 
+int ThermoStep(int portnum, ThermoStateType *ThermoState,
+               ThermoScript *StateScript, int *SubStep,
                int *Status, int *ErrorCount, char *msg)
 {
    short  rslt;
@@ -286,11 +286,11 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
    // do the current step
    switch (StateScript->Step)
    {
-      // the operation is complete      
+      // the operation is complete
       case ST_FINISH:
          sprintf(msg,"Operation complete");
          *Status = STATUS_COMPLETE;
-         break;      
+         break;
 
       // read the mission status page
       case ST_READ_STATUS:
@@ -300,7 +300,7 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
          sprintf(msg,"Ready to read status page %d",
                       read_page_num);
          *Status = STATUS_STEP_COMPLETE;
-         break;      
+         break;
 
       // set up to read the alarm registers
       case ST_READ_ALARM:
@@ -311,7 +311,7 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
                       read_page_num, read_page_num + read_pages - 1);
          *Status = STATUS_STEP_COMPLETE;
          break;
-         
+
       // set up to read the histogram data
       case ST_READ_HIST:
          read_page_num = 64;
@@ -349,12 +349,12 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
 			   *Status = STATUS_INPROGRESS;
 #endif
          }
-         else 
+         else
          {
             sprintf(msg,"Pages read from Thermochron");
             *Status = STATUS_STEP_COMPLETE;
          }
-         break;      
+         break;
 
       // setup the clear memory
       case ST_CLEAR_SETUP:
@@ -369,7 +369,7 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
 
       // clear the memory
       case ST_CLEAR_MEM:
-         // set the clear memory command (not check return because verify)        
+         // set the clear memory command (not check return because verify)
          if(!owAccess(portnum))
          {
             OWERROR(OWERROR_ACCESS_FAILED);
@@ -400,7 +400,7 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
             sprintf(msg,"Memory did NOT clear");
             *Status = STATUS_ERROR_TRANSIENT;
          }
-         break;      
+         break;
 
       // setup write time, clock alarm, control, trips
       case ST_WRITE_TIME:
@@ -430,7 +430,7 @@ int ThermoStep(int portnum, ThermoStateType *ThermoState,
          *Status = STATUS_STEP_COMPLETE;
          break;
 
-      // write the specified memory location 
+      // write the specified memory location
       case ST_WRITE_MEM:
          if (WriteMemory(portnum, write_buf, write_len, write_addr))
          {
@@ -463,15 +463,15 @@ int ReadPages(int portnum, int start_pg, int num_pgs, int *last_pg, uchar *final
    int len,i;
    uchar  SerialNumber[8];
    ushort lastcrc16;
-	
-   // read the rom number 
+
+   // read the rom number
    owSerialNum(portnum,SerialNumber,TRUE);
 
 #ifndef __MC68K__
    // verify device is in overdrive
    if (current_speed[portnum] == MODE_OVERDRIVE)
    {
-      if (owVerify(portnum,FALSE)) 
+      if (owVerify(portnum,FALSE))
          skip_overaccess = 1;
    }
 
@@ -490,28 +490,28 @@ int ReadPages(int portnum, int start_pg, int num_pgs, int *last_pg, uchar *final
       // create a packet to read a page
       len = 0;
       setcrc16(portnum,0);
-      // optional skip access on subsequent pages 
+      // optional skip access on subsequent pages
       if (!skip_access)
-      {  
+      {
          // match
-         pkt[len++] = 0x55; 
+         pkt[len++] = 0x55;
          // rom number
          for (i = 0; i < 8; i++)
             pkt[len++] = SerialNumber[i];
-         // read memory with crc command 
-         pkt[len] = 0xA5; 
-         lastcrc16 = docrc16(portnum,pkt[len++]);         
+         // read memory with crc command
+         pkt[len] = 0xA5;
+         lastcrc16 = docrc16(portnum,pkt[len++]);
          // address
          pkt[len] = (uchar)((*last_pg << 5) & 0xFF);
-         lastcrc16 = docrc16(portnum,pkt[len++]);         
-         pkt[len] = (uchar)(*last_pg >> 3); 
-         lastcrc16 = docrc16(portnum,pkt[len++]);         
+         lastcrc16 = docrc16(portnum,pkt[len++]);
+         pkt[len] = (uchar)(*last_pg >> 3);
+         lastcrc16 = docrc16(portnum,pkt[len++]);
       }
 
       // set 32 reads for data and 2 for crc
       for (i = 0; i < 34; i++)
-         pkt[len++] = 0xFF; 
-         
+         pkt[len++] = 0xFF;
+
       // send the bytes
       if (owBlock(portnum,!skip_access,pkt,len))
       {
@@ -526,10 +526,10 @@ int ReadPages(int portnum, int start_pg, int num_pgs, int *last_pg, uchar *final
             for (i = 0; i < 32; i++)
                finalbuf[i + (*last_pg - start_pg) * 32] = pkt[len - 34 + i];
 
-            // change number of pages 
+            // change number of pages
             *last_pg = *last_pg + 1;
 
-            // now skip access 
+            // now skip access
             skip_access = TRUE;
          }
          else
@@ -554,7 +554,7 @@ int ReadPages(int portnum, int start_pg, int num_pgs, int *last_pg, uchar *final
 int WriteMemory(int portnum, uchar *Buf, int ln, int adr)
 {
    // write to scratch and then copy
-   if (WriteScratch(portnum,Buf,ln,adr)) 
+   if (WriteScratch(portnum,Buf,ln,adr))
       return CopyScratch(portnum,ln,adr);
 
    return FALSE;
@@ -571,52 +571,52 @@ int WriteScratch(int portnum, uchar *Buf, int ln, int adr)
    int i;
    uchar pbuf[80];
 
-   // check for alarm indicator 
-   if (owAccess(portnum)) 
+   // check for alarm indicator
+   if (owAccess(portnum))
    {
-      // construct a packet to send  
-      pbuf[0] = 0x0F; // write scratch command 
-      pbuf[1] = (adr & 0xFF); // address 1 
-      pbuf[2] = ((adr >> 8) & 0xFF); // address 2 
+      // construct a packet to send
+      pbuf[0] = 0x0F; // write scratch command
+      pbuf[1] = (adr & 0xFF); // address 1
+      pbuf[2] = ((adr >> 8) & 0xFF); // address 2
 
-      // the write bytes 
+      // the write bytes
       for (i = 0; i < ln; i++)
-        pbuf[3 + i] = (uchar)(Buf[i]); // data 
+        pbuf[3 + i] = (uchar)(Buf[i]); // data
 
-      // perform the block 
+      // perform the block
       if (!owBlock(portnum,FALSE,pbuf,ln+3))
          return FALSE;
 
-      // Now read back the scratch 
-      if (owAccess(portnum)) 
+      // Now read back the scratch
+      if (owAccess(portnum))
       {
-         // construct a packet to send 
-         pbuf[0] = 0xAA; // read scratch command 
-         pbuf[1] = 0xFF; // address 1 
-         pbuf[2] = 0xFF; // address 2 
-         pbuf[3] = 0xFF; // offset 
+         // construct a packet to send
+         pbuf[0] = 0xAA; // read scratch command
+         pbuf[1] = 0xFF; // address 1
+         pbuf[2] = 0xFF; // address 2
+         pbuf[3] = 0xFF; // offset
 
-         // the write bytes 
+         // the write bytes
          for (i = 0; i < ln; i++)
-            pbuf[4 + i] = 0xFF; // data 
+            pbuf[4 + i] = 0xFF; // data
 
-         // perform the block  
+         // perform the block
          if (!owBlock(portnum,FALSE,pbuf,ln+4))
             return FALSE;
 
-         // read address 1 
-         if (pbuf[1] != (adr & 0xFF)) 
+         // read address 1
+         if (pbuf[1] != (adr & 0xFF))
             return FALSE;
-         // read address 2 
-         if (pbuf[2] != ((adr >> 8) & 0xFF)) 
+         // read address 2
+         if (pbuf[2] != ((adr >> 8) & 0xFF))
             return FALSE;
-         // read the offset 
-         if (pbuf[3] != ((adr + ln - 1) & 0x1F)) 
+         // read the offset
+         if (pbuf[3] != ((adr + ln - 1) & 0x1F))
             return FALSE;
-         // read and compare the contents 
+         // read and compare the contents
          for (i = 0; i < ln; i++)
          {
-            if (pbuf[4 + i] != Buf[i]) 
+            if (pbuf[4 + i] != Buf[i])
               return FALSE;
          }
          // success
@@ -640,22 +640,22 @@ int CopyScratch(int portnum, int ln, int adr)
    int i;
    uchar pbuf[50];
 
-   // check for alarm indicator 
-   if (owAccess(portnum)) 
+   // check for alarm indicator
+   if (owAccess(portnum))
    {
-      // construct a packet to send 
-      pbuf[0] = 0x55;                  // copy scratch command 
-      pbuf[1] = (adr & 0xFF);          // address 1 
-      pbuf[2] = ((adr >> 8) & 0xFF);   // address 2 
-      pbuf[3] = (adr + ln - 1) & 0x1F; // offset 
+      // construct a packet to send
+      pbuf[0] = 0x55;                  // copy scratch command
+      pbuf[1] = (adr & 0xFF);          // address 1
+      pbuf[2] = ((adr >> 8) & 0xFF);   // address 2
+      pbuf[3] = (adr + ln - 1) & 0x1F; // offset
       for (i = 0; i <= 9; i++)
-         pbuf[4 + i] = 0xFF;           // result of copy 
+         pbuf[4 + i] = 0xFF;           // result of copy
 
-      // perform the block 
+      // perform the block
       if (owBlock(portnum,FALSE,pbuf,14))
       {
          if ((pbuf[13] == 0x55) ||
-             (pbuf[13] == 0xAA)) 
+             (pbuf[13] == 0xAA))
            return TRUE;
       }
    }
@@ -665,7 +665,7 @@ int CopyScratch(int portnum, int ln, int adr)
 }
 
 //----------------------------------------------------------------------
-//  Interpret the Status by looking at the 'raw' portion of the 
+//  Interpret the Status by looking at the 'raw' portion of the
 //  mission status structure.
 //
 void InterpretStatus(MissionStatus *mstatus)
@@ -673,10 +673,10 @@ void InterpretStatus(MissionStatus *mstatus)
    timedate td,tdtmp;
    int offset;
    uint tmtmp;
-   
+
 #ifndef __MC68K__
-   time_t tint; 
-   struct tm *tstruct; 
+   time_t tint;
+   struct tm *tstruct;
 #endif
 
 
@@ -686,37 +686,37 @@ void InterpretStatus(MissionStatus *mstatus)
    // sample rate
    mstatus->sample_rate = mstatus->status_raw[0x0D];
 
-   // rollover enabled 
+   // rollover enabled
    mstatus->rollover_enable = (0x08 & mstatus->status_raw[0x0E]) >> 3;
 
    // startdelay
-   mstatus->start_delay = (mstatus->status_raw[0x13] << 8) | 
+   mstatus->start_delay = (mstatus->status_raw[0x13] << 8) |
                            mstatus->status_raw[0x12];
 
    // number of samples in this mission
 #ifdef __MC68K__
    mstatus->mission_samples = (((uint) mstatus->status_raw[0x1C]) * 65536) +
    							  (((uint) mstatus->status_raw[0x1B]) * 256) +
-   							  ((uint) mstatus->status_raw[0x1A]); 
+   							  ((uint) mstatus->status_raw[0x1A]);
 #else
    mstatus->mission_samples = (mstatus->status_raw[0x1C] << 16) |
-                              (mstatus->status_raw[0x1B] << 8) | 
+                              (mstatus->status_raw[0x1B] << 8) |
                                mstatus->status_raw[0x1A];
 #endif
-                               
 
 
-   // total number of samples 
+
+   // total number of samples
 #ifdef __MC68K__
    mstatus->samples_total   = (((uint) mstatus->status_raw[0x1F]) * 65536) +
    							  (((uint) mstatus->status_raw[0x1E]) * 256) +
-   							  ((uint) mstatus->status_raw[0x1D]);    
+   							  ((uint) mstatus->status_raw[0x1D]);
 #else
    mstatus->samples_total = (mstatus->status_raw[0x1F] << 16) |
-                            (mstatus->status_raw[0x1E] << 8) | 
-                             mstatus->status_raw[0x1D]; 
+                            (mstatus->status_raw[0x1E] << 8) |
+                             mstatus->status_raw[0x1D];
 #endif
-                            
+
    // temperature thresholds
    mstatus->high_threshold = mstatus->status_raw[0x0C];
    mstatus->low_threshold = mstatus->status_raw[0x0B];
@@ -767,7 +767,7 @@ void InterpretStatus(MissionStatus *mstatus)
    td.day = BCDToBin((uchar)(mstatus->status_raw[offset + 2] & 0x3F));
    td.month = BCDToBin((uchar)(mstatus->status_raw[offset + 3] & 0x1F));
    td.year = BCDToBin((uchar)(mstatus->status_raw[offset + 4])); // (2.00)
-   // (2.00) logic to decide on century of mission stamp   
+   // (2.00) logic to decide on century of mission stamp
    // check if century bit set in mission stamp
    if (mstatus->status_raw[offset + 3] & 0x80)
       td.year += 2000;
@@ -775,10 +775,10 @@ void InterpretStatus(MissionStatus *mstatus)
    else if (mstatus->mission_in_progress)
    {
       // calculate the mission start year back from real time clock
-      tmtmp = mstatus->current_time - 
+      tmtmp = mstatus->current_time -
              (mstatus->sample_rate * mstatus->mission_samples * 60);
       SecondsToDate(&tdtmp,tmtmp);
-      td.year = tdtmp.year;      
+      td.year = tdtmp.year;
    }
    else
    {
@@ -793,13 +793,13 @@ void InterpretStatus(MissionStatus *mstatus)
       mstatus->mission_start_time = 0;
    else
       mstatus->mission_start_time = DateToSeconds(&td);
-      
+
    // download stations time of reading
 #ifdef __MC68K__
    mstatus->download_time = TimGetSeconds();
 #else
    time(&tint);
-   tstruct = localtime(&tint); 
+   tstruct = localtime(&tint);
    td.day = tstruct->tm_mday;
    td.month = tstruct->tm_mon + 1;  // (1.01)
    td.year = tstruct->tm_year + 1900;
@@ -819,7 +819,7 @@ void InterpretStatus(MissionStatus *mstatus)
 void FormatMission(MissionStatus *mstatus)
 {
    int i;
-   time_t tint; 
+   time_t tint;
 #ifndef __MC68K__
    struct tm *tstruct;
 #else
@@ -828,7 +828,7 @@ void FormatMission(MissionStatus *mstatus)
    // clear the buffer
    for (i = 0; i < 32; i++)
       mstatus->status_raw[i] = 0;
-   
+
    // Real Time Clock
 #ifdef __MC68K__
    tint = TimGetSeconds();
@@ -836,7 +836,7 @@ void FormatMission(MissionStatus *mstatus)
    time(&tint);
 #endif
    tint++;  // add 1 second
-   
+
 #ifdef __MC68K__
    TimSecondsToDateTime(tint, tstruct);
 #else
@@ -883,7 +883,7 @@ void FormatMission(MissionStatus *mstatus)
 }
 
 //--------------------------------------------------------------------------
-// Convert an integer to a 1 Byte BCD number (99 max) 
+// Convert an integer to a 1 Byte BCD number (99 max)
 //
 uchar ToBCD(short num)
 {
@@ -891,7 +891,7 @@ uchar ToBCD(short num)
 
    rtbyte = (num - ((num / 10) * 10)) & 0x0F;
    rtbyte = rtbyte | ((num / 10) << 4);
-   
+
    return rtbyte;
 }
 
@@ -904,10 +904,10 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
    int cnt=0,i;
    timedate td;
 #ifndef __MC68K__
-   time_t tint; 
+   time_t tint;
    struct tm *tstruct;
-#else 
-   DateTimePtr tstruct = NULL;	
+#else
+   DateTimePtr tstruct = NULL;
 #endif
 
    // title
@@ -943,11 +943,11 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
       cnt += sprintf(&str[cnt],"yes\n");
    else
       cnt += sprintf(&str[cnt],"no\n");
- 
+
    // mission start time
    if (mstatus->start_delay == 0)
    {
-      SecondsToDate(&td,mstatus->mission_start_time);      
+      SecondsToDate(&td,mstatus->mission_start_time);
       if (mstatus->mission_start_time == 0)
          cnt += sprintf(&str[cnt],"Mission Start time: not started yet\n");
       else
@@ -960,7 +960,7 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
 
    // mission start delay
    cnt += sprintf(&str[cnt],"Mission Start delay: %d minute(s)\n",mstatus->start_delay);
-   
+
    // mission samples
    cnt += sprintf(&str[cnt],"Mission Samples: %d\n",mstatus->mission_samples);
 
@@ -968,21 +968,21 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
    cnt += sprintf(&str[cnt],"Device total samples: %d\n",mstatus->samples_total);
 
    // temperature display mode
-   cnt += sprintf(&str[cnt],"Temp displayed in: ");  
+   cnt += sprintf(&str[cnt],"Temp displayed in: ");
    if (ConvertToF)
       cnt += sprintf(&str[cnt],"(Fahrenheit)\n");
    else
       cnt += sprintf(&str[cnt],"(Celsius)\n");
-   
+
    // thresholds
    cnt += sprintf(&str[cnt],"High Threshold: %6.1f\n",
-          TempToFloat(mstatus->high_threshold,ConvertToF));   
+          TempToFloat(mstatus->high_threshold,ConvertToF));
 
    cnt += sprintf(&str[cnt],"Low Threshold: %6.1f\n",
-          TempToFloat(mstatus->low_threshold,ConvertToF)); 
-   
+          TempToFloat(mstatus->low_threshold,ConvertToF));
+
    // time from D1921
-   SecondsToDate(&td,mstatus->current_time);      
+   SecondsToDate(&td,mstatus->current_time);
    cnt += sprintf(&str[cnt],"Current Real-Time Clock from DS1921: %02d/%02d/%04d  %02d:%02d:%02d\n",
        td.month,td.day,td.year,td.hour,td.minute,td.second);
 
@@ -990,7 +990,7 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
    // current PC time
    time(&tint);
    tstruct = localtime(&tint);
- 
+
    cnt += sprintf(&str[cnt],"Current PC Time: %02d/%02d/%04d  %02d:%02d:%02d\n",
        tstruct->tm_mon + 1,tstruct->tm_mday,tstruct->tm_year + 1900,
        tstruct->tm_hour,tstruct->tm_min,tstruct->tm_sec);
@@ -1001,7 +1001,7 @@ void MissionStatusToString(MissionStatus *mstatus, int ConvertToF, char *str)
 }
 
 //----------------------------------------------------------------------
-//  Interpret the Histogram by looking at the 'raw' portion of the 
+//  Interpret the Histogram by looking at the 'raw' portion of the
 //  Histogram structure.  Store the temperature range values in Celsius.
 //
 void InterpretHistogram(Histogram *hist)
@@ -1030,9 +1030,9 @@ void HistogramToString(Histogram *hist, int ConvertToF, char *str)
    int cnt=0,i;
 
    // title
-   cnt += sprintf(&str[cnt],"Temperature Histogram\n---------------------\n"  
+   cnt += sprintf(&str[cnt],"Temperature Histogram\n---------------------\n"
                             "Format: [Temp Range, Count] ");
-   
+
    if (ConvertToF)
       cnt += sprintf(&str[cnt],"(Fahrenheit)\n");
    else
@@ -1041,7 +1041,7 @@ void HistogramToString(Histogram *hist, int ConvertToF, char *str)
    // loop through bins
    for (i = 0; i < 63; i++) // (2.00)
    {
-      cnt += sprintf(&str[cnt],"%6.1f to %6.1f, %d\n", 
+      cnt += sprintf(&str[cnt],"%6.1f to %6.1f, %d\n",
                      (ConvertToF) ? CToF(hist->start_range[i]): hist->start_range[i],
                      (ConvertToF) ? CToF(hist->end_range[i]): hist->end_range[i],
                       hist->bin_count[i]);
@@ -1052,7 +1052,7 @@ void HistogramToString(Histogram *hist, int ConvertToF, char *str)
 }
 
 //----------------------------------------------------------------------
-//  Interpret the Temperature Alarm Event data by looking at the 'raw' 
+//  Interpret the Temperature Alarm Event data by looking at the 'raw'
 //  portion of the TempAlarmEvents structure.  Mission Status is needed
 //  to interpret the events.
 //
@@ -1069,7 +1069,7 @@ void InterpretAlarms(TempAlarmEvents *alarm, MissionStatus *mstatus)
       // get the mission start count of this event
       event_mission_count = (alarm->alarm_raw[i + 2] << 16) |
                             (alarm->alarm_raw[i + 1] << 8) |
-                             alarm->alarm_raw[i];  
+                             alarm->alarm_raw[i];
 
       // check if done with low events
       if (!event_mission_count)
@@ -1077,15 +1077,15 @@ void InterpretAlarms(TempAlarmEvents *alarm, MissionStatus *mstatus)
 
       // get the duration
       duration = alarm->alarm_raw[i + 3];
-   
+
       // calculate the start time
       alarm->low_start_time[alarm->num_low] =
-          mstatus->mission_start_time + 
-          (event_mission_count - 1) * (mstatus->sample_rate * 60);  
+          mstatus->mission_start_time +
+          (event_mission_count - 1) * (mstatus->sample_rate * 60);
 
       // calculate the end time
       alarm->low_end_time[alarm->num_low] =
-          alarm->low_start_time[alarm->num_low] + 
+          alarm->low_start_time[alarm->num_low] +
           (duration - 1) * (mstatus->sample_rate * 60);
 
       // increment number of low events
@@ -1099,7 +1099,7 @@ void InterpretAlarms(TempAlarmEvents *alarm, MissionStatus *mstatus)
       // get the mission start count of this event
       event_mission_count = (alarm->alarm_raw[i + 2] << 16) |
                             (alarm->alarm_raw[i + 1] << 8) |
-                             alarm->alarm_raw[i];  
+                             alarm->alarm_raw[i];
 
       // check if done with low events
       if (!event_mission_count)
@@ -1110,12 +1110,12 @@ void InterpretAlarms(TempAlarmEvents *alarm, MissionStatus *mstatus)
 
       // calculate the start time
       alarm->high_start_time[alarm->num_high] =
-          mstatus->mission_start_time + 
-          (event_mission_count - 1) * (mstatus->sample_rate * 60);  
+          mstatus->mission_start_time +
+          (event_mission_count - 1) * (mstatus->sample_rate * 60);
 
       // calculate the end time
       alarm->high_end_time[alarm->num_high] =
-          alarm->high_start_time[alarm->num_high] + 
+          alarm->high_start_time[alarm->num_high] +
           (duration - 1) * (mstatus->sample_rate * 60);
 
       // increment number of low events
@@ -1124,7 +1124,7 @@ void InterpretAlarms(TempAlarmEvents *alarm, MissionStatus *mstatus)
 }
 
 //--------------------------------------------------------------------------
-// Take the Temperature Alarms Events structure and convert to string 
+// Take the Temperature Alarms Events structure and convert to string
 // format
 //
 void AlarmsToString(TempAlarmEvents *alarm, char *str)
@@ -1133,7 +1133,7 @@ void AlarmsToString(TempAlarmEvents *alarm, char *str)
    timedate td;
 
    // title
-   cnt += sprintf(&str[cnt],"Temperature Alarms\n------------------\n"  
+   cnt += sprintf(&str[cnt],"Temperature Alarms\n------------------\n"
                             "Format: [(HIGH/LOW), Time/Date Range]\n");
 
    // loop through each low alarm
@@ -1141,11 +1141,11 @@ void AlarmsToString(TempAlarmEvents *alarm, char *str)
    {
       cnt += sprintf(&str[cnt],"LOW  , ");
       // start time
-      SecondsToDate(&td,alarm->low_start_time[i]);      
+      SecondsToDate(&td,alarm->low_start_time[i]);
       cnt += sprintf(&str[cnt]," %02d/%02d/%04d  %02d:%02d  to  ",
          td.month,td.day,td.year,td.hour,td.minute);
       // end time
-      SecondsToDate(&td,alarm->low_end_time[i]);      
+      SecondsToDate(&td,alarm->low_end_time[i]);
       cnt += sprintf(&str[cnt]," %02d/%02d/%04d  %02d:%02d\n",
          td.month,td.day,td.year,td.hour,td.minute);
    }
@@ -1155,11 +1155,11 @@ void AlarmsToString(TempAlarmEvents *alarm, char *str)
    {
       cnt += sprintf(&str[cnt],"HIGH , ");
       // start time
-      SecondsToDate(&td,alarm->high_start_time[i]);      
+      SecondsToDate(&td,alarm->high_start_time[i]);
       cnt += sprintf(&str[cnt]," %02d/%02d/%04d  %02d:%02d  to  ",
          td.month,td.day,td.year,td.hour,td.minute);
       // end time
-      SecondsToDate(&td,alarm->high_end_time[i]);      
+      SecondsToDate(&td,alarm->high_end_time[i]);
       cnt += sprintf(&str[cnt]," %02d/%02d/%04d  %02d:%02d\n",
          td.month,td.day,td.year,td.hour,td.minute);
    }
@@ -1169,7 +1169,7 @@ void AlarmsToString(TempAlarmEvents *alarm, char *str)
 }
 
 //----------------------------------------------------------------------
-//  Interpret the Log data by looking at the 'raw' 
+//  Interpret the Log data by looking at the 'raw'
 //  portion of the Log structure.  Mission Status is needed
 //  to interpret when the logs occurred.
 //
@@ -1181,7 +1181,7 @@ void InterpretLog(Log *log, MissionStatus *mstatus)
    // check if wrap occurred
    if (mstatus->rollover_occurred)
    {
-      // calculate the number loops 
+      // calculate the number loops
       loops = (mstatus->mission_samples / 2048) - 1;
       // calculate the number of overlap
       overlap = mstatus->mission_samples % 2048;
@@ -1190,7 +1190,7 @@ void InterpretLog(Log *log, MissionStatus *mstatus)
    else
    {
       log->start_time = mstatus->mission_start_time;
-      if (mstatus->mission_samples > 2048)  // (1.02)  
+      if (mstatus->mission_samples > 2048)  // (1.02)
          lastlog = 2048;
       else
          lastlog = mstatus->mission_samples;
@@ -1214,7 +1214,7 @@ void InterpretLog(Log *log, MissionStatus *mstatus)
 }
 
 //--------------------------------------------------------------------------
-// Take the Log structure and convert to string 
+// Take the Log structure and convert to string
 // format
 //
 void LogToString(Log *log, int ConvertToF, char *str)
@@ -1224,7 +1224,7 @@ void LogToString(Log *log, int ConvertToF, char *str)
    timedate td;
 
    // title
-   cnt += sprintf(&str[cnt],"Log Data\n--------\n"  
+   cnt += sprintf(&str[cnt],"Log Data\n--------\n"
                             "Format: [Time/Date , Temperature] ");
    if (ConvertToF)
       cnt += sprintf(&str[cnt],"(Fahrenheit)\n");
@@ -1236,11 +1236,11 @@ void LogToString(Log *log, int ConvertToF, char *str)
    for (i = 0; i < log->num_log; i++)
    {
       // time
-      SecondsToDate(&td,logtime);      
-      cnt += sprintf(&str[cnt],"%02d/%02d/%04d  %02d:%02d ,",
-         td.month,td.day,td.year,td.hour,td.minute);
+      SecondsToDate(&td,logtime);
+      cnt += sprintf(&str[cnt],"%04d-%02d-%02d  %02d:%02d ,",
+         td.year,td.month,td.day,td.hour,td.minute);
       // temp
-      cnt += sprintf(&str[cnt],"%6.1f\n", 
+      cnt += sprintf(&str[cnt],"%6.1f\n",
              (ConvertToF) ? CToF(log->temp[i]): log->temp[i]);
 
       // increment the time
@@ -1254,8 +1254,8 @@ void LogToString(Log *log, int ConvertToF, char *str)
 //--------------------------------------------------------------------------
 // Convert the raw debug data to a string
 //
-void DebugToString(MissionStatus *mstatus, TempAlarmEvents *alarm, 
-                   Histogram *hist, Log *log, char *str) 
+void DebugToString(MissionStatus *mstatus, TempAlarmEvents *alarm,
+                   Histogram *hist, Log *log, char *str)
 {
    int i,cnt=0;
 
@@ -1320,46 +1320,46 @@ void SecondsToDate(timedate *td, uint x)
 {
    short tmp,i,j;
    uint y;
-   
+
    // check to make sure date is not over 2070 (sanity check)
    if (x > 0xBBF81E00L)
       x = 0;
-   
+
    y = x/60;  td->second = (ushort)(x-60*y);
    x = y/60;  td->minute = (ushort)(y-60*x);
    y = x/24;  td->hour   = (ushort)(x-24*y);
    x = 4*(y+731);  td->year = (ushort)(x/1461);
    i = (int)((x-1461*(uint)(td->year))/4);  td->month = 13;
-   
+
    do
    {
       td->month -= 1;
       tmp = (td->month > 2) && ((td->year & 3)==0) ? 1 : 0;
       j = dm[td->month]+tmp;
-   
+
    } while (i < j);
-   
+
    td->day = i-j+1;
-   
-   // slight adjustment to algorithm 
-   if (td->day == 0) 
+
+   // slight adjustment to algorithm
+   if (td->day == 0)
       td->day = 1;
-   
+
    td->year = (td->year < 32)  ? td->year + 68 + 1900: td->year - 32 + 2000;
 }
 
 //--------------------------------------------------------------------------
-// DateToSeconds takes a time/date structure and converts it into the 
+// DateToSeconds takes a time/date structure and converts it into the
 // number of seconds since 1970
 //
 uint DateToSeconds(timedate *td)
 {
    uint Sv,Bv,Xv;
 
-   // convert the date/time values into the 5 byte format used in the touch 
-   if (td->year >= 2000) 
+   // convert the date/time values into the 5 byte format used in the touch
+   if (td->year >= 2000)
       Sv = td->year + 32 - 2000;
-   else 
+   else
       Sv = td->year - 68 - 1900;
 
    if ((td->month > 2) && ( (Sv & 3) == 0))
@@ -1376,18 +1376,18 @@ uint DateToSeconds(timedate *td)
 
 //--------------------------------------------------------------------------
 // Convert from DS1921 termature format to a float
-// 
+//
 //
 float TempToFloat(uchar tmp, int ConvertToF)
 {
    float tfloat;
-   
+
    tfloat = (float)((tmp / 2.0) - 40.0);
 
    if (ConvertToF)
       return (float)(tfloat * 9.0 / 5.0 + 32.0);
    else
-      return tfloat;   
+      return tfloat;
 }
 
 //--------------------------------------------------------------------------

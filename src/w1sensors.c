@@ -1290,9 +1290,9 @@ void w1_verify_intervals (w1_devlist_t *w1)
     int n;
     int mint = w1->delay;
     w1_device_t *d;
-    int *intvls;
+    int *intvls=NULL;
 
-    intvls = malloc(w1->numdev*sizeof(int));
+    intvls = calloc(w1->numdev, sizeof(int));
     for(d = w1->devs, n = 0; n < w1->numdev; n++, d++)
     {
         if(d->intvl)
